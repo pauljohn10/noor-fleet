@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 
 interface ModalProps {
   isOpen: boolean;
+  isHidden?: boolean;
   onClose: () => void;
   title: string;
   subtitle?: string;
@@ -15,6 +16,7 @@ interface ModalProps {
 
 export const Modal: React.FC<ModalProps> = ({
   isOpen,
+  isHidden = false,
   onClose,
   title,
   subtitle,
@@ -24,18 +26,22 @@ export const Modal: React.FC<ModalProps> = ({
   maxWidth = '2xl'
 }) => {
   useEffect(() => {
+    if (!isOpen || isHidden) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      window.addEventListener('keydown', handleKeyDown);
-    }
+
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+
     return () => {
-      document.body.style.overflow = 'auto';
+      if (!isHidden) {
+        document.body.style.overflow = 'auto';
+      }
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, isHidden, onClose]);
 
   if (!isOpen) return null;
 
@@ -52,7 +58,11 @@ export const Modal: React.FC<ModalProps> = ({
 
   const modalNode = (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 md:p-6 bg-slate-950/70 backdrop-blur-[3px] animate-fade-in overflow-y-auto"
+      className={`fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 md:p-6 bg-slate-950/70 backdrop-blur-[3px] animate-fade-in overflow-y-auto ${
+        isHidden ? '!hidden pointer-events-none opacity-0' : ''
+      }`}
+      style={isHidden ? { display: 'none' } : undefined}
+      aria-hidden={isHidden}
       onClick={onClose}
     >
       <div

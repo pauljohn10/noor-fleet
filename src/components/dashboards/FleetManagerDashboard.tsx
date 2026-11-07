@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { 
-  Truck, Plus, CalendarCheck, ShieldCheck, Eye, Wrench, Clock, CheckCircle2, AlertTriangle, AlertOctagon, HelpCircle, XCircle
+  Truck, Plus, CalendarCheck, ShieldCheck, Eye, Wrench, Clock, CheckCircle2, AlertTriangle, AlertOctagon, HelpCircle, XCircle,
+  ZoomIn, Maximize2
 } from 'lucide-react';
 import { useFleet } from '../../context/FleetContext';
 import { useI18n } from '../../context/I18nContext';
 import { Modal } from '../common/Modal';
+import { ImageLightboxModal } from '../common/ImageLightboxModal';
 import { VehicleFormModal } from '../vehicles/VehicleFormModal';
 import { TrailerFormModal } from '../trailers/TrailerFormModal';
 import { DefectReport, SeverityLevel, VehicleStatus, DefectReportStatus, PMStatus } from '../../types';
@@ -25,6 +27,40 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
   const [isTrailerModalOpen, setIsTrailerModalOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState<DefectReport | null>(null);
   const [actionNotes, setActionNotes] = useState('');
+
+  // Lightbox Modal state for full-screen photo viewing & zoom
+  const [lightboxData, setLightboxData] = useState<{
+    isOpen: boolean;
+    imageUrl: string;
+    title?: string;
+    subtitle?: string;
+    reportNumber?: string;
+    createdAt?: string;
+  }>({
+    isOpen: false,
+    imageUrl: '',
+  });
+
+  const openLightbox = (
+    imageUrl: string,
+    title?: string,
+    subtitle?: string,
+    reportNumber?: string,
+    createdAt?: string
+  ) => {
+    setLightboxData({
+      isOpen: true,
+      imageUrl,
+      title: title || 'Attached Incident Photo',
+      subtitle,
+      reportNumber,
+      createdAt,
+    });
+  };
+
+  const closeLightbox = () => {
+    setLightboxData(prev => ({ ...prev, isOpen: false }));
+  };
 
   // Status Metrics
   const availableCount = vehicles.filter(v => v.status === 'AVAILABLE').length;
@@ -480,6 +516,7 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
       {selectedReport && (
         <Modal
           isOpen={!!selectedReport}
+          isHidden={lightboxData.isOpen}
           onClose={() => setSelectedReport(null)}
           title={`Defect Audit Record: ${selectedReport.report_number}`}
           subtitle={`Driver: ${selectedReport.driver_name} | Unit: ${selectedReport.vehicle_id}`}
@@ -498,13 +535,49 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
                 {selectedReport.description}
               </p>
               {selectedReport.photo_url && (
-                <div className="pt-2">
-                  <span className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Attached Issue Photo:</span>
-                  <img
-                    src={selectedReport.photo_url}
-                    alt="Driver reported issue"
-                    className="max-h-48 rounded-lg border border-slate-200 object-contain bg-white"
-                  />
+                <div className="pt-2 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase text-slate-500 block">
+                      Attached Issue Photo:
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => openLightbox(
+                        selectedReport.photo_url!,
+                        `Issue Photo: ${selectedReport.report_number}`,
+                        `Driver: ${selectedReport.driver_name} • Unit: ${selectedReport.vehicle_id}`,
+                        selectedReport.report_number,
+                        selectedReport.created_at
+                      )}
+                      className="text-[10px] font-bold text-amber-800 hover:text-amber-900 bg-amber-100 hover:bg-amber-200 px-2 py-0.5 rounded transition flex items-center gap-1 cursor-pointer"
+                    >
+                      <Maximize2 className="w-3 h-3" />
+                      <span>Click to Open Full Size & Zoom</span>
+                    </button>
+                  </div>
+                  <div
+                    onClick={() => openLightbox(
+                      selectedReport.photo_url!,
+                      `Issue Photo: ${selectedReport.report_number}`,
+                      `Driver: ${selectedReport.driver_name} • Unit: ${selectedReport.vehicle_id}`,
+                      selectedReport.report_number,
+                      selectedReport.created_at
+                    )}
+                    className="group relative cursor-pointer overflow-hidden rounded-xl border border-slate-200 bg-white hover:border-amber-400 transition shadow-xs max-w-sm"
+                    title="Click to open full-screen viewer with zoom"
+                  >
+                    <img
+                      src={selectedReport.photo_url}
+                      alt="Driver reported issue"
+                      className="max-h-48 w-auto rounded-lg object-contain mx-auto transition-transform duration-200 group-hover:scale-[1.02]"
+                    />
+                    <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/30 transition-all flex items-center justify-center">
+                      <span className="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 rounded-full bg-slate-900/90 backdrop-blur-xs text-white text-xs font-bold shadow-lg flex items-center gap-1.5">
+                        <ZoomIn className="w-4 h-4 text-amber-400" />
+                        View Full-Screen Lightbox
+                      </span>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -593,6 +666,17 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
       <TrailerFormModal
         isOpen={isTrailerModalOpen}
         onClose={() => setIsTrailerModalOpen(false)}
+      />
+
+      {/* Full-Screen Image Lightbox Viewer with Zoom & Pan */}
+      <ImageLightboxModal
+        isOpen={lightboxData.isOpen}
+        onClose={closeLightbox}
+        imageUrl={lightboxData.imageUrl}
+        title={lightboxData.title}
+        subtitle={lightboxData.subtitle}
+        reportNumber={lightboxData.reportNumber}
+        createdAt={lightboxData.createdAt}
       />
     </div>
   );

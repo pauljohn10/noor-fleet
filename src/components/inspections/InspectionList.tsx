@@ -893,6 +893,7 @@ export const InspectionList: React.FC = () => {
       {selectedReport && (
         <Modal
           isOpen={!!selectedReport}
+          isHidden={lightboxData.isOpen}
           onClose={() => setSelectedReport(null)}
           title={`Driver Issue Report: ${selectedReport.report_number}`}
           subtitle={`Category: ${selectedReport.category} | Reported by ${selectedReport.driver_name}`}
