@@ -206,15 +206,31 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const { data: pingData } = await supabase
           .from('vehicle_gps_pings')
           .select('*')
-          .order('gps_timestamp', { ascending: false })
+          .order('ping_timestamp', { ascending: false })
           .limit(100);
-        if (pingData && pingData.length > 0) setGpsPings(pingData as VehicleGpsPing[]);
+        if (pingData && pingData.length > 0) {
+          const normalizedPings = pingData.map((p: any) => ({
+            ...p,
+            gps_timestamp: p.ping_timestamp || p.gps_timestamp || p.created_at || new Date().toISOString(),
+            heading_degrees: p.heading_deg ?? p.heading_degrees ?? 0,
+            altitude_meters: p.altitude_m ?? p.altitude_meters ?? 0,
+          }));
+          setGpsPings(normalizedPings as VehicleGpsPing[]);
+        }
 
         const { data: fuelData } = await supabase
           .from('fuel_transactions')
           .select('*')
-          .order('transaction_date', { ascending: false });
-        if (fuelData && fuelData.length > 0) setFuelTransactions(fuelData as FuelTransaction[]);
+          .order('dispense_timestamp', { ascending: false });
+        if (fuelData && fuelData.length > 0) {
+          const normalizedFuel = fuelData.map((f: any) => ({
+            ...f,
+            transaction_date: f.dispense_timestamp || f.transaction_date || f.created_at || new Date().toISOString(),
+            unit_cost: f.cost_per_liter_sar ?? f.unit_cost ?? 0,
+            total_cost: f.total_cost_sar ?? f.total_cost ?? 0,
+          }));
+          setFuelTransactions(normalizedFuel as FuelTransaction[]);
+        }
 
         const { data: schData } = await supabase
           .from('maintenance_schedules')
@@ -793,57 +809,40 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const nextSeq = currentReports.length + 132;
     let reportNumber = `DEF-${new Date().getFullYear()}-${String(nextSeq).padStart(5, '0')}`;
 
-    // 4. Submit via secure Supabase Edge Function / RPC if configured
+    // 4. Submit directly via secure Supabase RPC function (Zero CORS issues, no edge function deployment required)
     if (isSupabaseConfigured) {
       try {
-        const { data: fnData, error: fnError } = await supabase.functions.invoke(
-          'submit-driver-report',
+        const { data: rpcData, error: rpcError } = await supabase.rpc(
+          'submit_public_driver_report',
           {
-            body: {
-              driver_name: cleanDriverName,
-              plate_number: resolvedPlate,
-              category,
-              description: cleanDescription,
-              photo_url: input.photo_url || null,
-            },
+            p_driver_name: cleanDriverName,
+            p_plate_number: resolvedPlate,
+            p_category: category,
+            p_description: cleanDescription,
+            p_photo_url: input.photo_url || null,
           }
         );
 
-        if (!fnError && fnData?.report_number) {
-          reportNumber = fnData.report_number;
+        if (!rpcError && rpcData?.report_number) {
+          reportNumber = rpcData.report_number;
         } else {
-          // Fallback to secure RPC or direct insert if Edge Function is not yet deployed remotely
-          const { data: rpcData, error: rpcError } = await supabase.rpc(
-            'submit_public_driver_report',
+          // Direct table insert fallback
+          await supabase.from('defect_reports').insert([
             {
-              p_driver_name: cleanDriverName,
-              p_plate_number: resolvedPlate,
-              p_category: category,
-              p_description: cleanDescription,
-              p_photo_url: input.photo_url || null,
-            }
-          );
-
-          if (!rpcError && rpcData?.report_number) {
-            reportNumber = rpcData.report_number;
-          } else {
-            await supabase.from('defect_reports').insert([
-              {
-                report_number: reportNumber,
-                driver_id: matchedDriver?.id || null,
-                driver_name: cleanDriverName,
-                vehicle_id: resolvedVehicleCode,
-                plate_number: resolvedPlate,
-                trailer_id: matchedTrailer?.trailer_id || null,
-                category,
-                severity,
-                description: cleanDescription,
-                photo_url: input.photo_url || null,
-                status: 'NEW',
-                created_at: nowIso,
-              },
-            ]);
-          }
+              report_number: reportNumber,
+              driver_id: matchedDriver?.id || null,
+              driver_name: cleanDriverName,
+              vehicle_id: resolvedVehicleCode,
+              plate_number: resolvedPlate,
+              trailer_id: matchedTrailer?.trailer_id || null,
+              category,
+              severity,
+              description: cleanDescription,
+              photo_url: input.photo_url || null,
+              status: 'NEW',
+              created_at: nowIso,
+            },
+          ]);
         }
       } catch (err) {
         console.warn('[Public Driver Report] Supabase submission fallback notice:', err);
