@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import {
   ShieldCheck, Plus, Search, AlertTriangle, CheckCircle2,
   FileSpreadsheet, FileText, Wrench, User, Truck, History, Camera,
-  Link2, Copy, Share2, ExternalLink, Check, Users
+  Link2, Copy, Share2, ExternalLink, Check, Users, Maximize2, ZoomIn
 } from 'lucide-react';
 import { useFleet } from '../../context/FleetContext';
 import { useAuth } from '../../context/AuthContext';
 import { Badge } from '../common/Badge';
 import { Modal } from '../common/Modal';
+import { ImageLightboxModal } from '../common/ImageLightboxModal';
 import { InspectionFormMobile } from './InspectionFormMobile';
 import { exportToExcel, exportToPDFReport } from '../../lib/exportUtils';
 import { DefectReport, SeverityLevel, VehicleStatus, DefectReportStatus } from '../../types';
@@ -73,6 +74,40 @@ export const InspectionList: React.FC = () => {
 
   // Shareable URL copy state
   const [copiedLink, setCopiedLink] = useState(false);
+
+  // Lightbox Modal state for full-screen photo viewing & zoom
+  const [lightboxData, setLightboxData] = useState<{
+    isOpen: boolean;
+    imageUrl: string;
+    title?: string;
+    subtitle?: string;
+    reportNumber?: string;
+    createdAt?: string;
+  }>({
+    isOpen: false,
+    imageUrl: '',
+  });
+
+  const openLightbox = (
+    imageUrl: string,
+    title?: string,
+    subtitle?: string,
+    reportNumber?: string,
+    createdAt?: string
+  ) => {
+    setLightboxData({
+      isOpen: true,
+      imageUrl,
+      title: title || 'Attached Incident Photo',
+      subtitle,
+      reportNumber,
+      createdAt,
+    });
+  };
+
+  const closeLightbox = () => {
+    setLightboxData((prev) => ({ ...prev, isOpen: false }));
+  };
 
   // Modal & Record Detail Sheet State
   const [isInspectionFormOpen, setIsInspectionFormOpen] = useState(false);
@@ -679,9 +714,24 @@ export const InspectionList: React.FC = () => {
                             <div className="flex items-center gap-1.5">
                               <span>{rep.report_number}</span>
                               {rep.photo_url && (
-                                <span title="Photo attached">
-                                  <Camera className="w-3.5 h-3.5 text-sky-600" />
-                                </span>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openLightbox(
+                                      rep.photo_url!,
+                                      `Issue Photo: ${rep.report_number}`,
+                                      `Driver: ${rep.driver_name} • Plate: ${displayPlate}`,
+                                      rep.report_number,
+                                      rep.created_at
+                                    );
+                                  }}
+                                  title="Click to view attached photo full size"
+                                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-[10px] font-bold transition cursor-pointer"
+                                >
+                                  <Camera className="w-3.5 h-3.5 text-amber-600" />
+                                  <span className="hidden sm:inline">Photo</span>
+                                </button>
                               )}
                             </div>
                           </td>
@@ -937,15 +987,51 @@ export const InspectionList: React.FC = () => {
                 </div>
 
                 {selectedReport.photo_url && (
-                  <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">
-                      Attached Issue Photo
-                    </span>
-                    <img
-                      src={selectedReport.photo_url}
-                      alt="Driver uploaded issue"
-                      className="max-h-56 rounded-lg border border-slate-200 object-contain bg-white"
-                    />
+                  <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                        <Camera className="w-3.5 h-3.5 text-slate-400" />
+                        Attached Issue Photo
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => openLightbox(
+                          selectedReport.photo_url!,
+                          `Issue Photo: ${selectedReport.report_number}`,
+                          `Driver: ${selectedReport.driver_name} • Plate: ${selectedReport.plate_number}`,
+                          selectedReport.report_number,
+                          selectedReport.created_at
+                        )}
+                        className="text-[11px] font-bold text-amber-800 hover:text-amber-900 bg-amber-100 hover:bg-amber-200 px-2.5 py-1 rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                      >
+                        <Maximize2 className="w-3.5 h-3.5" />
+                        <span>Click to Open Full Size & Zoom</span>
+                      </button>
+                    </div>
+
+                    <div
+                      onClick={() => openLightbox(
+                        selectedReport.photo_url!,
+                        `Issue Photo: ${selectedReport.report_number}`,
+                        `Driver: ${selectedReport.driver_name} • Plate: ${selectedReport.plate_number}`,
+                        selectedReport.report_number,
+                        selectedReport.created_at
+                      )}
+                      className="group relative cursor-pointer overflow-hidden rounded-xl border border-slate-200/90 bg-white hover:border-amber-400 transition shadow-xs max-w-md"
+                      title="Click to open full-screen viewer with zoom"
+                    >
+                      <img
+                        src={selectedReport.photo_url}
+                        alt="Driver uploaded issue"
+                        className="max-h-60 w-auto rounded-xl object-contain mx-auto transition-transform duration-200 group-hover:scale-[1.02]"
+                      />
+                      <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/30 transition-all flex items-center justify-center">
+                        <span className="opacity-0 group-hover:opacity-100 transition-opacity px-3.5 py-1.5 rounded-full bg-slate-900/90 backdrop-blur-xs text-white text-xs font-bold shadow-lg flex items-center gap-1.5">
+                          <ZoomIn className="w-4 h-4 text-amber-400" />
+                          View Full-Screen Lightbox
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -1068,15 +1154,49 @@ export const InspectionList: React.FC = () => {
             {detailTab === 'PHOTOS' && (
               <div className="p-5 bg-slate-50 border border-slate-200 rounded-xl text-center">
                 {selectedReport.photo_url ? (
-                  <div className="space-y-2">
-                    <img
-                      src={selectedReport.photo_url}
-                      alt="Reported vehicle issue"
-                      className="max-h-80 mx-auto rounded-xl border border-slate-200 shadow-xs object-contain bg-white"
-                    />
-                    <p className="text-[11px] text-slate-500 font-medium">
-                      Photo attached by {selectedReport.driver_name} on {new Date(selectedReport.created_at).toLocaleString()}
-                    </p>
+                  <div className="space-y-3">
+                    <div
+                      onClick={() => openLightbox(
+                        selectedReport.photo_url!,
+                        `Issue Photo: ${selectedReport.report_number}`,
+                        `Driver: ${selectedReport.driver_name} • Plate: ${selectedReport.plate_number}`,
+                        selectedReport.report_number,
+                        selectedReport.created_at
+                      )}
+                      className="group relative cursor-pointer inline-block overflow-hidden rounded-xl border border-slate-200 shadow-sm bg-white hover:border-amber-400 transition"
+                      title="Click to open full-screen viewer with zoom"
+                    >
+                      <img
+                        src={selectedReport.photo_url}
+                        alt="Reported vehicle issue"
+                        className="max-h-80 mx-auto rounded-xl object-contain transition-transform duration-200 group-hover:scale-[1.02]"
+                      />
+                      <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/30 transition-all flex items-center justify-center">
+                        <span className="opacity-0 group-hover:opacity-100 transition-opacity px-4 py-2 rounded-full bg-slate-900/90 backdrop-blur-xs text-white text-xs font-bold shadow-lg flex items-center gap-2">
+                          <ZoomIn className="w-4 h-4 text-amber-400" />
+                          Click to View Full-Screen & Zoom
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-center gap-3">
+                      <p className="text-[11px] text-slate-500 font-medium">
+                        Photo attached by {selectedReport.driver_name} on {new Date(selectedReport.created_at).toLocaleString()}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => openLightbox(
+                          selectedReport.photo_url!,
+                          `Issue Photo: ${selectedReport.report_number}`,
+                          `Driver: ${selectedReport.driver_name} • Plate: ${selectedReport.plate_number}`,
+                          selectedReport.report_number,
+                          selectedReport.created_at
+                        )}
+                        className="text-xs font-bold text-amber-800 hover:text-amber-900 bg-amber-100 hover:bg-amber-200 px-3 py-1 rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                      >
+                        <Maximize2 className="w-3.5 h-3.5" />
+                        <span>Open Full Screen</span>
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div className="py-6 text-slate-500">
@@ -1147,6 +1267,17 @@ export const InspectionList: React.FC = () => {
           </div>
         </Modal>
       )}
+
+      {/* Full-Screen Image Lightbox Viewer with Zoom & Pan */}
+      <ImageLightboxModal
+        isOpen={lightboxData.isOpen}
+        onClose={closeLightbox}
+        imageUrl={lightboxData.imageUrl}
+        title={lightboxData.title}
+        subtitle={lightboxData.subtitle}
+        reportNumber={lightboxData.reportNumber}
+        createdAt={lightboxData.createdAt}
+      />
     </div>
   );
 };

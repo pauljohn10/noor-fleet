@@ -2,11 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Flame, Truck, User, Wrench, Zap, Disc, AlertTriangle, HelpCircle,
   Camera, CheckCircle2, Clock, ShieldCheck, Globe, X, Send, Loader2,
-  AlertCircle, Lock
+  AlertCircle, Lock, ZoomIn, Maximize2, Sparkles, Check
 } from 'lucide-react';
 import { useFleet } from '../../context/FleetContext';
 import { useI18n } from '../../context/I18nContext';
 import { DefectReportCategory } from '../../types';
+import { compressImageFile, formatFileSize } from '../../lib/imageCompression';
+import { ImageLightboxModal } from '../common/ImageLightboxModal';
+import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 
 const ISSUE_CATEGORIES: {
   value: DefectReportCategory;
@@ -79,6 +82,16 @@ export const PublicDriverReportPortal: React.FC = () => {
   const [description, setDescription] = useState('');
   const [photoDataUrl, setPhotoDataUrl] = useState<string | undefined>(undefined);
   const [photoFileName, setPhotoFileName] = useState<string>('');
+  const [compressedBlob, setCompressedBlob] = useState<Blob | null>(null);
+  const [compressionStats, setCompressionStats] = useState<{
+    originalSize: string;
+    compressedSize: string;
+    savedPercent: number;
+    dimensions: string;
+  } | null>(null);
+  const [isCompressing, setIsCompressing] = useState<boolean>(false);
+  const [uploadStatusText, setUploadStatusText] = useState<string | null>(null);
+  const [isLightboxOpen, setIsLightboxOpen] = useState<boolean>(false);
   const [honeypotUrl, setHoneypotUrl] = useState('');
 
   // Live clock for automatic timestamp display
@@ -126,68 +139,70 @@ export const PublicDriverReportPortal: React.FC = () => {
     ? trailers.find(t => t.id === matchedVehicle.assigned_trailer_id)
     : undefined;
 
-  // Compress & convert uploaded image to lightweight JPEG Data URL
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Compress & optimize uploaded image before storage upload (Max 1600px, ~200-400KB target)
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
       setErrorMsg(
         isRTL
-          ? 'يرجى اختيار ملف صورة صالح (JPG أو PNG).'
+          ? 'يرجى اختيار ملف صورة صالح (JPG أو PNG أو WEBP).'
           : 'Please select a valid image file (JPG, PNG, or WEBP).'
       );
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
+    // Accept up to 25 MB mobile photo before compression
+    if (file.size > 25 * 1024 * 1024) {
       setErrorMsg(
         isRTL
-          ? 'حجم الصورة كبير جداً (الحد الأقصى 10 ميجابايت).'
-          : 'Image file is too large (maximum 10 MB).'
+          ? 'حجم الصورة الأصلي كبير جداً (الحد الأقصى 25 ميجابايت قبل الضغط).'
+          : 'Original image is too large (maximum 25 MB before compression).'
       );
       return;
     }
 
     setErrorMsg(null);
+    setIsCompressing(true);
     setPhotoFileName(file.name);
 
-    const reader = new FileReader();
-    reader.onload = event => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const maxDim = 1024;
-        let width = img.width;
-        let height = img.height;
+    try {
+      // Downscale to max 1600px, high quality, target 200-400KB
+      const result = await compressImageFile(file, {
+        maxDimension: 1600,
+        quality: 0.82,
+        mimeType: 'image/jpeg',
+      });
 
-        if (width > height && width > maxDim) {
-          height = Math.round((height * maxDim) / width);
-          width = maxDim;
-        } else if (height > maxDim) {
-          width = Math.round((width * maxDim) / height);
-          height = maxDim;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, width, height);
-          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.78);
-          setPhotoDataUrl(compressedDataUrl);
-        } else {
-          setPhotoDataUrl(event.target?.result as string);
-        }
+      setPhotoDataUrl(result.dataUrl);
+      setCompressedBlob(result.blob);
+      setCompressionStats({
+        originalSize: formatFileSize(result.originalSizeBytes),
+        compressedSize: formatFileSize(result.compressedSizeBytes),
+        savedPercent: result.compressionRatioPercent,
+        dimensions: `${result.compressedWidth} × ${result.compressedHeight} px`,
+      });
+    } catch (err: any) {
+      console.warn('Advanced compression warning, falling back to standard reader:', err);
+      const reader = new FileReader();
+      reader.onload = event => {
+        setPhotoDataUrl(event.target?.result as string);
+        setCompressedBlob(file);
+        setCompressionStats(null);
       };
-      img.src = event.target?.result as string;
-    };
-    reader.readAsDataURL(file);
+      reader.readAsDataURL(file);
+    } finally {
+      setIsCompressing(false);
+    }
   };
 
   const handleRemovePhoto = () => {
     setPhotoDataUrl(undefined);
     setPhotoFileName('');
+    setCompressedBlob(null);
+    setCompressionStats(null);
+    setIsCompressing(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -238,14 +253,53 @@ export const PublicDriverReportPortal: React.FC = () => {
     }
 
     setIsSubmitting(true);
+    let finalPhotoUrl = photoDataUrl;
 
     try {
+      // 1. Upload compressed photo to Supabase storage bucket 'driver-issue-photos'
+      if (compressedBlob && isSupabaseConfigured) {
+        try {
+          setUploadStatusText(
+            isRTL
+              ? 'جاري رفع الصورة المضغوطة إلى خوادم أسطول نور...'
+              : 'Uploading optimized photo to fleet storage...'
+          );
+          const ext = compressedBlob.type === 'image/webp' ? 'webp' : 'jpg';
+          const randomSuffix = Math.random().toString(36).substring(2, 9);
+          const filePath = `reports/${new Date().getFullYear()}/${Date.now()}_${randomSuffix}.${ext}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('driver-issue-photos')
+            .upload(filePath, compressedBlob, {
+              contentType: compressedBlob.type || 'image/jpeg',
+              cacheControl: '3600',
+              upsert: true,
+            });
+
+          if (!uploadError) {
+            const { data: pubData } = supabase.storage
+              .from('driver-issue-photos')
+              .getPublicUrl(filePath);
+            if (pubData?.publicUrl) {
+              finalPhotoUrl = pubData.publicUrl;
+            }
+          } else {
+            console.warn('Storage bucket upload notice, falling back to data URL:', uploadError);
+          }
+        } catch (storageErr) {
+          console.warn('Storage bucket upload exception, falling back to data URL:', storageErr);
+        } finally {
+          setUploadStatusText(null);
+        }
+      }
+
+      // 2. Submit driver report with permanent photo URL
       const result = await submitPublicDriverReport({
         driver_name: driverName.trim(),
         plate_number: finalPlate,
         category,
         description: description.trim(),
-        photo_url: photoDataUrl,
+        photo_url: finalPhotoUrl,
         website_url: honeypotUrl,
       });
 
@@ -263,7 +317,7 @@ export const PublicDriverReportPortal: React.FC = () => {
           plateNumber: result.plate_number || finalPlate,
           category,
           submittedAt: result.submitted_at || new Date().toISOString(),
-          hasPhoto: Boolean(photoDataUrl),
+          hasPhoto: Boolean(finalPhotoUrl),
         });
       }
     } catch (err: any) {
@@ -273,6 +327,7 @@ export const PublicDriverReportPortal: React.FC = () => {
       );
     } finally {
       setIsSubmitting(false);
+      setUploadStatusText(null);
     }
   };
 
@@ -281,7 +336,10 @@ export const PublicDriverReportPortal: React.FC = () => {
     setDescription('');
     setPhotoDataUrl(undefined);
     setPhotoFileName('');
+    setCompressedBlob(null);
+    setCompressionStats(null);
     setErrorMsg(null);
+    setUploadStatusText(null);
   };
 
   return (
@@ -613,7 +671,17 @@ export const PublicDriverReportPortal: React.FC = () => {
                   </span>
                 </div>
 
-                {!photoDataUrl ? (
+                {isCompressing ? (
+                  <div className="flex flex-col items-center justify-center gap-2 p-6 rounded-xl border border-amber-300 bg-amber-50/60 text-center animate-pulse">
+                    <Loader2 className="w-6 h-6 text-amber-600 animate-spin" />
+                    <span className="text-xs font-bold text-amber-900">
+                      {isRTL ? 'جاري ضغط وتحسين الصورة للموبايل...' : 'Compressing & optimizing photo for mobile...'}
+                    </span>
+                    <span className="text-[11px] text-amber-700">
+                      {isRTL ? 'الحفاظ على وضوح تفاصيل العطل وتصغير الحجم' : 'Preserving damage details & reducing file size'}
+                    </span>
+                  </div>
+                ) : !photoDataUrl ? (
                   <label className="flex flex-col items-center justify-center gap-2 p-5 border-2 border-dashed border-slate-300 hover:border-amber-500 rounded-xl bg-slate-50/70 hover:bg-amber-50/30 transition cursor-pointer text-center">
                     <div className="w-11 h-11 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center">
                       <Camera className="w-5 h-5" />
@@ -623,7 +691,7 @@ export const PublicDriverReportPortal: React.FC = () => {
                         {isRTL ? 'اضغط لالتقاط صورة أو اختيارها من الهاتف' : 'Tap to take a photo or upload from phone'}
                       </span>
                       <span className="text-[11px] text-slate-400 block mt-0.5">
-                        JPG, PNG — {isRTL ? 'يتم ضغط الصورة تلقائياً' : 'Automatically optimized for mobile upload'}
+                        JPG, PNG — {isRTL ? 'يتم ضغط الصورة تلقائياً إلى ~200-400KB' : 'Auto-resized to max 1600px & compressed to ~200-400 KB'}
                       </span>
                     </div>
                     <input
@@ -635,29 +703,78 @@ export const PublicDriverReportPortal: React.FC = () => {
                     />
                   </label>
                 ) : (
-                  <div className="relative rounded-xl border border-slate-200 bg-slate-50 p-3 flex items-center gap-3">
-                    <img
-                      src={photoDataUrl}
-                      alt="Uploaded vehicle issue preview"
-                      className="w-20 h-20 object-cover rounded-lg border border-slate-200 shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-slate-900 truncate">
-                        {photoFileName || (isRTL ? 'صورة مرفقة' : 'Attached Issue Photo')}
-                      </p>
-                      <p className="text-[11px] text-emerald-700 font-semibold mt-0.5 flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        {isRTL ? 'جاهزة للإرسال مع البلاغ' : 'Ready to attach with report'}
-                      </p>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2.5">
+                    <div className="flex items-center gap-3">
+                      {/* Clickable Thumbnail to Open Lightbox */}
+                      <div
+                        onClick={() => setIsLightboxOpen(true)}
+                        className="group relative cursor-pointer w-20 h-20 rounded-lg overflow-hidden border border-slate-200 bg-slate-900 shrink-0 shadow-2xs"
+                        title={isRTL ? 'اضغط لتكبير الصورة ومعاينتها' : 'Click to preview full-screen photo'}
+                      >
+                        <img
+                          src={photoDataUrl}
+                          alt="Uploaded vehicle issue preview"
+                          className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/40 transition-all flex items-center justify-center">
+                          <ZoomIn className="w-5 h-5 text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md" />
+                        </div>
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-xs font-bold text-slate-900 truncate">
+                            {photoFileName || (isRTL ? 'صورة مرفقة' : 'Attached Issue Photo')}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setIsLightboxOpen(true)}
+                            className="text-[10px] font-bold text-amber-800 hover:text-amber-900 bg-amber-100 hover:bg-amber-200 px-1.5 py-0.5 rounded transition flex items-center gap-0.5 cursor-pointer shrink-0"
+                          >
+                            <Maximize2 className="w-2.5 h-2.5" />
+                            <span>{isRTL ? 'معاينة' : 'Preview'}</span>
+                          </button>
+                        </div>
+
+                        {/* File Size & Compression Ratio Badge */}
+                        {compressionStats ? (
+                          <div className="mt-1 space-y-0.5">
+                            <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
+                              <span className="text-slate-400 line-through">
+                                {compressionStats.originalSize}
+                              </span>
+                              <span className="font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded text-[10px]">
+                                {compressionStats.compressedSize} ({compressionStats.savedPercent}% smaller)
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-slate-400 block font-mono">
+                              {compressionStats.dimensions}
+                            </span>
+                          </div>
+                        ) : (
+                          <p className="text-[11px] text-emerald-700 font-semibold mt-0.5 flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            {isRTL ? 'جاهزة للإرسال مع البلاغ' : 'Ready to attach with report'}
+                          </p>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleRemovePhoto}
+                        className="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition cursor-pointer self-start"
+                        title={isRTL ? 'حذف الصورة' : 'Remove photo'}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleRemovePhoto}
-                      className="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition cursor-pointer"
-                      title={isRTL ? 'حذف الصورة' : 'Remove photo'}
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+
+                    <p className="text-[10px] text-slate-500 font-medium italic flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-amber-500 shrink-0" />
+                      {isRTL
+                        ? 'تم تحسين أبعاد وحجم الصورة تلقائياً لسرعة الإرسال مع الحفاظ على دقة تفاصيل العطل.'
+                        : 'Image optimized for fast mobile upload while keeping vehicle damage details crisp.'}
+                    </p>
                   </div>
                 )}
               </div>
@@ -682,13 +799,20 @@ export const PublicDriverReportPortal: React.FC = () => {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isCompressing}
                 className="w-full py-4 px-5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-base shadow-md shadow-amber-500/20 transition active:scale-[0.99] disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>{isRTL ? 'جاري إرسال البلاغ...' : 'Submitting Report...'}</span>
+                    <span>
+                      {uploadStatusText || (isRTL ? 'جاري إرسال البلاغ...' : 'Submitting Report...')}
+                    </span>
+                  </>
+                ) : isCompressing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>{isRTL ? 'جاري معالجة الصورة...' : 'Processing Photo...'}</span>
                   </>
                 ) : (
                   <>
@@ -701,6 +825,17 @@ export const PublicDriverReportPortal: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Driver Photo Preview Lightbox */}
+      {photoDataUrl && (
+        <ImageLightboxModal
+          isOpen={isLightboxOpen}
+          onClose={() => setIsLightboxOpen(false)}
+          imageUrl={photoDataUrl}
+          title={isRTL ? 'معاينة صورة العطل قبل الإرسال' : 'Incident Photo Preview'}
+          subtitle={photoFileName || (selectedPlate ? `Vehicle: ${selectedPlate}` : undefined)}
+        />
+      )}
 
       {/* Footer */}
       <footer className="max-w-xl mx-auto w-full px-4 py-4 text-center text-[11px] text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-slate-200/70">
