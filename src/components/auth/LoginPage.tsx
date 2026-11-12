@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  Flame, Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight, CheckCircle2, Globe, Sparkles, Shield
+  Flame, Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight, CheckCircle2, Globe, Shield
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
-import { UserRole } from '../../types';
 
 export const LoginPage: React.FC = () => {
-  const { signInWithEmail, signInWithPersona, isLoading, loginError, clearError } = useAuth();
+  const { signInWithEmail, isLoading, loginError, clearError } = useAuth();
   const { language, toggleLanguage, isRTL } = useI18n();
 
   const [email, setEmail] = useState('');
@@ -17,14 +16,34 @@ export const LoginPage: React.FC = () => {
   const [forgotPasswordSubmitted, setForgotPasswordSubmitted] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
 
+  // Rate-limiting / brute-force protection
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutTimer, setLockoutTimer] = useState(0);
+
+  useEffect(() => {
+    if (lockoutTimer <= 0) return;
+    const interval = setInterval(() => {
+      setLockoutTimer(prev => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [lockoutTimer]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
-    await signInWithEmail(email, password);
-  };
+    if (lockoutTimer > 0) return;
+    if (!email.trim() || !password) return;
 
-  const handleQuickDemo = (role: UserRole) => {
-    signInWithPersona(role);
+    const res = await signInWithEmail(email, password);
+    if (!res.success) {
+      const updatedCount = failedAttempts + 1;
+      setFailedAttempts(updatedCount);
+      if (updatedCount >= 5) {
+        setLockoutTimer(60);
+        setFailedAttempts(0);
+      }
+    } else {
+      setFailedAttempts(0);
+    }
   };
 
   return (
@@ -306,10 +325,22 @@ export const LoginPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Rate-limiting warning if locked out */}
+              {lockoutTimer > 0 && (
+                <div className="mt-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>
+                    {isRTL
+                      ? `تم قفل محاولات الدخول مؤقتاً لأسباب أمنية. يرجى الانتظار ${lockoutTimer} ثانية.`
+                      : `Too many failed attempts. Login temporarily locked for ${lockoutTimer}s.`}
+                  </span>
+                </div>
+              )}
+
               {/* Submit Button (Coral Red Gradient matching reference) */}
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || lockoutTimer > 0}
                 className="w-full mt-2 py-3 px-4 rounded-xl font-bold text-white text-xs sm:text-sm bg-gradient-to-r from-[#ff5266] to-[#f43f5e] hover:from-[#f43f5e] hover:to-[#e11d48] transition-all duration-200 shadow-md shadow-rose-500/30 active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isLoading ? (
@@ -317,6 +348,8 @@ export const LoginPage: React.FC = () => {
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     <span>{isRTL ? 'جاري التحقق...' : 'Signing in...'}</span>
                   </span>
+                ) : lockoutTimer > 0 ? (
+                  <span>{isRTL ? `مقفل (${lockoutTimer} ثانية)` : `Locked (${lockoutTimer}s)`}</span>
                 ) : (
                   <span>{isRTL ? 'دخول' : 'Log In'}</span>
                 )}
@@ -324,42 +357,19 @@ export const LoginPage: React.FC = () => {
             </form>
           </div>
 
-          {/* Quick Demo Access Bar */}
-          <div className="mt-6 pt-5 border-t border-slate-100">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-amber-500" />
-                {isRTL ? 'تجربة سريعة للأدوار:' : 'Quick Demo Access:'}
+          {/* Enterprise Security Notice */}
+          <div className="mt-6 pt-5 border-t border-slate-100 space-y-3">
+            <div className="flex items-center gap-2 text-[11px] text-slate-500">
+              <Shield className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span>
+                {isRTL 
+                  ? 'تسجيل دخول مشفّر ومحمي بصلاحيات الوصول المعتمدة (RBAC).' 
+                  : 'Encrypted corporate access with verified Role-Based Access Control (RBAC).'}
               </span>
-              <span className="text-[10px] text-slate-400 font-mono">1-Click</span>
-            </div>
-
-            <div className="grid grid-cols-3 gap-1.5">
-              <button
-                type="button"
-                onClick={() => handleQuickDemo('SUPER_ADMIN')}
-                className="px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-amber-50 hover:border-amber-300 text-slate-700 hover:text-amber-900 text-[11px] font-bold text-center transition cursor-pointer"
-              >
-                Super Admin
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickDemo('FLEET_MANAGER')}
-                className="px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-sky-50 hover:border-sky-300 text-slate-700 hover:text-sky-900 text-[11px] font-bold text-center transition cursor-pointer"
-              >
-                Fleet Manager
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickDemo('MANAGEMENT')}
-                className="px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-purple-50 hover:border-purple-300 text-slate-700 hover:text-purple-900 text-[11px] font-bold text-center transition cursor-pointer"
-              >
-                Management
-              </button>
             </div>
 
             {/* Public Driver Issue Reporting Portal Link (No Login Required) */}
-            <div className="mt-3 pt-3 border-t border-slate-100">
+            <div className="pt-1">
               <a
                 href="/driver-report"
                 className="w-full py-2 px-3 rounded-xl border border-amber-300/90 bg-amber-50/80 hover:bg-amber-100/90 text-amber-950 text-xs font-extrabold flex items-center justify-between transition shadow-2xs"
@@ -372,6 +382,7 @@ export const LoginPage: React.FC = () => {
                 <ArrowRight className={`w-3.5 h-3.5 text-amber-700 shrink-0 ${isRTL ? 'rotate-180' : ''}`} />
               </a>
             </div>
+          </div>
 
             {/* Bottom Footer Details */}
             <div className="mt-4 flex items-center justify-between text-[11px] text-slate-400">
@@ -380,7 +391,6 @@ export const LoginPage: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
 
       {/* Forgot Password Modal */}
       {isForgotPasswordOpen && (

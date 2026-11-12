@@ -14,7 +14,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', onOpenSearch, onToggleSidebar }) => {
-  const { currentProfile, activeRole, setPersonaRole, signOut } = useAuth();
+  const { currentProfile, activeRole, signOut } = useAuth();
   const { language, toggleLanguage, t, isRTL } = useI18n();
 
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -97,34 +97,11 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', onOpenS
           <span className="font-bold text-[11px]">{language === 'en' ? 'العربية' : 'English'}</span>
         </button>
 
-        {/* Persona Role Switcher */}
-        <div className="relative group">
-          <div className="flex items-center gap-1.5 rounded-lg border border-amber-300/80 bg-amber-50/80 px-2.5 py-1.5 text-xs font-bold text-amber-950 cursor-pointer hover:bg-amber-100/90 transition shadow-2xs">
-            <Shield className="w-3.5 h-3.5 text-amber-600" />
-            <span className="hidden sm:inline text-slate-600 font-normal">{t('roleLabel', 'Role:')}</span>
-            <span className="font-bold">{rolesList.find(r => r.role === activeRole)?.label}</span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
-          </div>
-
-          <div className="absolute right-0 rtl:right-auto rtl:left-0 mt-1 hidden group-hover:block w-60 rounded-xl border border-slate-200 bg-white p-2 shadow-xl z-50 animate-fade-in">
-            <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 mb-1">
-              {t('switchPersona', 'Switch Staff Role')}
-            </div>
-            {rolesList.map(r => (
-              <button
-                key={r.role}
-                onClick={() => setPersonaRole(r.role)}
-                className={`w-full flex items-center justify-between text-left rtl:text-right px-2.5 py-1.5 text-xs rounded-lg transition font-medium ${
-                  activeRole === r.role
-                    ? 'bg-amber-500 text-slate-950 font-bold shadow-2xs'
-                    : 'text-slate-700 hover:bg-slate-100'
-                }`}
-              >
-                <span>{r.label}</span>
-                {activeRole === r.role && <Check className="w-3.5 h-3.5 text-slate-950" />}
-              </button>
-            ))}
-          </div>
+        {/* Verified User Role Badge (Read-Only) */}
+        <div className="flex items-center gap-1.5 rounded-lg border border-slate-200/90 bg-slate-50/90 px-2.5 py-1.5 text-xs font-bold text-slate-800 shadow-2xs">
+          <Shield className="w-3.5 h-3.5 text-amber-600" />
+          <span className="hidden sm:inline text-slate-500 font-normal">{t('roleLabel', 'Role:')}</span>
+          <span className="font-bold text-amber-950">{rolesList.find(r => r.role === activeRole)?.label || activeRole}</span>
         </div>
 
         {/* Notifications */}

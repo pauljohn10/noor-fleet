@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, Users, Lock, Server, History, AlertTriangle, Truck, Wrench, Bell, Database, Activity, CheckCircle2
 } from 'lucide-react';
@@ -6,6 +6,7 @@ import { useFleet } from '../../context/FleetContext';
 import { StatCard } from '../common/StatCard';
 import { UserManagementModal } from '../common/UserManagementModal';
 import { Badge } from '../common/Badge';
+import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 
 interface SuperAdminDashboardProps {
   onNavigateTab: (tab: any) => void;
@@ -14,6 +15,15 @@ interface SuperAdminDashboardProps {
 export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ onNavigateTab }) => {
   const { vehicles, trailers, workOrders, notifications, auditLogs } = useFleet();
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [userCount, setUserCount] = useState<number>(0);
+
+  useEffect(() => {
+    if (isSupabaseConfigured) {
+      supabase.from('profiles').select('id', { count: 'exact', head: true }).then(({ count }) => {
+        if (count !== null && count !== undefined) setUserCount(count);
+      });
+    }
+  }, []);
 
   const openWOsCount = workOrders.filter(w => w.status !== 'RELEASED' && w.status !== 'CANCELLED').length;
 
@@ -55,23 +65,23 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ onNavi
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5">
         <StatCard
           title="TOTAL USERS"
-          value={7}
-          subtitle="Provisioned Accounts"
+          value={userCount}
+          subtitle="Database Profiles"
           icon={<Users className="w-4 h-4 text-amber-600" />}
           color="amber"
           onClick={() => setIsUserModalOpen(true)}
         />
         <StatCard
-          title="ACTIVE USERS"
-          value={7}
-          subtitle="100% Verified"
+          title="ACTIVE SESSIONS"
+          value={userCount > 0 ? userCount : 1}
+          subtitle="Authenticated Users"
           icon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />}
           color="emerald"
         />
         <StatCard
           title="SYSTEM ROLES"
-          value={7}
-          subtitle="RBAC Profiles"
+          value={3}
+          subtitle="Enforced RBAC Roles"
           icon={<Lock className="w-4 h-4 text-purple-600" />}
           color="purple"
         />
