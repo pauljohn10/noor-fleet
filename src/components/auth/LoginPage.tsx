@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Flame, Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight, CheckCircle2, Globe, Shield
+  Flame, Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight, CheckCircle2, Globe, Shield,
+  ShieldAlert, Sparkles, Loader2, X
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
+import { checkSetupStatus, bootstrapSuperAdmin } from '../../lib/adminUsersApi';
 
 export const LoginPage: React.FC = () => {
   const { signInWithEmail, isLoading, loginError, clearError } = useAuth();
@@ -15,6 +17,52 @@ export const LoginPage: React.FC = () => {
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
   const [forgotPasswordSubmitted, setForgotPasswordSubmitted] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
+
+  // Initial Super Admin Setup state (Active only when 0 Super Admins exist)
+  const [isSetupRequired, setIsSetupRequired] = useState<boolean>(false);
+  const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
+  const [setupFullName, setSetupFullName] = useState('');
+  const [setupEmail, setSetupEmail] = useState('');
+  const [setupPassword, setSetupPassword] = useState('');
+  const [setupDepartment, setSetupDepartment] = useState('Executive Management');
+  const [showSetupPassword, setShowSetupPassword] = useState(false);
+  const [isSettingUp, setIsSettingUp] = useState(false);
+  const [setupError, setSetupError] = useState<string | null>(null);
+
+  useEffect(() => {
+    checkSetupStatus().then((res) => {
+      setIsSetupRequired(res.setupRequired);
+    });
+  }, []);
+
+  const handleSetupSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!setupFullName.trim() || !setupEmail.trim() || !setupPassword) return;
+    if (setupPassword.length < 8) {
+      setSetupError('Password must be at least 8 characters long.');
+      return;
+    }
+
+    setIsSettingUp(true);
+    setSetupError(null);
+
+    const res = await bootstrapSuperAdmin({
+      fullName: setupFullName,
+      email: setupEmail,
+      password: setupPassword,
+      department: setupDepartment
+    });
+
+    if (res.success) {
+      setIsSetupRequired(false);
+      setIsSetupModalOpen(false);
+      // Auto login
+      await signInWithEmail(setupEmail, setupPassword);
+    } else {
+      setSetupError(res.error || 'Failed to initialize Super Admin.');
+    }
+    setIsSettingUp(false);
+  };
 
   // Rate-limiting / brute-force protection
   const [failedAttempts, setFailedAttempts] = useState(0);
@@ -256,6 +304,33 @@ export const LoginPage: React.FC = () => {
               </p>
             </div>
 
+            {/* First-Time System Setup Banner (Shown ONLY when 0 Super Admins exist) */}
+            {isSetupRequired && (
+              <div className="mb-5 p-3.5 bg-gradient-to-r from-amber-500/15 via-amber-400/10 to-amber-500/15 border-2 border-amber-400/80 rounded-2xl shadow-xs animate-pulse">
+                <div className="flex items-start gap-2.5">
+                  <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="text-xs font-black text-amber-950 uppercase tracking-wider">
+                      {isRTL ? 'تهيئة النظام لأول مرة مطلوبة' : 'Initial Super Admin Setup Required'}
+                    </h4>
+                    <p className="text-[11px] text-amber-900 font-medium mt-0.5 leading-snug">
+                      {isRTL
+                        ? 'لم يتم تسجيل أي حساب مشرف أعلى (Super Admin). اضغط أدناه لإنشاء حساب المشرف وتفعيل النظام.'
+                        : 'No Super Admin account exists in the database. Initialize your primary master account to activate the system.'}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setIsSetupModalOpen(true)}
+                      className="mt-2.5 w-full py-2 px-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span>{isRTL ? 'إنشاء حساب المشرف الأعلى الآن' : 'Initialize Super Admin Account'}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Error Banner */}
             {loginError && (
               <div className="mb-4 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start justify-between gap-2 animate-fade-in">
@@ -450,6 +525,136 @@ export const LoginPage: React.FC = () => {
                 {isRTL ? 'إغلاق' : 'Close'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* First-Time Super Admin Setup Modal */}
+      {isSetupModalOpen && isSetupRequired && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-fade-in [direction:ltr]">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shadow-md shadow-amber-400/20">
+                  <Shield className="w-5 h-5 fill-current" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900">Initialize Super Admin Account</h3>
+                  <p className="text-[11px] text-amber-800 font-bold">One-Time System Activation</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSetupModalOpen(false)}
+                className="text-slate-400 hover:text-slate-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="mt-3 p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-950 text-[11px] leading-relaxed">
+              <strong>Security Protocol:</strong> This master account has full authority over the fleet system and database. Once this first Super Admin is provisioned, this registration wizard will be permanently locked for all future visitors.
+            </div>
+
+            {setupError && (
+              <div className="mt-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>{setupError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSetupSubmit} className="mt-4 space-y-3.5">
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  Full Legal Name <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Faisal Al-Noor"
+                  value={setupFullName}
+                  onChange={(e) => setSetupFullName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  Corporate Email Address <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="e.g. admin@alnoortransport.com"
+                  value={setupEmail}
+                  onChange={(e) => setSetupEmail(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-mono text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  Master Password <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type={showSetupPassword ? 'text' : 'password'}
+                    required
+                    minLength={8}
+                    placeholder="Minimum 8 characters"
+                    value={setupPassword}
+                    onChange={(e) => setSetupPassword(e.target.value)}
+                    className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-slate-300 font-mono text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSetupPassword(!showSetupPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                  >
+                    {showSetupPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  Department
+                </label>
+                <input
+                  type="text"
+                  value={setupDepartment}
+                  onChange={(e) => setSetupDepartment(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsSetupModalOpen(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSettingUp}
+                  className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs rounded-xl shadow-md transition active:scale-95 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  {isSettingUp ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Activating System...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      <span>Activate & Sign In</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

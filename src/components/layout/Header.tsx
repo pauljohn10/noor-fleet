@@ -39,6 +39,12 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', onOpenS
   ];
 
   const getPageTitleAndBreadcrumb = (tab: NavItemKey) => {
+    if (tab === 'userManagement') {
+      return {
+        title: isRTL ? 'إدارة المستخدمين والأدوار' : 'USER & ROLE MANAGEMENT',
+        breadcrumb: isRTL ? 'إدارة النظام' : 'Administration'
+      };
+    }
     return {
       title: t(`title_${tab}`, tab.toUpperCase()),
       breadcrumb: t(`breadcrumb_${tab}`, 'Operations')

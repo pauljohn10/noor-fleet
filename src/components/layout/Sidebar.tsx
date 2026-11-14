@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   LayoutDashboard, Truck, Wrench, CalendarCheck, ShieldCheck, 
   Package, UserCheck, FileText, History, Flame, ChevronRight, ChevronDown, Settings, Layers,
-  Radio, Navigation, LogOut
+  Radio, Navigation, LogOut, Shield
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
@@ -24,6 +24,7 @@ export type NavItemKey =
   | 'documents'
   | 'analytics'
   | 'reports'
+  | 'userManagement'
   | 'auditLog';
 
 interface SidebarProps {
@@ -136,6 +137,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab, collap
         title: t('nav_admin', 'Administration'),
         icon: <Settings className="w-3.5 h-3.5 text-amber-400" />,
         items: [
+          { key: 'userManagement' as NavItemKey, label: t('userManagement', 'User & Role Management'), icon: <Shield className="w-3.5 h-3.5" /> },
           { key: 'auditLog' as NavItemKey, label: t('auditLog', 'Audit Trail Logs'), icon: <History className="w-3.5 h-3.5" /> }
         ]
       }] : [])

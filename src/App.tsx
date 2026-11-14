@@ -24,6 +24,7 @@ import { DocumentList } from './components/documents/DocumentList';
 import { CostAnalysisView } from './components/analytics/CostAnalysisView';
 import { ReportsCenter } from './components/reports/ReportsCenter';
 import { AuditLogView } from './components/audit/AuditLogView';
+import { UserManagementView } from './components/admin/UserManagementView';
 
 import { LiveFleetMap } from './components/telematics/LiveFleetMap';
 import { TripManager } from './components/telematics/TripManager';
@@ -131,6 +132,8 @@ export function AppContent() {
         return <CostAnalysisView />;
       case 'reports':
         return <ReportsCenter />;
+      case 'userManagement':
+        return activeRole === 'SUPER_ADMIN' ? <UserManagementView /> : renderRoleDashboard();
       case 'auditLog':
         return activeRole === 'SUPER_ADMIN' ? <AuditLogView /> : renderRoleDashboard();
       default:
