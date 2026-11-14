@@ -10,7 +10,7 @@ import {
   MaintenanceSchedule, VehicleInspection, VehicleDocument, 
   DefectReport, Trip, GpsDevice, VehicleGpsPing, FuelTransaction, 
   VehicleFuelBenchmark, TripFuelReconciliation, GpsSyncLog, 
-  AuditLog, NotificationItem, PartCategory
+  AuditLog, NotificationItem, PartCategory, SmallVehicle, SmallVehicleInput
 } from '../types';
 
 // ============================================================================
@@ -925,4 +925,85 @@ export async function fetchNotifications(): Promise<NotificationItem[]> {
     is_read: n.is_read ?? false,
     created_at: n.created_at || new Date().toISOString()
   })) as NotificationItem[];
+}
+
+// ============================================================================
+// 19. SMALL VEHICLES (DEDICATED TABLE: public.small_vehicles)
+// ============================================================================
+export async function fetchSmallVehicles(): Promise<SmallVehicle[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase
+    .from('small_vehicles')
+    .select('*')
+    .order('sn', { ascending: true });
+
+  if (error) {
+    console.error('[SupabaseFleet] Error fetching small_vehicles:', error.message);
+    return [];
+  }
+
+  return (data || []).map((sv: any) => ({
+    id: sv.id,
+    sn: Number(sv.sn) || 0,
+    plate_number: sv.plate_number || '',
+    vehicle_number: sv.vehicle_number || '',
+    model_year: sv.model_year ? Number(sv.model_year) : null,
+    brand: sv.brand || '',
+    driver_name: sv.driver_name || '',
+    department_location: sv.department_location || '',
+    created_at: sv.created_at || new Date().toISOString(),
+    updated_at: sv.updated_at || new Date().toISOString()
+  })) as SmallVehicle[];
+}
+
+export async function insertSmallVehicle(input: SmallVehicleInput): Promise<SmallVehicle> {
+  const payload: any = {
+    plate_number: input.plate_number.trim(),
+    vehicle_number: input.vehicle_number.trim(),
+    model_year: input.model_year ? Number(input.model_year) : null,
+    brand: input.brand?.trim() || null,
+    driver_name: input.driver_name?.trim() || null,
+    department_location: input.department_location?.trim() || null
+  };
+
+  const { data, error } = await supabase
+    .from('small_vehicles')
+    .insert([payload])
+    .select('*')
+    .single();
+
+  if (error) throw error;
+  return data as SmallVehicle;
+}
+
+export async function updateSmallVehicle(
+  id: string,
+  updates: Partial<SmallVehicleInput>
+): Promise<SmallVehicle> {
+  const payload: any = {};
+  if (updates.plate_number !== undefined) payload.plate_number = updates.plate_number.trim();
+  if (updates.vehicle_number !== undefined) payload.vehicle_number = updates.vehicle_number.trim();
+  if (updates.model_year !== undefined) payload.model_year = updates.model_year ? Number(updates.model_year) : null;
+  if (updates.brand !== undefined) payload.brand = updates.brand?.trim() || null;
+  if (updates.driver_name !== undefined) payload.driver_name = updates.driver_name?.trim() || null;
+  if (updates.department_location !== undefined) payload.department_location = updates.department_location?.trim() || null;
+
+  const { data, error } = await supabase
+    .from('small_vehicles')
+    .update(payload)
+    .eq('id', id)
+    .select('*')
+    .single();
+
+  if (error) throw error;
+  return data as SmallVehicle;
+}
+
+export async function deleteSmallVehicle(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('small_vehicles')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
 }

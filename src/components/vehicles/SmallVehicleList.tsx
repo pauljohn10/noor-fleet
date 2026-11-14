@@ -1,127 +1,70 @@
 import React, { useState } from 'react';
-import { Eye, Edit3, Trash2, Search, Plus, Car } from 'lucide-react';
+import { Eye, Edit3, Trash2, Search, Plus, Car, FileSpreadsheet, FileText } from 'lucide-react';
 import { useFleet } from '../../context/FleetContext';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
-import { VehicleFormModal } from './VehicleFormModal';
-import { VehicleDetailDrawer } from './VehicleDetailDrawer';
-import { Vehicle } from '../../types';
+import { SmallVehicleFormModal } from './SmallVehicleFormModal';
+import { SmallVehicleDetailDrawer } from './SmallVehicleDetailDrawer';
+import { SmallVehicle } from '../../types';
 import { exportToExcel, exportToPDFReport } from '../../lib/exportUtils';
 
-/* ── Status Tokens ─────────────────────────────────────────────── */
-const STATUS_META: Record<
-  string,
-  { text: string; stripe: string; label: string; labelAr: string }
-> = {
-  AVAILABLE:      { text: '#166534', stripe: '#16A34A', label: 'Available',       labelAr: 'متاح' },
-  ON_TRIP:        { text: '#1E40AF', stripe: '#2563EB', label: 'On trip',          labelAr: 'في رحلة' },
-  IN_WORKSHOP:    { text: '#92400E', stripe: '#D97706', label: 'In workshop',      labelAr: 'في الورشة' },
-  OUT_OF_SERVICE: { text: '#991B1B', stripe: '#DC2626', label: 'Out of service',   labelAr: 'خارج الخدمة' },
-  SOLD:           { text: '#6B665C', stripe: '#9CA3AF', label: 'Sold',             labelAr: 'مباع' },
-  RETIRED:        { text: '#6B665C', stripe: '#9CA3AF', label: 'Retired',          labelAr: 'متقاعد' },
-};
-
-const STATUS_TABS: { key: string; label: string; labelAr: string }[] = [
-  { key: 'ALL',            label: 'All',            labelAr: 'الكل' },
-  { key: 'AVAILABLE',      label: 'Available',      labelAr: 'متاح' },
-  { key: 'ON_TRIP',        label: 'On trip',        labelAr: 'في رحلة' },
-  { key: 'IN_WORKSHOP',    label: 'In workshop',    labelAr: 'في الورشة' },
-  { key: 'OUT_OF_SERVICE', label: 'Out of service', labelAr: 'خارج الخدمة' },
-];
-
-export const isSmallVehicleRecord = (v: Vehicle): boolean => {
-  return (
-    v.vehicle_type === 'SMALL_VEHICLE' ||
-    v.vehicle_id.startsWith('SV-') ||
-    Boolean(v.notes && v.notes.includes('Small Vehicles'))
-  );
-};
-
 export const SmallVehicleList: React.FC = () => {
-  const { vehicles, deleteVehicle, drivers } = useFleet();
+  const { smallVehicles, deleteSmallVehicle } = useFleet();
   const { hasPermission } = useAuth();
   const { isRTL } = useI18n();
 
-  const [search, setSearch]                 = useState('');
-  const [statusFilter, setStatusFilter]     = useState('ALL');
-  const [isFormOpen, setIsFormOpen]         = useState(false);
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
-  const [editingVehicle, setEditingVehicle]   = useState<Vehicle | undefined>(undefined);
+  const [search, setSearch] = useState('');
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState<SmallVehicle | null>(null);
+  const [editingVehicle, setEditingVehicle] = useState<SmallVehicle | null>(null);
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 20;
 
-  // Filter ONLY Small Vehicles records
-  const smallVehicles = vehicles.filter(isSmallVehicleRecord);
-
-  // Search & Status filtering
+  // Search filter across the 6 informative fields + Sn
   const filtered = smallVehicles.filter(v => {
-    const q = search.toLowerCase();
-    const assignedDriver = drivers.find(d => d.id === v.assigned_driver_id);
-    const driverName = assignedDriver?.full_name || '';
-
-    const matchesSearch =
-      v.vehicle_id.toLowerCase().includes(q) ||
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      String(v.sn).includes(q) ||
       v.plate_number.toLowerCase().includes(q) ||
-      v.fleet_number.toLowerCase().includes(q) ||
-      v.vin.toLowerCase().includes(q) ||
-      v.make.toLowerCase().includes(q) ||
-      v.model.toLowerCase().includes(q) ||
-      (v.department && v.department.toLowerCase().includes(q)) ||
-      (v.station_location && v.station_location.toLowerCase().includes(q)) ||
-      driverName.toLowerCase().includes(q);
-
-    const matchesStatus = statusFilter === 'ALL' || v.status === statusFilter;
-    return matchesSearch && matchesStatus;
+      v.vehicle_number.toLowerCase().includes(q) ||
+      (v.model_year && String(v.model_year).includes(q)) ||
+      (v.brand && v.brand.toLowerCase().includes(q)) ||
+      (v.driver_name && v.driver_name.toLowerCase().includes(q)) ||
+      (v.department_location && v.department_location.toLowerCase().includes(q))
+    );
   });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  // Status counts
-  const counts = STATUS_TABS.reduce<Record<string, number>>((acc, tab) => {
-    acc[tab.key] = tab.key === 'ALL'
-      ? smallVehicles.length
-      : smallVehicles.filter(v => v.status === tab.key).length;
-    return acc;
-  }, {});
-
-  // Exports
+  // Excel export using the 7 Excel reference columns
   const handleExportExcel = () => {
-    const data = filtered.map(v => {
-      const drv = drivers.find(d => d.id === v.assigned_driver_id);
-      return {
-        'Vehicle Number': v.vehicle_id,
-        'Plate Number': v.plate_number,
-        'Category': 'Small Vehicle',
-        'Brand': v.make,
-        'Model': v.model,
-        'Model Year': v.year,
-        'Driver Name': drv?.full_name || 'Unassigned',
-        'Department': v.department || '—',
-        'Location': v.station_location || '—',
-        'Status': v.status,
-        'Purchase Date': v.purchase_date || '—',
-        'Purchase Cost (SAR)': v.purchase_cost || 0,
-      };
-    });
+    const data = filtered.map(v => ({
+      'Sn': v.sn,
+      'Plate No.': v.plate_number,
+      'Vehicle Number': v.vehicle_number,
+      'Model Year': v.model_year || '—',
+      'Brand': v.brand || '—',
+      'Driver Name': v.driver_name || 'Unassigned / Standby',
+      'Dept. / Location': v.department_location || '—',
+      'Registered At': new Date(v.created_at).toLocaleDateString(),
+    }));
     exportToExcel(data, 'Noor_Fleet_Small_Vehicles_Master');
   };
 
+  // PDF report matching the 7 reference columns
   const handleExportPDF = () => {
-    const headers = ['Vehicle #', 'Plate Number', 'Brand', 'Model Year', 'Driver Name', 'Department', 'Location', 'Status'];
-    const rows = filtered.map(v => {
-      const drv = drivers.find(d => d.id === v.assigned_driver_id);
-      return [
-        v.vehicle_id,
-        v.plate_number,
-        v.make,
-        String(v.year),
-        drv ? drv.full_name : 'Unassigned',
-        v.department || '—',
-        v.station_location || '—',
-        v.status,
-      ];
-    });
+    const headers = ['Sn', 'Plate No.', 'Vehicle Number', 'Model Year', 'Brand', 'Driver Name', 'Dept. / Location'];
+    const rows = filtered.map(v => [
+      `#${v.sn}`,
+      v.plate_number,
+      v.vehicle_number,
+      v.model_year ? String(v.model_year) : '—',
+      v.brand || '—',
+      v.driver_name || 'Unassigned / Standby',
+      v.department_location || '—',
+    ]);
 
     exportToPDFReport(
       'Small Vehicles Master Register',
@@ -130,19 +73,32 @@ export const SmallVehicleList: React.FC = () => {
       'Small_Vehicles_Master_Register',
       {
         orientation: 'landscape',
-        subtitle: 'Official Registry of Commercial Service Vehicles, Pickups & Administration Transport',
+        subtitle: 'Official Registry of Commercial Service Vehicles, Pickups & Administration Transport (public.small_vehicles)',
         summaryKPIs: [
           { label: 'Total Registered', value: smallVehicles.length, color: 'slate' },
-          { label: 'Operational', value: smallVehicles.filter(v => v.status === 'AVAILABLE' || v.status === 'ON_TRIP').length, color: 'emerald' },
-          { label: 'In Workshop / Standby', value: smallVehicles.filter(v => v.status === 'IN_WORKSHOP' || v.status === 'OUT_OF_SERVICE').length, color: 'rose' },
+          { label: 'Assigned Drivers', value: smallVehicles.filter(v => v.driver_name && !v.driver_name.toLowerCase().includes('standby')).length, color: 'emerald' },
+          { label: 'Standby / Pool', value: smallVehicles.filter(v => !v.driver_name || v.driver_name.toLowerCase().includes('standby')).length, color: 'amber' },
         ],
         metadata: [
-          { label: 'Master Category', value: 'Small Vehicles / Utility Fleet' },
-          { label: 'Status Filter', value: statusFilter },
+          { label: 'Schema Table', value: 'public.small_vehicles (Independent Master)' },
           { label: 'Scope', value: `${filtered.length} vehicles listed` },
         ],
       }
     );
+  };
+
+  const handleDelete = async (v: SmallVehicle) => {
+    const confirmMsg = isRTL
+      ? `هل أنت متأكد من حذف المركبة ${v.vehicle_number} (لوحة: ${v.plate_number})؟`
+      : `Are you sure you want to delete small vehicle ${v.vehicle_number} (Plate: ${v.plate_number})?`;
+    if (window.confirm(confirmMsg)) {
+      try {
+        await deleteSmallVehicle(v.id);
+        if (selectedVehicle?.id === v.id) setSelectedVehicle(null);
+      } catch (err: any) {
+        alert(err?.message || 'Failed to delete vehicle.');
+      }
+    }
   };
 
   return (
@@ -151,37 +107,51 @@ export const SmallVehicleList: React.FC = () => {
       {/* Page Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h1 style={{
-            fontFamily: 'var(--font-brand)',
-            fontSize: 36,
-            fontWeight: 700,
-            letterSpacing: '-0.04em',
-            lineHeight: 1.05,
-            color: 'var(--color-ink)',
-            margin: 0,
-          }}>
-            {isRTL ? 'المركبات الصغيرة' : 'Small Vehicles'}
-            <br />
-            {isRTL ? 'أسطول الخدمات المساندة' : 'Service & Utility Fleet'}
-          </h1>
-          <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 8, maxWidth: 520, lineHeight: 1.5 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <h1 style={{
+              fontFamily: 'var(--font-brand)',
+              fontSize: 32,
+              fontWeight: 700,
+              letterSpacing: '-0.03em',
+              lineHeight: 1.1,
+              color: 'var(--color-ink)',
+              margin: 0,
+            }}>
+              {isRTL ? 'سجل المركبات الصغيرة' : 'Small Vehicles Master'}
+            </h1>
+            <span style={{
+              fontSize: 11,
+              fontWeight: 600,
+              padding: '3px 8px',
+              borderRadius: 4,
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-brand-accent)',
+              fontFamily: 'var(--font-mono)',
+            }}>
+              public.small_vehicles
+            </span>
+          </div>
+          <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 8, maxWidth: 620, lineHeight: 1.5 }}>
             {isRTL
-              ? 'السجل الرسمي للمركبات الصغيرة، سيارات الخدمة، سيارات الإدارة، وتوزيع السائقين والمواقع.'
-              : 'Dedicated master ledger for commercial light service vehicles, pickups, administrative cars, driver allocations and depot stations.'}
+              ? 'سجل مستقل مخصص لسيارات الخدمة، البيك آب، والسيارات الإدارية، منفصل تماماً عن سجل الشاحنات والمعدات الثقيلة.'
+              : 'Independent ledger dedicated exclusively to commercial light service vehicles, pickups, and administrative transport, completely separate from heavy commercial trucks.'}
           </p>
         </div>
 
         {/* Action Buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 4 }}>
-          <GhostBtn onClick={handleExportExcel} disabled={filtered.length === 0}>
-            {isRTL ? 'إكسل' : 'Excel'}
+          <GhostBtn onClick={handleExportExcel} disabled={filtered.length === 0} title={isRTL ? 'تصدير إكسل' : 'Export Excel'}>
+            <FileSpreadsheet size={14} style={{ marginRight: isRTL ? 0 : 6, marginLeft: isRTL ? 6 : 0 }} />
+            <span>{isRTL ? 'إكسل' : 'Excel'}</span>
           </GhostBtn>
-          <GhostBtn onClick={handleExportPDF} disabled={filtered.length === 0}>
-            {isRTL ? 'تقرير PDF' : 'PDF report'}
+          <GhostBtn onClick={handleExportPDF} disabled={filtered.length === 0} title={isRTL ? 'تصدير PDF' : 'Export PDF'}>
+            <FileText size={14} style={{ marginRight: isRTL ? 0 : 6, marginLeft: isRTL ? 6 : 0 }} />
+            <span>{isRTL ? 'تقرير PDF' : 'PDF Report'}</span>
           </GhostBtn>
           {hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER']) && (
             <button
-              onClick={() => { setEditingVehicle(undefined); setIsFormOpen(true); }}
+              onClick={() => { setEditingVehicle(null); setIsFormOpen(true); }}
               style={{
                 padding: '7px 16px',
                 background: 'var(--color-ink)',
@@ -193,76 +163,60 @@ export const SmallVehicleList: React.FC = () => {
                 cursor: 'pointer',
                 fontFamily: 'var(--font-ui)',
                 whiteSpace: 'nowrap',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
               }}
             >
-              {isRTL ? '+ إضافة مركبة صغيرة' : '+ Add small vehicle'}
+              <Plus size={15} />
+              <span>{isRTL ? 'إضافة مركبة صغيرة' : 'Add Small Vehicle'}</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* Status tabs row + search */}
+      {/* Search & Info Toolbar */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         borderBottom: '1px solid var(--color-row-divider)',
+        paddingBottom: 12,
         marginBottom: 0,
-        paddingBottom: 0,
         gap: 16,
       }}>
-        {/* Status Tabs */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 0, overflowX: 'auto' }}>
-          {STATUS_TABS.map(tab => {
-            const isActive = statusFilter === tab.key;
-            const meta = STATUS_META[tab.key];
-            return (
-              <button
-                key={tab.key}
-                onClick={() => { setStatusFilter(tab.key); setPage(1); }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: '10px 14px',
-                  fontSize: 13,
-                  fontWeight: isActive ? 600 : 400,
-                  color: isActive ? 'var(--color-ink)' : 'var(--color-text-secondary)',
-                  background: 'none',
-                  border: 'none',
-                  borderBottom: isActive ? '2px solid var(--color-ink)' : '2px solid transparent',
-                  cursor: 'pointer',
-                  fontFamily: 'var(--font-ui)',
-                  whiteSpace: 'nowrap',
-                  transition: 'color 0.12s',
-                  marginBottom: -1,
-                }}
-              >
-                {meta && (
-                  <span style={{
-                    display: 'inline-block',
-                    width: 8,
-                    height: 8,
-                    borderRadius: 2,
-                    background: meta.stripe,
-                    flexShrink: 0,
-                  }} />
-                )}
-                <span>{isRTL ? tab.labelAr : tab.label}</span>
-                <span style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 12,
-                  color: isActive ? 'var(--color-ink)' : 'var(--color-text-muted)',
-                }}>
-                  {counts[tab.key] ?? 0}
-                </span>
-              </button>
-            );
-          })}
+        {/* Left: Summary Pill */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{
+            fontSize: 13,
+            color: 'var(--color-text-secondary)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+          }}>
+            <span>{isRTL ? 'إجمالي المركبات:' : 'Total Registered:'}</span>
+            <span style={{
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 700,
+              color: 'var(--color-ink)',
+              padding: '2px 8px',
+              borderRadius: 4,
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+            }}>
+              {smallVehicles.length}
+            </span>
+          </div>
+
+          {search && (
+            <span style={{ fontSize: 12, color: 'var(--color-brand-accent)' }}>
+              {isRTL ? `(نتائج البحث: ${filtered.length})` : `(${filtered.length} matching)`}
+            </span>
+          )}
         </div>
 
-        {/* Search */}
-        <div style={{ position: 'relative', marginBottom: 4 }}>
+        {/* Right: Search */}
+        <div style={{ position: 'relative' }}>
           <Search
             size={13}
             style={{
@@ -276,11 +230,11 @@ export const SmallVehicleList: React.FC = () => {
           />
           <input
             type="text"
-            placeholder={isRTL ? 'الرقم، اللوحة، السائق، القسم، الموقع...' : 'Vehicle #, plate, driver, dept, location...'}
+            placeholder={isRTL ? 'بحث باللوحة، الرقم، الماركة، السائق...' : 'Search plate, vehicle #, brand, driver, dept...'}
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }}
             style={{
-              width: 270,
+              width: 290,
               padding: '7px 10px 7px 30px',
               fontSize: 13,
               fontFamily: 'var(--font-ui)',
@@ -296,32 +250,34 @@ export const SmallVehicleList: React.FC = () => {
         </div>
       </div>
 
-      {/* Table / Empty State */}
+      {/* Table: Exact 7 Columns from Excel Reference + Actions */}
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--color-row-divider)' }}>
               {[
-                { label: isRTL ? 'المركبة واللوحة' : 'Vehicle Number & Plate', align: 'start' as const },
-                { label: isRTL ? 'الماركة والموديل' : 'Brand & Model Year',     align: 'start' as const },
-                { label: isRTL ? 'اسم السائق' : 'Driver Name',                  align: 'start' as const },
-                { label: isRTL ? 'القسم' : 'Department',                        align: 'start' as const },
-                { label: isRTL ? 'الموقع' : 'Location',                         align: 'start' as const },
-                { label: isRTL ? 'الحالة' : 'Status',                           align: 'start' as const },
-                { label: '',                                                    align: 'end' as const },
+                { label: isRTL ? 'م (Sn)' : 'Sn',                          align: 'start' as const, width: '70px' },
+                { label: isRTL ? 'رقم اللوحة' : 'Plate No.',               align: 'start' as const, width: '150px' },
+                { label: isRTL ? 'رقم المركبة' : 'Vehicle Number',          align: 'start' as const, width: '140px' },
+                { label: isRTL ? 'سنة الصنع' : 'Model Year',               align: 'start' as const, width: '110px' },
+                { label: isRTL ? 'الماركة' : 'Brand',                      align: 'start' as const, width: '130px' },
+                { label: isRTL ? 'اسم السائق' : 'Driver Name',             align: 'start' as const, width: '180px' },
+                { label: isRTL ? 'القسم / الموقع' : 'Dept. / Location',    align: 'start' as const, width: 'auto' },
+                { label: isRTL ? 'إجراءات' : 'Actions',                    align: 'end' as const,   width: '110px' },
               ].map((col, i) => (
                 <th
                   key={i}
                   style={{
-                    padding: '10px 16px',
+                    padding: '12px 14px',
                     fontSize: 12,
-                    fontWeight: 500,
-                    color: 'var(--color-text-muted)',
+                    fontWeight: 600,
+                    color: 'var(--color-text-secondary)',
                     textAlign: col.align,
                     background: 'var(--color-page-bg)',
                     position: 'sticky',
-                    top: 52,
+                    top: 0,
                     whiteSpace: 'nowrap',
+                    width: col.width,
                   }}
                 >
                   {col.label}
@@ -332,48 +288,48 @@ export const SmallVehicleList: React.FC = () => {
           <tbody>
             {paged.length === 0 ? (
               <tr>
-                <td colSpan={7} style={{ padding: '72px 16px', textAlign: 'center' }}>
+                <td colSpan={8} style={{ padding: '72px 16px', textAlign: 'center' }}>
                   <div style={{
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    width: 48,
-                    height: 48,
-                    borderRadius: 4,
+                    width: 52,
+                    height: 52,
+                    borderRadius: 8,
                     background: 'var(--color-surface)',
                     border: '1px solid var(--color-border)',
                     color: 'var(--color-text-muted)',
-                    marginBottom: 12,
+                    marginBottom: 14,
                   }}>
-                    <Car size={24} />
+                    <Car size={26} />
                   </div>
                   <div style={{
-                    fontSize: 15,
+                    fontSize: 16,
                     fontWeight: 600,
                     color: 'var(--color-ink)',
                     marginBottom: 6,
                     fontFamily: 'var(--font-brand)',
                   }}>
-                    {search || statusFilter !== 'ALL'
+                    {search
                       ? (isRTL ? 'لا توجد مركبات صغيرة مطابقة لمعايير البحث' : 'No small vehicles match query criteria')
                       : (isRTL ? 'لا توجد مركبات صغيرة مسجلة حتى الآن' : 'No small vehicles registered yet')}
                   </div>
                   <p style={{
                     fontSize: 13,
                     color: 'var(--color-text-muted)',
-                    maxWidth: 420,
-                    margin: '0 auto 16px',
-                    lineHeight: 1.4,
+                    maxWidth: 460,
+                    margin: '0 auto 18px',
+                    lineHeight: 1.5,
                   }}>
-                    {search || statusFilter !== 'ALL'
-                      ? (isRTL ? 'حاول تغيير شروط الفلتر أو مسح البحث.' : 'Try adjusting your search query or status filter.')
+                    {search
+                      ? (isRTL ? 'حاول تغيير شروط البحث أو مسح الكلمات المدخلة.' : 'Try adjusting or clearing your search criteria.')
                       : (isRTL
-                          ? 'ابدأ بتسجيل سيارة خدمة جديدة أو بيك آب أو مركبة إدارية مباشرة في قاعدة البيانات.'
-                          : 'Register a new commercial light vehicle, service pickup or administration car directly into the Supabase database.')}
+                          ? 'السجل فارغ وجاهز لتسجيل أول مركبة صغيرة رسمية عبر النموذج المخصص.'
+                          : 'The small vehicles register is clean and empty. Click below to add an official small vehicle.')}
                   </p>
-                  {search || statusFilter !== 'ALL' ? (
+                  {search ? (
                     <button
-                      onClick={() => { setSearch(''); setStatusFilter('ALL'); }}
+                      onClick={() => setSearch('')}
                       style={{
                         fontSize: 13,
                         color: 'var(--color-brand-accent)',
@@ -384,13 +340,13 @@ export const SmallVehicleList: React.FC = () => {
                         textDecoration: 'underline',
                       }}
                     >
-                      {isRTL ? 'مسح الفلاتر والبحث' : 'Clear filters and search'}
+                      {isRTL ? 'مسح البحث' : 'Clear search'}
                     </button>
                   ) : hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER']) ? (
                     <button
-                      onClick={() => { setEditingVehicle(undefined); setIsFormOpen(true); }}
+                      onClick={() => { setEditingVehicle(null); setIsFormOpen(true); }}
                       style={{
-                        padding: '7px 16px',
+                        padding: '8px 18px',
                         background: 'var(--color-ink)',
                         color: 'var(--color-page-bg)',
                         border: 'none',
@@ -405,38 +361,30 @@ export const SmallVehicleList: React.FC = () => {
                       }}
                     >
                       <Plus size={14} />
-                      <span>{isRTL ? 'تسجيل مركبة صغيرة' : 'Register Small Vehicle'}</span>
+                      <span>{isRTL ? 'تسجيل مركبة صغيرة' : 'Add Small Vehicle'}</span>
                     </button>
                   ) : null}
                 </td>
               </tr>
             ) : (
-              paged.map(v => {
-                const driver = drivers.find(d => d.id === v.assigned_driver_id);
-                const meta = STATUS_META[v.status] || STATUS_META['AVAILABLE'];
-                return (
-                  <SmallVehicleRow
-                    key={v.id}
-                    v={v}
-                    driver={driver?.full_name}
-                    meta={meta}
-                    isRTL={isRTL}
-                    canEdit={hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER'])}
-                    canDelete={hasPermission(['SUPER_ADMIN'])}
-                    onView={() => setSelectedVehicle(v)}
-                    onEdit={() => { setEditingVehicle(v); setIsFormOpen(true); }}
-                    onDelete={() => {
-                      if (confirm(`Delete small vehicle ${v.vehicle_id}?`)) deleteVehicle(v.id);
-                    }}
-                  />
-                );
-              })
+              paged.map(v => (
+                <SmallVehicleRow
+                  key={v.id}
+                  v={v}
+                  isRTL={isRTL}
+                  canEdit={hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER'])}
+                  canDelete={hasPermission(['SUPER_ADMIN'])}
+                  onView={() => setSelectedVehicle(v)}
+                  onEdit={() => { setEditingVehicle(v); setIsFormOpen(true); }}
+                  onDelete={() => handleDelete(v)}
+                />
+              ))
             )}
           </tbody>
         </table>
       </div>
 
-      {/* Footer */}
+      {/* Pagination Footer */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -448,46 +396,60 @@ export const SmallVehicleList: React.FC = () => {
       }}>
         <span>
           {isRTL
-            ? `${filtered.length} من ${smallVehicles.length} مركبة صغيرة`
-            : `${filtered.length} of ${smallVehicles.length} small vehicles`}
+            ? `${filtered.length} من أصل ${smallVehicles.length} مركبة مسجلة`
+            : `${filtered.length} of ${smallVehicles.length} small vehicles registered`}
         </span>
         <div style={{ display: 'flex', gap: 8 }}>
           <GhostBtn onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}>
             {isRTL ? 'السابق' : 'Previous'}
           </GhostBtn>
+          <span style={{ display: 'inline-flex', alignItems: 'center', padding: '0 8px', fontSize: 12, fontFamily: 'var(--font-mono)' }}>
+            {page} / {totalPages}
+          </span>
           <GhostBtn onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>
             {isRTL ? 'التالي' : 'Next'}
           </GhostBtn>
         </div>
       </div>
 
-      {/* Modals */}
-      <VehicleFormModal
+      {/* Add / Edit Form Modal - STRICTLY 6 FIELDS */}
+      <SmallVehicleFormModal
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         initialVehicle={editingVehicle}
+        onSuccess={() => {
+          // Handled reactively by FleetContext
+        }}
       />
-      <VehicleDetailDrawer
+
+      {/* Vehicle Details Drawer - 7 REFERENCE FIELDS */}
+      <SmallVehicleDetailDrawer
         vehicle={selectedVehicle}
         isOpen={!!selectedVehicle}
         onClose={() => setSelectedVehicle(null)}
+        onEdit={v => {
+          setSelectedVehicle(null);
+          setEditingVehicle(v);
+          setIsFormOpen(true);
+        }}
+        onDelete={v => handleDelete(v)}
+        canEdit={hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER'])}
+        canDelete={hasPermission(['SUPER_ADMIN'])}
       />
     </div>
   );
 };
 
-/* ── Small Vehicle Row ─────────────────────────────────────────── */
+/* ── Small Vehicle Table Row (Strictly 7 Reference Columns + Hover Actions) ── */
 const SmallVehicleRow: React.FC<{
-  v: Vehicle;
-  driver?: string;
-  meta: { text: string; stripe: string; label: string; labelAr: string };
+  v: SmallVehicle;
   isRTL: boolean;
   canEdit: boolean;
   canDelete: boolean;
   onView: () => void;
   onEdit: () => void;
   onDelete: () => void;
-}> = ({ v, driver, meta, isRTL, canEdit, canDelete, onView, onEdit, onDelete }) => {
+}> = ({ v, isRTL, canEdit, canDelete, onView, onEdit, onDelete }) => {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -498,105 +460,120 @@ const SmallVehicleRow: React.FC<{
         borderBottom: '1px solid var(--color-row-divider)',
         background: hovered ? 'var(--color-row-hover)' : 'transparent',
         transition: 'background 0.12s',
-        minHeight: 76,
-        position: 'relative',
+        minHeight: 56,
       }}
     >
-      {/* 3px status stripe */}
-      <td style={{
-        width: 0,
-        padding: 0,
-        borderInlineStart: `3px solid ${meta.stripe}`,
-      }} />
+      {/* 1. Sn */}
+      <td style={{ padding: '12px 14px', verticalAlign: 'middle' }}>
+        <span style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: 12.5,
+          fontWeight: 600,
+          color: 'var(--color-text-secondary)',
+        }}>
+          #{v.sn}
+        </span>
+      </td>
 
-      {/* Vehicle column: plate chip + vehicle number */}
-      <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+      {/* 2. Plate No. */}
+      <td style={{ padding: '12px 14px', verticalAlign: 'middle' }}>
         <div style={{
           display: 'inline-flex',
           alignItems: 'center',
           border: '1.5px solid var(--color-ink)',
           borderRadius: 4,
           overflow: 'hidden',
-          marginBottom: 6,
           background: 'var(--color-surface)',
         }}>
-          <span style={{ width: 6, alignSelf: 'stretch', background: 'var(--color-brand-accent)', flexShrink: 0 }} />
+          <span style={{ width: 6, height: 22, background: 'var(--color-brand-accent)', flexShrink: 0 }} />
           <span style={{
             fontFamily: 'var(--font-mono)',
             fontSize: 13,
-            fontWeight: 500,
-            letterSpacing: '0.08em',
+            fontWeight: 600,
+            letterSpacing: '0.06em',
             color: 'var(--color-ink)',
-            padding: '4px 8px',
+            padding: '2px 8px',
             direction: 'ltr',
           }}>
             {v.plate_number}
           </span>
         </div>
-        <div style={{
+      </td>
+
+      {/* 3. Vehicle Number */}
+      <td style={{ padding: '12px 14px', verticalAlign: 'middle' }}>
+        <span style={{
           fontFamily: 'var(--font-mono)',
-          fontSize: 12,
-          color: 'var(--color-text-muted)',
+          fontSize: 13,
+          fontWeight: 600,
+          color: 'var(--color-ink)',
           direction: 'ltr',
-          letterSpacing: '0.03em',
         }}>
-          {v.vehicle_id}
-          {v.fleet_number && v.fleet_number !== v.vehicle_id ? ` · ${v.fleet_number}` : ''}
-        </div>
+          {v.vehicle_number}
+        </span>
       </td>
 
-      {/* Brand & Model Year */}
-      <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
-        <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-ink)' }}>{v.make}</div>
-        <div style={{ fontSize: 12.5, color: 'var(--color-text-muted)', marginTop: 2 }}>
-          {v.model} · <span style={{ fontFamily: 'var(--font-mono)' }}>{v.year}</span>
-        </div>
+      {/* 4. Model Year */}
+      <td style={{ padding: '12px 14px', verticalAlign: 'middle' }}>
+        <span style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: 13,
+          color: 'var(--color-ink)',
+        }}>
+          {v.model_year || '—'}
+        </span>
       </td>
 
-      {/* Driver Name */}
-      <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
-        {driver && !driver.includes('STANDBY') ? (
-          <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-ink)' }}>{driver}</span>
+      {/* 5. Brand */}
+      <td style={{ padding: '12px 14px', verticalAlign: 'middle' }}>
+        <span style={{
+          fontSize: 13,
+          fontWeight: 500,
+          color: 'var(--color-ink)',
+        }}>
+          {v.brand || '—'}
+        </span>
+      </td>
+
+      {/* 6. Driver Name */}
+      <td style={{ padding: '12px 14px', verticalAlign: 'middle' }}>
+        {v.driver_name && !v.driver_name.toLowerCase().includes('standby') ? (
+          <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-ink)' }}>
+            {v.driver_name}
+          </span>
         ) : (
-          <span style={{ fontSize: 13, color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+          <span style={{ fontSize: 12.5, color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
             {isRTL ? 'غير مخصص / احتياط' : 'Unassigned / Standby'}
           </span>
         )}
       </td>
 
-      {/* Department */}
-      <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
-        <span style={{ fontSize: 13, color: 'var(--color-ink)' }}>
-          {v.department || (isRTL ? 'العمليات' : 'Operations')}
-        </span>
-      </td>
-
-      {/* Location */}
-      <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+      {/* 7. Dept. / Location */}
+      <td style={{ padding: '12px 14px', verticalAlign: 'middle' }}>
         <span style={{
-          fontSize: 12,
-          fontWeight: 500,
+          fontSize: 12.5,
+          color: 'var(--color-ink)',
           padding: '2px 8px',
           borderRadius: 3,
           background: 'var(--color-page-bg)',
           border: '1px solid var(--color-border)',
-          color: 'var(--color-text-secondary)',
+          display: 'inline-block',
         }}>
-          {v.station_location || 'Najran'}
+          {v.department_location || '—'}
         </span>
       </td>
 
-      {/* Status */}
-      <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
-        <span style={{ fontSize: 13, fontWeight: 500, color: meta.text }}>
-          {isRTL ? meta.labelAr : meta.label}
-        </span>
-      </td>
-
-      {/* Row actions */}
-      <td style={{ padding: '14px 16px', verticalAlign: 'middle', textAlign: 'end', whiteSpace: 'nowrap' }}>
-        <div style={{ opacity: hovered ? 1 : 0, transition: 'opacity 0.12s', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
-          <RowAction icon={<Eye size={14} />} title={isRTL ? 'عرض' : 'View'} onClick={onView} />
+      {/* 8. Actions (Hover View, Edit, Delete) */}
+      <td style={{ padding: '12px 14px', verticalAlign: 'middle', textAlign: 'end', whiteSpace: 'nowrap' }}>
+        <div style={{
+          opacity: hovered ? 1 : 0.35,
+          transition: 'opacity 0.12s',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          gap: 4,
+        }}>
+          <RowAction icon={<Eye size={14} />} title={isRTL ? 'عرض التفاصيل' : 'View Details'} onClick={onView} />
           {canEdit && <RowAction icon={<Edit3 size={14} />} title={isRTL ? 'تعديل' : 'Edit'} onClick={onEdit} />}
           {canDelete && <RowAction icon={<Trash2 size={14} />} title={isRTL ? 'حذف' : 'Delete'} onClick={onDelete} danger />}
         </div>
@@ -641,22 +618,26 @@ const GhostBtn: React.FC<{
   children: React.ReactNode;
   onClick: () => void;
   disabled?: boolean;
-}> = ({ children, onClick, disabled }) => {
+  title?: string;
+}> = ({ children, onClick, disabled, title }) => {
   const [hovered, setHovered] = useState(false);
   return (
     <button
       onClick={onClick}
       disabled={disabled}
+      title={title}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
+        display: 'inline-flex',
+        alignItems: 'center',
         padding: '6px 12px',
         fontSize: 13,
         fontFamily: 'var(--font-ui)',
-        fontWeight: 400,
+        fontWeight: 500,
         color: disabled ? 'var(--color-text-muted)' : 'var(--color-text-secondary)',
         background: hovered && !disabled ? 'var(--color-sidebar-hover)' : 'transparent',
-        border: 'none',
+        border: '1px solid var(--color-border)',
         borderRadius: 4,
         cursor: disabled ? 'default' : 'pointer',
         transition: 'background 0.12s, color 0.12s',

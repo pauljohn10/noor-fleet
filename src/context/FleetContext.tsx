@@ -3,7 +3,8 @@ import {
   Vehicle, Trailer, Driver, Technician, WorkOrder, Part, 
   MaintenanceSchedule, PMStatus, VehicleInspection, VehicleDocument, 
   NotificationItem, AuditLog, WOStatus, DefectReport, DefectReportCategory, SeverityLevel,
-  GpsDevice, VehicleGpsPing, GpsSyncLog, Trip, VehicleFuelBenchmark, FuelTransaction, TripFuelReconciliation
+  GpsDevice, VehicleGpsPing, GpsSyncLog, Trip, VehicleFuelBenchmark, FuelTransaction, TripFuelReconciliation,
+  SmallVehicle, SmallVehicleInput
 } from '../types';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { LocalStorageRepository } from '../lib/storage';
@@ -18,6 +19,7 @@ interface DateRange {
 
 interface FleetContextType {
   vehicles: Vehicle[];
+  smallVehicles: SmallVehicle[];
   trailers: Trailer[];
   drivers: Driver[];
   technicians: Technician[];
@@ -55,6 +57,11 @@ interface FleetContextType {
   updateVehicle: (id: string, vehicle: Partial<Vehicle>) => Promise<Vehicle>;
   deleteVehicle: (id: string) => Promise<void>;
   
+  addSmallVehicle: (input: SmallVehicleInput) => Promise<SmallVehicle>;
+  updateSmallVehicle: (id: string, updates: Partial<SmallVehicleInput>) => Promise<SmallVehicle>;
+  deleteSmallVehicle: (id: string) => Promise<void>;
+  refreshSmallVehicles: () => Promise<void>;
+
   addTrailer: (trailer: Omit<Trailer, 'id' | 'created_at' | 'updated_at'>) => Promise<Trailer>;
   updateTrailer: (id: string, trailer: Partial<Trailer>) => Promise<Trailer>;
   deleteTrailer: (id: string) => Promise<void>;
@@ -119,6 +126,7 @@ const FleetContext = createContext<FleetContextType | undefined>(undefined);
 export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Pure Supabase states (Zero mock data)
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [smallVehicles, setSmallVehicles] = useState<SmallVehicle[]>([]);
   const [trailers, setTrailers] = useState<Trailer[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [technicians, setTechnicians] = useState<Technician[]>([]);
@@ -169,11 +177,12 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     try {
       const [
-        vehList, trlList, drvList, techList, partList,
+        vehList, smallVehList, trlList, drvList, techList, partList,
         woList, schedList, insList, docList, repList,
         tripList, devList, fuelList, auditList, notifList
       ] = await Promise.all([
         dbService.fetchVehicles().catch(err => { console.warn('Vehicles fetch:', err); return []; }),
+        dbService.fetchSmallVehicles().catch(err => { console.warn('SmallVehicles fetch:', err); return []; }),
         dbService.fetchTrailers().catch(err => { console.warn('Trailers fetch:', err); return []; }),
         dbService.fetchDrivers().catch(err => { console.warn('Drivers fetch:', err); return []; }),
         dbService.fetchTechnicians().catch(err => { console.warn('Technicians fetch:', err); return []; }),
@@ -191,6 +200,7 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       ]);
 
       setVehicles(vehList);
+      setSmallVehicles(smallVehList);
       setTrailers(trlList);
       setDrivers(drvList);
       setTechnicians(techList);
@@ -296,6 +306,55 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       target_id: id
     });
     await refreshData();
+  };
+
+  // ============================================================================
+  // ACTIONS: SMALL VEHICLES (DEDICATED TABLE: public.small_vehicles)
+  // ============================================================================
+  const refreshSmallVehicles = async (): Promise<void> => {
+    try {
+      const list = await dbService.fetchSmallVehicles();
+      setSmallVehicles(list);
+    } catch (err) {
+      console.warn('refreshSmallVehicles error:', err);
+    }
+  };
+
+  const addSmallVehicle = async (input: SmallVehicleInput): Promise<SmallVehicle> => {
+    const created = await dbService.insertSmallVehicle(input);
+    await dbService.insertAuditLog({
+      action: 'CREATE',
+      module: 'SMALL_VEHICLES',
+      performed_by: 'Staff',
+      target_id: created.vehicle_number,
+      details: created
+    });
+    setSmallVehicles(prev => [...prev, created].sort((a, b) => a.sn - b.sn));
+    return created;
+  };
+
+  const updateSmallVehicle = async (id: string, updates: Partial<SmallVehicleInput>): Promise<SmallVehicle> => {
+    const updated = await dbService.updateSmallVehicle(id, updates);
+    await dbService.insertAuditLog({
+      action: 'UPDATE',
+      module: 'SMALL_VEHICLES',
+      performed_by: 'Staff',
+      target_id: updated.vehicle_number,
+      details: updates
+    });
+    setSmallVehicles(prev => prev.map(v => v.id === id ? updated : v));
+    return updated;
+  };
+
+  const deleteSmallVehicle = async (id: string): Promise<void> => {
+    await dbService.deleteSmallVehicle(id);
+    await dbService.insertAuditLog({
+      action: 'DELETE',
+      module: 'SMALL_VEHICLES',
+      performed_by: 'Staff',
+      target_id: id
+    });
+    setSmallVehicles(prev => prev.filter(v => v.id !== id));
   };
 
   // ============================================================================
@@ -814,6 +873,7 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <FleetContext.Provider
       value={{
         vehicles,
+        smallVehicles,
         trailers,
         drivers,
         technicians,
@@ -842,6 +902,10 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addVehicle,
         updateVehicle,
         deleteVehicle,
+        addSmallVehicle,
+        updateSmallVehicle,
+        deleteSmallVehicle,
+        refreshSmallVehicles,
         addTrailer,
         updateTrailer,
         deleteTrailer,

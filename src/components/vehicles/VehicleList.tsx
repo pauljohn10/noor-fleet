@@ -43,9 +43,9 @@ export const VehicleList: React.FC = () => {
   const { hasPermission } = useAuth();
   const { isRTL } = useI18n();
 
-  const [search, setSearch]                 = useState('');
-  const [statusFilter, setStatusFilter]     = useState('ALL');
-  const [isFormOpen, setIsFormOpen]         = useState(false);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [editingVehicle, setEditingVehicle]   = useState<Vehicle | undefined>(undefined);
   const [page, setPage] = useState(1);

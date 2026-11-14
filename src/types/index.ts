@@ -61,6 +61,28 @@ export interface Vehicle {
   updated_at: string;
 }
 
+export interface SmallVehicle {
+  id: string;
+  sn: number;
+  plate_number: string;
+  vehicle_number: string;
+  model_year: number | null;
+  brand: string | null;
+  driver_name: string | null;
+  department_location: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type SmallVehicleInput = {
+  plate_number: string;
+  vehicle_number: string;
+  model_year?: number | null;
+  brand?: string | null;
+  driver_name?: string | null;
+  department_location?: string | null;
+};
+
 export interface Trailer {
   id: string;
   trailer_id: string;
