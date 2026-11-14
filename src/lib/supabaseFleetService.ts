@@ -771,16 +771,28 @@ export async function fetchDefectReports(): Promise<DefectReport[]> {
 }
 
 export async function updateDefectReportInDb(id: string, updates: Partial<DefectReport>): Promise<void> {
+  // Map frontend-normalized status values to the DB-canonical equivalents.
+  // 'NEW' and 'IN_PROGRESS' are UI shortcuts; the DB stores the richer values.
+  const STATUS_MAP: Record<string, string> = {
+    NEW:         'REPORTED',
+    IN_PROGRESS: 'WORK_ORDER_CREATED',
+    REJECTED:    'DUPLICATE',
+  };
+
   // Allowlist: only send columns that exist in the live DB schema.
-  // If a column is missing from the DB it causes a 400; keep this list
-  // in sync with supabase/migrations.
   const ALLOWED_COLUMNS: (keyof DefectReport)[] = [
     'status', 'workshop_response', 'fleet_manager_notes', 'action_taken',
     'work_order_id', 'assigned_maintenance_team', 'internal_notes', 'severity',
   ];
-  const safeUpdates = Object.fromEntries(
+  const safeUpdates: Record<string, unknown> = Object.fromEntries(
     Object.entries(updates).filter(([k]) => ALLOWED_COLUMNS.includes(k as keyof DefectReport))
   );
+
+  // Remap status if needed
+  if (safeUpdates.status && typeof safeUpdates.status === 'string') {
+    safeUpdates.status = STATUS_MAP[safeUpdates.status] ?? safeUpdates.status;
+  }
+
   const { error } = await supabase
     .from('defect_reports')
     .update({ ...safeUpdates, updated_at: new Date().toISOString() })

@@ -15,7 +15,7 @@ export interface Profile {
   created_at: string;
 }
 
-export type VehicleType = 'TRACTOR_HEAD' | 'TANKER_TRAILER' | 'OTHER';
+export type VehicleType = 'TRACTOR_HEAD' | 'TANKER_TRAILER' | 'OTHER' | 'SMALL_VEHICLE';
 
 export type VehicleStatus = 
   | 'AVAILABLE'

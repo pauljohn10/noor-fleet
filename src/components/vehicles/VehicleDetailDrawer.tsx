@@ -99,25 +99,25 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                 <p className="font-mono font-bold text-slate-900 text-sm mt-0.5">{(vehicle.current_mileage || 0).toLocaleString()} KM</p>
               </div>
               <div>
-                <p className="text-slate-500 font-bold uppercase text-[10px]">Engine Hours</p>
-                <p className="font-mono font-bold text-slate-900 text-sm mt-0.5">{(vehicle.current_engine_hours || 0).toLocaleString()} HRS</p>
+                <p className="text-slate-500 font-bold uppercase text-[10px]">Model Year</p>
+                <p className="font-mono font-bold text-slate-900 text-sm mt-0.5">{vehicle.year}</p>
               </div>
               <div>
-                <p className="text-slate-500 font-bold uppercase text-[10px]">Engine Serial</p>
-                <p className="font-mono text-slate-700 text-xs mt-0.5">{vehicle.engine_number || 'N/A'}</p>
+                <p className="text-slate-500 font-bold uppercase text-[10px]">Department</p>
+                <p className="text-slate-800 font-medium text-xs mt-0.5 truncate" title={vehicle.department}>{vehicle.department || 'Operations'}</p>
               </div>
               <div>
                 <p className="text-slate-500 font-bold uppercase text-[10px]">Color / Livery</p>
                 <p className="text-slate-800 font-medium text-xs mt-0.5">{vehicle.color}</p>
               </div>
               <div>
-                <p className="text-slate-500 font-bold uppercase text-[10px]">Current Depot</p>
+                <p className="text-slate-500 font-bold uppercase text-[10px]">Current Location</p>
                 <p className="text-slate-800 font-medium text-xs mt-0.5">{vehicle.station_location}</p>
               </div>
-                <div>
-                  <p className="text-slate-500 font-bold uppercase text-[10px]">Purchase Cost</p>
-                  <p className="font-mono font-bold text-emerald-700 text-xs mt-0.5">{(vehicle.purchase_cost || 0).toLocaleString()} SAR</p>
-                </div>
+              <div>
+                <p className="text-slate-500 font-bold uppercase text-[10px]">Purchase Cost</p>
+                <p className="font-mono font-bold text-emerald-700 text-xs mt-0.5">{(vehicle.purchase_cost || 0).toLocaleString()} SAR</p>
+              </div>
             </div>
 
             {/* Assignments Panel */}
@@ -134,7 +134,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                     <p className="text-[10px] text-amber-800 font-medium mt-1">Phone: {assignedDriver.phone}</p>
                   </div>
                 ) : (
-                  <p className="text-slate-400 italic">No driver assigned to this tractor head.</p>
+                  <p className="text-slate-400 italic">No driver assigned to this vehicle.</p>
                 )}
               </div>
 
@@ -150,7 +150,11 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                     <p className="text-[10px] text-slate-600 mt-1">{assignedTrailer.tank_type}</p>
                   </div>
                 ) : (
-                  <p className="text-slate-400 italic">No trailer currently coupled to this tractor head.</p>
+                  <p className="text-slate-400 italic">
+                    {vehicle.vehicle_id.startsWith('SV-') || vehicle.vehicle_type === 'SMALL_VEHICLE'
+                      ? 'Not applicable for small / service vehicles.'
+                      : 'No trailer currently coupled to this tractor head.'}
+                  </p>
                 )}
               </div>
             </div>
