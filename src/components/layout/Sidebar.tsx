@@ -1,13 +1,9 @@
-import React, { useState } from 'react';
-import { 
-  LayoutDashboard, Truck, Wrench, CalendarCheck, ShieldCheck, 
-  Package, UserCheck, FileText, History, Flame, ChevronRight, ChevronDown, Settings, Layers,
-  Radio, Navigation, LogOut, Shield
-} from 'lucide-react';
+import React from 'react';
+import { LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
 
-export type NavItemKey = 
+export type NavItemKey =
   | 'dashboard'
   | 'vehicles'
   | 'trailers'
@@ -33,255 +29,262 @@ interface SidebarProps {
   collapsed?: boolean;
 }
 
-interface NavSubItem {
+interface NavItem {
   key: NavItemKey;
   label: string;
-  icon: React.ReactNode;
+  labelAr: string;
 }
 
 interface NavGroup {
   id: string;
   title: string;
-  icon: React.ReactNode;
-  items: NavSubItem[];
+  titleAr: string;
+  items: NavItem[];
+  adminOnly?: boolean;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab, collapsed = false }) => {
+const NAV_GROUPS: NavGroup[] = [
+  {
+    id: 'telematics',
+    title: 'GPS & Telematics',
+    titleAr: 'GPS والتتبع',
+    items: [
+      { key: 'liveMap',        label: 'Live Vehicle Map',             labelAr: 'خريطة المركبات' },
+      { key: 'trips',          label: 'Trip Management',              labelAr: 'إدارة الرحلات' },
+      { key: 'fuelMonitoring', label: 'Fuel Consumption & Variance',  labelAr: 'استهلاك الوقود' },
+      { key: 'gpsSync',        label: 'GPS Sync & Diagnostics',       labelAr: 'تشخيص GPS' },
+    ],
+  },
+  {
+    id: 'fleet',
+    title: 'Fleet Management',
+    titleAr: 'إدارة الأسطول',
+    items: [
+      { key: 'vehicles',  label: 'Trucks Master',    labelAr: 'الشاحنات الرئيسية' },
+      { key: 'trailers',  label: 'Tanker Trailers',  labelAr: 'مقطورات الصهريج' },
+    ],
+  },
+  {
+    id: 'drivers',
+    title: 'Drivers & Roster',
+    titleAr: 'السائقون والجدول',
+    items: [
+      { key: 'drivers', label: 'Driver List & Assignments', labelAr: 'قائمة السائقين' },
+    ],
+  },
+  {
+    id: 'operations',
+    title: 'Operations',
+    titleAr: 'العمليات',
+    items: [
+      { key: 'inspections', label: 'Driver Reports Inbox',  labelAr: 'صندوق تقارير السائقين' },
+      { key: 'vehicles',    label: 'Vehicle Status Matrix', labelAr: 'مصفوفة حالة المركبات' },
+    ],
+  },
+  {
+    id: 'maintenance',
+    title: 'Maintenance',
+    titleAr: 'الصيانة',
+    items: [
+      { key: 'workOrders', label: 'Job Cards & Repair',   labelAr: 'بطاقات العمل والإصلاح' },
+      { key: 'preventive', label: 'Preventive Maint.',    labelAr: 'الصيانة الوقائية' },
+      { key: 'inventory',  label: 'Spare Parts Store',    labelAr: 'مخزن قطع الغيار' },
+    ],
+  },
+  {
+    id: 'documents',
+    title: 'Documents & Istimara',
+    titleAr: 'الوثائق والاستمارة',
+    items: [
+      { key: 'documents', label: 'Document Expiries', labelAr: 'انتهاء الوثائق' },
+    ],
+  },
+  {
+    id: 'reports',
+    title: 'Reports & Analytics',
+    titleAr: 'التقارير والتحليلات',
+    items: [
+      { key: 'reports',    label: 'Reports & Export',    labelAr: 'التقارير والتصدير' },
+      { key: 'analytics',  label: 'Fleet Cost Metrics',  labelAr: 'مقاييس تكلفة الأسطول' },
+    ],
+  },
+  {
+    id: 'admin',
+    title: 'Administration',
+    titleAr: 'الإدارة',
+    adminOnly: true,
+    items: [
+      { key: 'userManagement', label: 'User Management', labelAr: 'إدارة المستخدمين' },
+      { key: 'auditLog',       label: 'Audit Logs',      labelAr: 'سجلات التدقيق' },
+    ],
+  },
+];
+
+export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
   const { activeRole, currentProfile, signOut } = useAuth();
-  const { t, isRTL } = useI18n();
+  const { isRTL } = useI18n();
 
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
-    fleet: true,
-    telematics: true,
-    drivers: true,
-    operations: true,
-    maintenance: true,
-    documents: true,
-    reports: true,
-    admin: true,
-    driver_portal: true
-  });
+  const visibleGroups = NAV_GROUPS.filter(g => !g.adminOnly || activeRole === 'SUPER_ADMIN');
 
-  const toggleGroup = (groupId: string) => {
-    setOpenGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
+  const sidebarBase: React.CSSProperties = {
+    width: 224,
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    flexShrink: 0,
+    background: 'var(--color-page-bg)',
+    borderInlineEnd: '1px solid var(--color-border)',
+    userSelect: 'none',
+    fontFamily: 'var(--font-ui)',
+    overflowY: 'auto',
   };
-
-  const getERPNavGroups = (): NavGroup[] => {
-    return [
-      {
-        id: 'telematics',
-        title: t('nav_telematics', 'GPS & Telematics'),
-        icon: <Radio className="w-3.5 h-3.5 text-amber-400" />,
-        items: [
-          { key: 'liveMap', label: t('liveMap', 'Live Vehicle Map'), icon: <Radio className="w-3.5 h-3.5 text-emerald-400" /> },
-          { key: 'trips', label: t('trips', 'Trip Management'), icon: <Navigation className="w-3.5 h-3.5 text-amber-400" /> },
-          { key: 'fuelMonitoring', label: t('fuelMonitoring', 'Fuel Consumption & Variance'), icon: <Flame className="w-3.5 h-3.5 text-amber-500" /> },
-          { key: 'gpsSync', label: t('gpsSync', 'GPS Sync & Diagnostics'), icon: <Settings className="w-3.5 h-3.5 text-slate-400" /> }
-        ]
-      },
-      {
-        id: 'fleet',
-        title: t('nav_fleet', 'Fleet Management'),
-        icon: <Truck className="w-3.5 h-3.5 text-amber-400" />,
-        items: [
-          { key: 'vehicles', label: t('vehicles', 'Tractor Heads'), icon: <Truck className="w-3.5 h-3.5" /> },
-          { key: 'trailers', label: t('trailers', 'Fuel Tanker Trailers'), icon: <Truck className="w-3.5 h-3.5 text-sky-400" /> }
-        ]
-      },
-      {
-        id: 'drivers',
-        title: t('nav_drivers', 'Drivers & Roster'),
-        icon: <UserCheck className="w-3.5 h-3.5 text-amber-400" />,
-        items: [
-          { key: 'drivers', label: t('drivers_tab', 'Driver List & Assignments'), icon: <UserCheck className="w-3.5 h-3.5" /> }
-        ]
-      },
-      {
-        id: 'operations',
-        title: t('nav_operations', 'Operations'),
-        icon: <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />,
-        items: [
-          { key: 'inspections', label: t('inspections', 'Driver Reports Inbox'), icon: <ShieldCheck className="w-3.5 h-3.5 text-amber-400" /> },
-          { key: 'vehicles', label: t('status_matrix', 'Vehicle Status Matrix'), icon: <Layers className="w-3.5 h-3.5" /> }
-        ]
-      },
-      {
-        id: 'maintenance',
-        title: t('nav_maintenance', 'Maintenance'),
-        icon: <Wrench className="w-3.5 h-3.5 text-amber-400" />,
-        items: [
-          { key: 'workOrders', label: t('workOrders', 'Maintenance Records'), icon: <Wrench className="w-3.5 h-3.5" /> },
-          { key: 'preventive', label: t('preventive', 'Preventive Maintenance'), icon: <CalendarCheck className="w-3.5 h-3.5" /> },
-          { key: 'inventory', label: t('inventory', 'Parts Store & Inventory'), icon: <Package className="w-3.5 h-3.5" /> }
-        ]
-      },
-      {
-        id: 'documents',
-        title: t('nav_documents', 'Documents & Istimara'),
-        icon: <FileText className="w-3.5 h-3.5 text-amber-400" />,
-        items: [
-          { key: 'documents', label: t('documents', 'Vehicle Documents'), icon: <FileText className="w-3.5 h-3.5" /> }
-        ]
-      },
-      {
-        id: 'reports',
-        title: t('nav_reports', 'Reports & Analytics'),
-        icon: <FileText className="w-3.5 h-3.5 text-amber-400" />,
-        items: [
-          { key: 'reports', label: t('reports', 'Executive Reports'), icon: <FileText className="w-3.5 h-3.5" /> },
-          { key: 'analytics', label: t('analytics', 'Fleet Cost Metrics'), icon: <FileText className="w-3.5 h-3.5" /> }
-        ]
-      },
-      ...(activeRole === 'SUPER_ADMIN' ? [{
-        id: 'admin',
-        title: t('nav_admin', 'Administration'),
-        icon: <Settings className="w-3.5 h-3.5 text-amber-400" />,
-        items: [
-          { key: 'userManagement' as NavItemKey, label: t('userManagement', 'User & Role Management'), icon: <Shield className="w-3.5 h-3.5" /> },
-          { key: 'auditLog' as NavItemKey, label: t('auditLog', 'Audit Trail Logs'), icon: <History className="w-3.5 h-3.5" /> }
-        ]
-      }] : [])
-    ];
-  };
-
-  const navGroups = getERPNavGroups();
 
   return (
-    <aside className={`${collapsed ? 'w-16' : 'w-60'} bg-[#0a0f1d] border-r rtl:border-r-0 rtl:border-l border-slate-800/80 flex flex-col shrink-0 min-h-screen select-none transition-all duration-200`}>
-      {/* Enterprise Brand Header */}
-      <div className="flex items-center gap-2.5 px-4 h-14 border-b border-slate-800/90 bg-[#0d1424]">
-        <div className="p-1.5 rounded-lg bg-amber-400 text-slate-950 font-black shrink-0 shadow-md shadow-amber-400/20">
-          <Flame className="w-4 h-4 fill-current" />
+    <aside style={sidebarBase}>
+      {/* Brand */}
+      <div style={{
+        padding: '20px 16px 16px',
+        borderBottom: '1px solid var(--color-border)',
+      }}>
+        <div style={{
+          fontFamily: 'var(--font-brand)',
+          fontSize: 19,
+          fontWeight: 700,
+          letterSpacing: '-0.03em',
+          color: 'var(--color-ink)',
+          lineHeight: 1.1,
+        }}>
+          {isRTL ? 'النور المتحدة' : 'Al-Noor United'}
         </div>
-        {!collapsed && (
-          <div className="overflow-hidden">
-            <h1 className="text-xs font-black uppercase tracking-wider text-white leading-none truncate">
-              {t('companyName', 'AL-NOOR UNITED')}
-            </h1>
-            <p className="text-[9px] text-amber-400 font-bold mt-1 tracking-tight uppercase">
-              {t('systemSubtitle', 'FUEL TRANSPORT ERP')}
-            </p>
-          </div>
-        )}
+        <div style={{
+          fontSize: 11,
+          color: 'var(--color-text-muted)',
+          marginTop: 3,
+          fontFamily: 'var(--font-ui)',
+        }}>
+          {isRTL ? 'نظام نقل الوقود' : 'Fuel transport ERP'}
+        </div>
       </div>
 
-      {/* Navigation Links */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
-        {/* Single Dashboard button at top */}
-        <button
+      {/* Nav */}
+      <div style={{ flex: 1, padding: '8px 8px', overflowY: 'auto' }}>
+        {/* Dashboard standalone item */}
+        <NavBtn
+          label={isRTL ? 'لوحة القيادة' : 'Dashboard'}
+          isActive={activeTab === 'dashboard'}
           onClick={() => onSelectTab('dashboard')}
-          className={`w-full flex items-center justify-between px-3 py-2 text-xs font-bold transition rounded-lg ${
-            isRTL ? 'border-r-2' : 'border-l-2'
-          } ${
-            activeTab === 'dashboard'
-              ? 'bg-slate-800/90 text-amber-400 border-amber-400 font-bold shadow-xs'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800/50 border-transparent'
-          }`}
-        >
-          <div className="flex items-center gap-2.5">
-            <LayoutDashboard className="w-3.5 h-3.5 text-amber-400" />
-            {!collapsed && <span>{t('dashboard', 'Dashboard')}</span>}
-          </div>
-          {!collapsed && activeTab === 'dashboard' && (
-            <ChevronRight className={`w-3 h-3 text-amber-400 ${isRTL ? 'rotate-180' : ''}`} />
-          )}
-        </button>
+        />
 
-        <div className="border-t border-slate-800/60 my-1"></div>
+        <div style={{ height: 1, background: 'var(--color-border)', margin: '8px 0' }} />
 
-        {/* Expandable Navigation Groups */}
-        {navGroups.map(group => {
-          const isOpen = openGroups[group.id] ?? true;
-
-          return (
-            <div key={group.id} className="space-y-0.5">
-              {!collapsed ? (
-                <button
-                  onClick={() => toggleGroup(group.id)}
-                  className="w-full flex items-center justify-between px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 hover:text-slate-200 transition"
-                >
-                  <div className="flex items-center gap-1.5">
-                    {group.icon}
-                    <span>{group.title}</span>
-                  </div>
-                  {isOpen ? (
-                    <ChevronDown className="w-3 h-3 text-slate-500" />
-                  ) : (
-                    <ChevronRight className={`w-3 h-3 text-slate-500 ${isRTL ? 'rotate-180' : ''}`} />
-                  )}
-                </button>
-              ) : (
-                <div className="px-2 py-1 text-[9px] font-bold text-slate-500 text-center uppercase">
-                  {group.title.slice(0, 3)}
-                </div>
-              )}
-
-              {(isOpen || collapsed) && (
-                <div className="space-y-0.5">
-                  {group.items.map(item => {
-                    const isActive = activeTab === item.key;
-                    return (
-                      <button
-                        key={item.key}
-                        onClick={() => onSelectTab(item.key)}
-                        className={`w-full flex items-center justify-between px-3 py-1.5 text-xs font-medium transition rounded-lg ${
-                          isRTL ? 'border-r-2' : 'border-l-2'
-                        } ${
-                          isActive
-                            ? 'bg-slate-800/90 text-amber-400 border-amber-400 font-bold shadow-xs'
-                            : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/40 border-transparent'
-                        }`}
-                        title={item.label}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className={isActive ? 'text-amber-400' : 'text-slate-400'}>{item.icon}</span>
-                          {!collapsed && <span className="truncate">{item.label}</span>}
-                        </div>
-                        {!collapsed && isActive && (
-                          <ChevronRight className={`w-3 h-3 text-amber-400 shrink-0 ${isRTL ? 'rotate-180' : ''}`} />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+        {visibleGroups.map(group => (
+          <div key={group.id} style={{ marginBottom: 4 }}>
+            {/* Group label */}
+            <div style={{
+              fontSize: 11,
+              fontWeight: 500,
+              color: 'var(--color-text-muted)',
+              padding: '8px 8px 4px',
+              letterSpacing: '0.01em',
+              textTransform: 'none',
+            }}>
+              {isRTL ? group.titleAr : group.title}
             </div>
-          );
-        })}
+
+            {group.items.map(item => (
+              <NavBtn
+                key={`${group.id}-${item.key}`}
+                label={isRTL ? item.labelAr : item.label}
+                isActive={activeTab === item.key && group.id !== 'operations'}
+                onClick={() => onSelectTab(item.key)}
+              />
+            ))}
+          </div>
+        ))}
       </div>
 
-      {/* User Profile & Sign Out Footer */}
-      {!collapsed ? (
-        <div className="p-3 border-t border-slate-800/90 bg-[#0d1424] text-[11px] text-slate-400">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="font-bold text-slate-200 truncate max-w-[110px]">{currentProfile.full_name}</span>
-            <span className="text-amber-400 font-mono font-extrabold text-[9px] uppercase bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20">
-              {t(activeRole, activeRole.replace(/_/g, ' '))}
-            </span>
-          </div>
-          <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-800/70">
-            <p className="text-[10px] text-slate-500 font-mono">{t('dammamHub', 'ERP Terminal | Dammam')}</p>
-            <button
-              onClick={signOut}
-              className="text-rose-400 hover:text-rose-300 transition p-1 hover:bg-rose-950/40 rounded flex items-center gap-1 text-[10px] font-bold"
-              title="Sign Out"
-            >
-              <LogOut className="w-3 h-3" />
-              <span>{isRTL ? 'خروج' : 'Exit'}</span>
-            </button>
-          </div>
+      {/* Footer — user + sign out */}
+      <div style={{
+        padding: '12px 12px',
+        borderTop: '1px solid var(--color-border)',
+        fontSize: 12,
+      }}>
+        <div style={{
+          color: 'var(--color-ink)',
+          fontWeight: 500,
+          marginBottom: 2,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}>
+          {currentProfile.full_name}
         </div>
-      ) : (
-        <div className="p-2 border-t border-slate-800/90 bg-[#0d1424] flex justify-center">
-          <button
-            onClick={signOut}
-            className="text-rose-400 hover:text-rose-300 p-2 rounded hover:bg-rose-950/40 transition"
-            title="Sign Out"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+        <div style={{ color: 'var(--color-text-muted)', fontSize: 11, marginBottom: 8 }}>
+          {activeRole.replace(/_/g, ' ')}
         </div>
-      )}
+        <button
+          onClick={signOut}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: 12,
+            color: 'var(--color-text-muted)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '4px 0',
+            transition: 'color 0.15s',
+            fontFamily: 'var(--font-ui)',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.color = 'var(--color-ink)')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'var(--color-text-muted)')}
+        >
+          <LogOut size={13} />
+          <span>{isRTL ? 'خروج' : 'Sign out'}</span>
+        </button>
+      </div>
     </aside>
+  );
+};
+
+/* ── Reusable nav button ── */
+const NavBtn: React.FC<{
+  label: string;
+  isActive: boolean;
+  onClick: () => void;
+}> = ({ label, isActive, onClick }) => {
+  const [hovered, setHovered] = React.useState(false);
+
+  const style: React.CSSProperties = {
+    display: 'block',
+    width: '100%',
+    textAlign: 'start',
+    padding: '6px 8px',
+    borderRadius: 4,
+    fontSize: 13.5,
+    fontWeight: isActive ? 600 : 400,
+    fontFamily: 'var(--font-ui)',
+    cursor: 'pointer',
+    border: 'none',
+    transition: 'background 0.12s, color 0.12s',
+    color: isActive ? 'var(--color-page-bg)' : 'var(--color-ink)',
+    background: isActive
+      ? 'var(--color-ink)'
+      : hovered
+      ? 'var(--color-sidebar-hover)'
+      : 'transparent',
+    marginBottom: 1,
+  };
+
+  return (
+    <button
+      style={style}
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {label}
+    </button>
   );
 };

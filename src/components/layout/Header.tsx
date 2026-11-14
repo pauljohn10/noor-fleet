@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Globe, Shield, ChevronDown, ChevronRight, Menu, LogOut, User, Check, Users } from 'lucide-react';
+import { Bell, Users, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
 import { NotificationCenter } from '../common/NotificationCenter';
-import { UserRole } from '../../types';
 import { NavItemKey } from './Sidebar';
 import { UserManagementModal } from '../common/UserManagementModal';
 
@@ -13,15 +12,53 @@ interface HeaderProps {
   onToggleSidebar?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', onOpenSearch, onToggleSidebar }) => {
-  const { currentProfile, activeRole, signOut } = useAuth();
-  const { language, toggleLanguage, t, isRTL } = useI18n();
+/** Map a NavItemKey to a human-readable breadcrumb + page segment */
+const getBreadcrumb = (tab: NavItemKey, isRTL: boolean): { section: string; page: string } => {
+  const map: Partial<Record<NavItemKey, { section: string; sectionAr: string; page: string; pageAr: string }>> = {
+    dashboard:      { section: 'Home',         sectionAr: 'الرئيسية',    page: 'Dashboard',               pageAr: 'لوحة القيادة' },
+    vehicles:       { section: 'Operations',   sectionAr: 'العمليات',    page: 'Vehicles',                pageAr: 'المركبات' },
+    trailers:       { section: 'Operations',   sectionAr: 'العمليات',    page: 'Trailers',                pageAr: 'المقطورات' },
+    liveMap:        { section: 'GPS',          sectionAr: 'GPS',         page: 'Live Map',                pageAr: 'الخريطة المباشرة' },
+    trips:          { section: 'GPS',          sectionAr: 'GPS',         page: 'Trip Management',         pageAr: 'إدارة الرحلات' },
+    fuelMonitoring: { section: 'GPS',          sectionAr: 'GPS',         page: 'Fuel Consumption',        pageAr: 'استهلاك الوقود' },
+    gpsSync:        { section: 'GPS',          sectionAr: 'GPS',         page: 'GPS Diagnostics',         pageAr: 'تشخيص GPS' },
+    drivers:        { section: 'Operations',   sectionAr: 'العمليات',    page: 'Drivers',                 pageAr: 'السائقون' },
+    inspections:    { section: 'Operations',   sectionAr: 'العمليات',    page: 'Reports Inbox',           pageAr: 'صندوق التقارير' },
+    workOrders:     { section: 'Maintenance',  sectionAr: 'الصيانة',     page: 'Job Cards',               pageAr: 'بطاقات العمل' },
+    preventive:     { section: 'Maintenance',  sectionAr: 'الصيانة',     page: 'Preventive',              pageAr: 'الصيانة الوقائية' },
+    inventory:      { section: 'Maintenance',  sectionAr: 'الصيانة',     page: 'Spare Parts',             pageAr: 'قطع الغيار' },
+    documents:      { section: 'Documents',    sectionAr: 'الوثائق',     page: 'Document Expiries',       pageAr: 'انتهاء الوثائق' },
+    reports:        { section: 'Analytics',    sectionAr: 'التحليلات',   page: 'Reports & Export',        pageAr: 'التقارير والتصدير' },
+    analytics:      { section: 'Analytics',    sectionAr: 'التحليلات',   page: 'Fleet Cost Metrics',      pageAr: 'مقاييس التكلفة' },
+    userManagement: { section: 'Admin',        sectionAr: 'الإدارة',     page: 'User Management',         pageAr: 'إدارة المستخدمين' },
+    auditLog:       { section: 'Admin',        sectionAr: 'الإدارة',     page: 'Audit Logs',              pageAr: 'سجلات التدقيق' },
+  };
+  const entry = map[tab];
+  if (!entry) return { section: 'ERP', page: tab };
+  return {
+    section: isRTL ? entry.sectionAr : entry.section,
+    page:    isRTL ? entry.pageAr    : entry.page,
+  };
+};
 
+const roleLabel = (role: string, isRTL: boolean) => {
+  const map: Record<string, { en: string; ar: string }> = {
+    SUPER_ADMIN:   { en: 'Super Admin',    ar: 'مدير النظام' },
+    FLEET_MANAGER: { en: 'Fleet Manager',  ar: 'مدير الأسطول' },
+    MANAGEMENT:    { en: 'Management',     ar: 'الإدارة' },
+  };
+  const entry = map[role];
+  if (!entry) return role;
+  return isRTL ? entry.ar : entry.en;
+};
+
+export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', onOpenSearch }) => {
+  const { currentProfile, activeRole, signOut } = useAuth();
+  const { language, toggleLanguage, isRTL } = useI18n();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
-  // Close profile menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
@@ -32,155 +69,163 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', onOpenS
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const rolesList: { role: UserRole; label: string }[] = [
-    { role: 'SUPER_ADMIN', label: t('SUPER_ADMIN', 'Super Admin') },
-    { role: 'FLEET_MANAGER', label: t('FLEET_MANAGER', 'Fleet Manager') },
-    { role: 'MANAGEMENT', label: t('MANAGEMENT', 'Management') }
-  ];
+  const { section, page } = getBreadcrumb(activeTab, isRTL);
 
-  const getPageTitleAndBreadcrumb = (tab: NavItemKey) => {
-    if (tab === 'userManagement') {
-      return {
-        title: isRTL ? 'إدارة المستخدمين والأدوار' : 'USER & ROLE MANAGEMENT',
-        breadcrumb: isRTL ? 'إدارة النظام' : 'Administration'
-      };
-    }
-    return {
-      title: t(`title_${tab}`, tab.toUpperCase()),
-      breadcrumb: t(`breadcrumb_${tab}`, 'Operations')
-    };
+  const headerStyle: React.CSSProperties = {
+    position: 'sticky',
+    top: 0,
+    zIndex: 30,
+    height: 52,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0 20px',
+    background: 'var(--color-page-bg)',
+    borderBottom: '1px solid var(--color-border)',
+    fontFamily: 'var(--font-ui)',
+    flexShrink: 0,
   };
 
-  const pageInfo = getPageTitleAndBreadcrumb(activeTab);
+  const ghostBtnStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 4,
+    padding: '5px 10px',
+    fontSize: 13,
+    color: 'var(--color-text-secondary)',
+    background: 'none',
+    border: 'none',
+    borderRadius: 4,
+    cursor: 'pointer',
+    fontFamily: 'var(--font-ui)',
+    transition: 'background 0.12s',
+    whiteSpace: 'nowrap' as const,
+  };
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200/90 bg-white/95 backdrop-blur-md px-4 shadow-2xs text-xs">
-      {/* Left side: Sidebar Toggle, ERP Breadcrumb & Operational Title */}
-      <div className="flex items-center gap-3">
-        {onToggleSidebar && (
-          <button
-            onClick={onToggleSidebar}
-            className="p-1.5 rounded-lg border border-slate-200 bg-slate-50/80 text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition active:scale-95"
-            title="Toggle Menu"
-          >
-            <Menu className="w-4 h-4" />
-          </button>
-        )}
-
-        <div>
-          <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500 uppercase tracking-tight">
-            <span>{isRTL ? 'المنظومة' : 'ERP'}</span>
-            <ChevronRight className={`w-3 h-3 text-slate-400 ${isRTL ? 'rotate-180' : ''}`} />
-            <span className="text-amber-600 font-bold">{pageInfo.breadcrumb}</span>
-          </div>
-          <h1 className="text-sm font-extrabold text-slate-900 leading-none mt-0.5 tracking-tight">
-            {pageInfo.title}
-          </h1>
-        </div>
+    <header style={headerStyle}>
+      {/* Left — breadcrumb */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+        <span style={{ color: 'var(--color-text-muted)' }}>{section}</span>
+        <span style={{ color: 'var(--color-text-muted)' }}>/</span>
+        <span style={{ color: 'var(--color-ink)', fontWeight: 500 }}>{page}</span>
       </div>
 
-      {/* Center & Right: Global Search, Role Switcher, RTL, Notifications, Profile */}
-      <div className="flex items-center gap-2 sm:gap-2.5">
-        {/* Global Search Button */}
+      {/* Right — actions */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        {/* Search */}
         <button
           onClick={onOpenSearch}
-          className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50/90 px-3 py-1.5 text-xs text-slate-600 hover:border-slate-300 hover:bg-slate-100 transition shadow-2xs w-36 sm:w-64"
+          style={{
+            ...ghostBtnStyle,
+            border: '1px solid var(--color-input-border)',
+            background: 'var(--color-surface)',
+            borderRadius: 4,
+            padding: '5px 12px',
+            gap: 8,
+            width: 200,
+            justifyContent: 'space-between',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--color-text-muted)')}
+          onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--color-input-border)')}
         >
-          <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-          <span className="truncate">{t('searchPlaceholder', 'Search vehicle, WO#, driver, VIN...')}</span>
-          <kbd className="ml-auto hidden rounded border border-slate-200 bg-white px-1 py-0.5 text-[9px] font-mono font-bold text-slate-400 sm:inline-block shadow-2xs">
+          <span style={{ color: 'var(--color-text-muted)' }}>
+            {isRTL ? 'ابحث عن أي شيء' : 'Search anything'}
+          </span>
+          <kbd style={{
+            fontSize: 11,
+            fontFamily: 'var(--font-mono)',
+            color: 'var(--color-text-muted)',
+            background: 'var(--color-page-bg)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 3,
+            padding: '1px 4px',
+          }}>
             ⌘K
           </kbd>
         </button>
 
-        {/* Language/RTL Switcher */}
+        {/* Language toggle */}
         <button
           onClick={toggleLanguage}
-          className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50/80 px-2.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 hover:border-slate-300 transition shadow-2xs"
-          title={t('langToggleTitle')}
+          style={ghostBtnStyle}
+          onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-sidebar-hover)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'none')}
         >
-          <Globe className="w-3.5 h-3.5 text-sky-600" />
-          <span className="font-bold text-[11px]">{language === 'en' ? 'العربية' : 'English'}</span>
+          {language === 'en' ? 'العربية' : 'English'}
         </button>
 
-        {/* Verified User Role Badge (Read-Only) */}
-        <div className="flex items-center gap-1.5 rounded-lg border border-slate-200/90 bg-slate-50/90 px-2.5 py-1.5 text-xs font-bold text-slate-800 shadow-2xs">
-          <Shield className="w-3.5 h-3.5 text-amber-600" />
-          <span className="hidden sm:inline text-slate-500 font-normal">{t('roleLabel', 'Role:')}</span>
-          <span className="font-bold text-amber-950">{rolesList.find(r => r.role === activeRole)?.label || activeRole}</span>
-        </div>
+        {/* Role */}
+        <span style={{
+          fontSize: 13,
+          color: 'var(--color-text-secondary)',
+          padding: '0 6px',
+        }}>
+          {roleLabel(activeRole, isRTL)}
+        </span>
 
         {/* Notifications */}
         <NotificationCenter />
 
-        {/* User Profile Menu */}
-        <div className="relative pl-1 rtl:pl-0 rtl:pr-1 border-l rtl:border-l-0 rtl:border-r border-slate-200" ref={profileMenuRef}>
+        {/* Profile menu */}
+        <div style={{ position: 'relative' }} ref={profileMenuRef}>
           <button
             onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-            className="flex items-center gap-2 p-1 rounded-lg hover:bg-slate-100 transition active:scale-95"
-            title="User Profile Menu"
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 4,
+              border: '1px solid var(--color-border)',
+              background: 'var(--color-surface)',
+              color: 'var(--color-ink)',
+              fontWeight: 600,
+              fontSize: 13,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontFamily: 'var(--font-ui)',
+            }}
+            title={currentProfile.full_name}
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-slate-900 to-slate-800 text-amber-400 font-bold text-xs shadow-xs border border-slate-700">
-              {currentProfile.full_name.charAt(0)}
-            </div>
-            <div className="hidden lg:block text-left rtl:text-right">
-              <p className="text-xs font-bold text-slate-900 leading-none">{currentProfile.full_name}</p>
-              <p className="text-[10px] text-slate-500 font-medium leading-none mt-1 truncate max-w-[120px]">
-                {isRTL ? 'لوجستيات نقل الوقود' : currentProfile.department}
-              </p>
-            </div>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
+            {currentProfile.full_name.charAt(0)}
           </button>
 
-          {/* Profile Dropdown Menu */}
           {isProfileMenuOpen && (
-            <div className="absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-2 shadow-xl z-50 animate-fade-in">
-              {/* User details header */}
-              <div className="px-3 py-2 border-b border-slate-100">
-                <p className="text-xs font-extrabold text-slate-900">{currentProfile.full_name}</p>
-                <p className="text-[11px] text-slate-500 font-mono mt-0.5 truncate">{currentProfile.email}</p>
-                <div className="mt-2 flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                    {rolesList.find(r => r.role === activeRole)?.label || activeRole}
-                  </span>
-                  <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Online
-                  </span>
-                </div>
+            <div style={{
+              position: 'absolute',
+              insetInlineEnd: 0,
+              top: 36,
+              width: 220,
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 4,
+              boxShadow: '0 4px 16px rgba(22,21,19,0.1)',
+              zIndex: 50,
+              padding: 8,
+            }}>
+              <div style={{ padding: '8px 10px 10px', borderBottom: '1px solid var(--color-border)', marginBottom: 6 }}>
+                <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>{currentProfile.full_name}</div>
+                <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2, fontFamily: 'var(--font-mono)' }}>{currentProfile.email}</div>
+                <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 4 }}>{roleLabel(activeRole, isRTL)}</div>
               </div>
 
-              {/* Menu options */}
-              <div className="pt-1.5 space-y-1">
-                {activeRole === 'SUPER_ADMIN' && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsProfileMenuOpen(false);
-                      setIsUserManagementOpen(true);
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-lg transition"
-                  >
-                    <Users className="w-4 h-4 text-amber-600" />
-                    <span>{isRTL ? 'إدارة المستخدمين والأدوار' : 'Manage Users & Roles'}</span>
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsProfileMenuOpen(false);
-                    signOut();
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                >
-                  <LogOut className="w-4 h-4 text-rose-500" />
-                  <span>{isRTL ? 'تسجيل الخروج' : 'Sign Out / Lock System'}</span>
-                </button>
-              </div>
+              {activeRole === 'SUPER_ADMIN' && (
+                <MenuRow
+                  icon={<Users size={13} />}
+                  label={isRTL ? 'إدارة المستخدمين' : 'Manage users'}
+                  onClick={() => { setIsProfileMenuOpen(false); setIsUserManagementOpen(true); }}
+                />
+              )}
+              <MenuRow
+                icon={<LogOut size={13} />}
+                label={isRTL ? 'تسجيل الخروج' : 'Sign out'}
+                onClick={() => { setIsProfileMenuOpen(false); signOut(); }}
+                danger
+              />
             </div>
           )}
 
-          {/* Super Admin User Management Modal */}
           {activeRole === 'SUPER_ADMIN' && (
             <UserManagementModal
               isOpen={isUserManagementOpen}
@@ -190,5 +235,40 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', onOpenS
         </div>
       </div>
     </header>
+  );
+};
+
+const MenuRow: React.FC<{
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  danger?: boolean;
+}> = ({ icon, label, onClick, danger }) => {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        width: '100%',
+        textAlign: 'start',
+        padding: '7px 10px',
+        borderRadius: 4,
+        fontSize: 13,
+        color: danger ? '#991B1B' : 'var(--color-ink)',
+        background: hovered ? (danger ? '#FEF2F2' : 'var(--color-sidebar-hover)') : 'none',
+        border: 'none',
+        cursor: 'pointer',
+        fontFamily: 'var(--font-ui)',
+        transition: 'background 0.12s',
+      }}
+    >
+      {icon}
+      {label}
+    </button>
   );
 };

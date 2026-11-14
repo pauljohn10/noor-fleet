@@ -15,7 +15,7 @@ export const Layout: React.FC<LayoutProps> = ({ activeTab, onSelectTab, children
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-slate-100 text-slate-900 font-sans text-xs">
+    <div className="flex h-screen w-screen overflow-hidden" style={{ background: 'var(--color-page-bg)', color: 'var(--color-ink)', fontFamily: 'var(--font-ui)', fontSize: 14 }}>
       {/* Desktop Sidebar */}
       <div className="hidden md:flex shrink-0">
         <Sidebar 
@@ -32,8 +32,8 @@ export const Layout: React.FC<LayoutProps> = ({ activeTab, onSelectTab, children
           onOpenSearch={() => setIsSearchOpen(true)}
           onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
-        <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 md:p-6 pb-24 md:pb-6 bg-slate-50/80 transition-all duration-200">
-          <div className="max-w-[1700px] mx-auto animate-fade-in">
+        <main className="flex-1 overflow-y-auto" style={{ background: 'var(--color-page-bg)' }}>
+          <div className="animate-fade-in">
             {children}
           </div>
         </main>

@@ -2,128 +2,84 @@
 
 @layer base {
   :root {
-    --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    --font-arabic: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, Arial, sans-serif;
-    
-    /* Core Noor Fleet Theme Variables */
-    --color-brand-blue-deep: #091b48;
-    --color-brand-blue-royal: #184cc8;
-    --color-brand-blue-accent: #38bdf8;
-    --color-brand-coral: #ff5266;
-    --color-brand-coral-hover: #f43f5e;
-    --color-brand-amber: #f59e0b;
-    --color-brand-amber-dark: #d97706;
+    /* ── Noor Fleet Design Tokens (warm-paper editorial theme) ── */
+
+    /* Fonts */
+    --font-brand:   'Bricolage Grotesque', system-ui, sans-serif;
+    --font-ui:      'Instrument Sans', system-ui, sans-serif;
+    --font-mono:    'DM Mono', 'Courier New', monospace;
+    --font-arabic:  'IBM Plex Sans Arabic', system-ui, sans-serif;
+
+    /* Palette */
+    --color-page-bg:        #F4F1EA;
+    --color-surface:        #FFFDF8;
+    --color-ink:            #161513;
+    --color-text-secondary: #5B574F;
+    --color-text-muted:     #6B665C;
+
+    /* Borders & dividers */
+    --color-border:         #D9D4C8;
+    --color-row-divider:    #DDD8CB;
+    --color-input-border:   #CFC9BA;
+
+    /* Interaction */
+    --color-row-hover:      #ECE8DE;
+    --color-sidebar-hover:  #E8E3D8;
+    --color-brand-accent:   #0F5C4D;
+
+    /* Status — text / stripe */
+    --color-available-text:   #166534;
+    --color-available-stripe: #16A34A;
+    --color-ontrip-text:      #1E40AF;
+    --color-ontrip-stripe:    #2563EB;
+    --color-workshop-text:    #92400E;
+    --color-workshop-stripe:  #D97706;
+    --color-oos-text:         #991B1B;
+    --color-oos-stripe:       #DC2626;
+
+    /* Radius */
+    --radius: 4px;
   }
-  
+
   body {
-    font-family: var(--font-sans);
-    @apply bg-slate-100 text-slate-900 antialiased min-h-screen selection:bg-amber-500 selection:text-slate-950;
+    font-family: var(--font-ui);
+    background: var(--color-page-bg);
+    color: var(--color-ink);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+
+  :lang(ar), [dir="rtl"] {
+    font-family: var(--font-arabic);
+  }
+
+  /* Plates, fleet numbers, odometer — always LTR even in RTL context */
+  .font-mono, [data-ltr] {
+    font-family: var(--font-mono);
+    direction: ltr;
+    unicode-bidi: embed;
   }
 }
 
-/* Custom scrollbars for clean enterprise UI */
+/* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.05);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.4);
+  background: var(--color-border);
   border-radius: 9999px;
   transition: background 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(71, 85, 105, 0.7);
-}
-
-/* Enterprise Design Tokens & Micro-interactions */
-.erp-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.erp-card:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.06);
-}
-
-.erp-card-elevated {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08);
-}
-
-/* Smooth Interactive Button Micro-Interactions */
-.erp-btn-coral {
-  background: linear-gradient(135deg, #ff5266 0%, #f43f5e 100%);
-  color: #ffffff;
-  font-weight: 700;
-  border-radius: 0.75rem;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 14px 0 rgba(244, 63, 94, 0.35);
-}
-
-.erp-btn-coral:hover {
-  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
-  box-shadow: 0 6px 20px 0 rgba(244, 63, 94, 0.45);
-  transform: translateY(-1px);
-}
-
-.erp-btn-coral:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 8px 0 rgba(244, 63, 94, 0.3);
-}
-
-.erp-btn-amber {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  color: #020617;
-  font-weight: 700;
-  border-radius: 0.5rem;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px 0 rgba(245, 158, 11, 0.25);
-}
-
-.erp-btn-amber:hover {
-  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
-  box-shadow: 0 4px 14px 0 rgba(245, 158, 11, 0.35);
-  transform: translateY(-1px);
-}
-
-.erp-btn-amber:active {
-  transform: translateY(0);
-}
-
-/* Enhanced Form Inputs */
-.erp-input {
-  width: 100%;
-  border-radius: 0.625rem;
-  border: 1px solid #cbd5e1;
-  background-color: #ffffff;
-  padding: 0.625rem 0.875rem;
-  font-size: 0.875rem;
-  color: #0f172a;
-  transition: all 0.15s ease-in-out;
-}
-
-.erp-input::placeholder {
-  color: #94a3b8;
-}
-
-.erp-input:focus {
-  outline: none;
-  border-color: #38bdf8;
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+  background: var(--color-text-muted);
 }
 
 /* Restrained UI Animations */
@@ -181,7 +137,7 @@
   }
 }
 
-/* RTL Support Preparation */
+/* RTL Support */
 [dir="rtl"] {
   text-align: right;
   font-family: var(--font-arabic);
@@ -195,9 +151,10 @@
   --tw-space-x-reverse: 1;
 }
 
-/* Ensure tabular numbers stay legible in both directions */
+/* Plates, fleet numbers and odometer values always stay LTR inside RTL text */
 .font-mono {
   direction: ltr !important;
   unicode-bidi: isolate;
   font-feature-settings: 'tnum' on, 'lnum' on;
+  font-family: var(--font-mono);
 }
