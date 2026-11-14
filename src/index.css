@@ -27,6 +27,14 @@
     --color-sidebar-hover: #E8E3D8;
     --color-brand-accent: #0F5C4D;
 
+    /* Route panel tokens */
+    --color-route-bg: #0B3B33;
+    --color-route-grid: #14584B;
+    --color-route-planned: #1F7A68;
+    --color-route-active: #8FD6C4;
+    --color-route-label: #CDEBE3;
+    --color-route-body: #BFE0D7;
+
     /* Status — text / stripe */
     --color-available-text: #166534;
     --color-available-stripe: #16A34A;
@@ -161,4 +169,74 @@
   unicode-bidi: isolate;
   font-feature-settings: 'tnum' on, 'lnum' on;
   font-family: var(--font-mono);
+}
+
+/* Login split layout & editorial form focus primitives */
+.nf-login-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+  width: 100%;
+  background: var(--color-page-bg);
+}
+
+.nf-login-form-panel {
+  background: var(--color-page-bg);
+  padding: 28px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100vh;
+}
+
+.nf-login-route-panel {
+  position: relative;
+  background: var(--color-route-bg);
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 48px;
+}
+
+@media (max-width: 960px) {
+  .nf-login-split {
+    grid-template-columns: 1fr;
+  }
+  .nf-login-form-panel {
+    min-height: auto;
+    padding: 24px 20px 32px;
+  }
+  .nf-login-route-panel {
+    min-height: 420px;
+    padding: 32px 24px;
+  }
+}
+
+.nf-input {
+  width: 100%;
+  height: 46px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius);
+  padding: 0 14px;
+  font-size: 14px;
+  color: var(--color-ink);
+  outline: none;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.nf-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.nf-input:focus {
+  border-color: var(--color-ink);
+  box-shadow: 0 0 0 3px rgba(15, 92, 77, 0.2);
+}
+
+.nf-focus-ring:focus-visible {
+  outline: 2px solid var(--color-brand-accent);
+  outline-offset: 2px;
 }

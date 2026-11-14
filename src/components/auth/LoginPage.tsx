@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Flame, Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight, CheckCircle2, Globe, Shield,
-  ShieldAlert, Sparkles, Loader2, X
+import {
+  AlertCircle,
+  ArrowRight,
+  CheckCircle2,
+  ShieldAlert,
+  Loader2,
+  X,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
 import { checkSetupStatus, bootstrapSuperAdmin } from '../../lib/adminUsersApi';
+import { DESIGN_TOKENS } from '../../lib/designTokens';
+
+const T = DESIGN_TOKENS;
 
 export const LoginPage: React.FC = () => {
   const { signInWithEmail, isLoading, loginError, clearError } = useAuth();
@@ -14,9 +21,12 @@ export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
   const [forgotPasswordSubmitted, setForgotPasswordSubmitted] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
+
+  const [isContactAdminOpen, setIsContactAdminOpen] = useState(false);
 
   // Initial Super Admin Setup state (Active only when 0 Super Admins exist)
   const [isSetupRequired, setIsSetupRequired] = useState<boolean>(false);
@@ -39,7 +49,11 @@ export const LoginPage: React.FC = () => {
     e.preventDefault();
     if (!setupFullName.trim() || !setupEmail.trim() || !setupPassword) return;
     if (setupPassword.length < 8) {
-      setSetupError('Password must be at least 8 characters long.');
+      setSetupError(
+        isRTL
+          ? 'يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.'
+          : 'Password must be at least 8 characters long.'
+      );
       return;
     }
 
@@ -50,13 +64,12 @@ export const LoginPage: React.FC = () => {
       fullName: setupFullName,
       email: setupEmail,
       password: setupPassword,
-      department: setupDepartment
+      department: setupDepartment,
     });
 
     if (res.success) {
       setIsSetupRequired(false);
       setIsSetupModalOpen(false);
-      // Auto login
       await signInWithEmail(setupEmail, setupPassword);
     } else {
       setSetupError(res.error || 'Failed to initialize Super Admin.');
@@ -71,7 +84,7 @@ export const LoginPage: React.FC = () => {
   useEffect(() => {
     if (lockoutTimer <= 0) return;
     const interval = setInterval(() => {
-      setLockoutTimer(prev => Math.max(0, prev - 1));
+      setLockoutTimer((prev) => Math.max(0, prev - 1));
     }, 1000);
     return () => clearInterval(interval);
   }, [lockoutTimer]);
@@ -94,410 +107,855 @@ export const LoginPage: React.FC = () => {
     }
   };
 
+  const fontStack = isRTL ? T.fonts.arabic : T.fonts.ui;
+
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 md:p-8 bg-gradient-to-br from-[#081a44] via-[#0d2870] to-[#061233] relative overflow-hidden select-none">
-      {/* Subtle Ambient Background Lighting */}
-      <div className="absolute -top-32 -left-32 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-sky-500/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-1/2 left-1/3 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none" />
-
-      {/* Main Login Container Card (Strict Left-Hero, Right-Form as in reference) */}
-      <div className="relative w-full max-w-4xl lg:max-w-5xl bg-white rounded-2xl md:rounded-3xl shadow-2xl shadow-blue-950/60 overflow-hidden flex flex-col md:flex-row border border-white/10 z-10 [direction:ltr]">
-        
-        {/* ======================================================== */}
-        {/* LEFT COLUMN: HERO, BRAND & VECTOR ILLUSTRATION (54%)    */}
-        {/* ======================================================== */}
-        <div className="w-full md:w-[54%] bg-gradient-to-br from-[#1b52cf] via-[#1444b3] to-[#0a287a] p-8 sm:p-10 lg:p-12 text-white flex flex-col justify-between relative overflow-hidden [direction:ltr]">
-          
-          {/* Subtle Radial Highlight behind Illustration */}
-          <div className="absolute top-1/3 right-10 w-72 h-72 bg-sky-400/20 rounded-full blur-2xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 right-0 h-36 bg-gradient-to-t from-[#061c57]/80 to-transparent pointer-events-none" />
-
-          {/* Top Brand Logo */}
-          <div className="relative z-10 flex items-center justify-between [direction:ltr]">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-amber-400 text-slate-950 flex items-center justify-center shadow-md shadow-amber-400/20 font-black">
-                <Flame className="w-5 h-5 fill-current" />
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-lg font-black tracking-tight text-white">Noor</span>
-                <span className="text-lg font-bold tracking-tight text-sky-200">Fleet</span>
-                <span className="w-2 h-2 rounded-full bg-[#ff5266] inline-block shadow-xs shadow-rose-500/50" />
-              </div>
+    <div
+      dir={isRTL ? 'rtl' : 'ltr'}
+      className="nf-login-split"
+      style={{ fontFamily: fontStack, color: T.colors.ink }}
+    >
+      {/* ================================================================= */}
+      {/* FORM PANEL (Paper #F4F1EA)                                        */}
+      {/* ================================================================= */}
+      <main
+        className="nf-login-form-panel"
+        style={{ textAlign: isRTL ? 'right' : 'left' }}
+      >
+        {/* Top Bar: Plate-style Brand Mark + Language Toggle */}
+        <header
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+            gap: 16,
+          }}
+        >
+          {/* Brand Mark */}
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 10,
+            }}
+          >
+            <div
+              dir="ltr"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'stretch',
+                background: T.colors.surface,
+                border: `1.5px solid ${T.colors.ink}`,
+                borderRadius: T.radius,
+                overflow: 'hidden',
+                height: 28,
+              }}
+            >
+              <span
+                aria-hidden="true"
+                style={{
+                  width: 6,
+                  background: T.colors.accent,
+                  flexShrink: 0,
+                }}
+              />
+              <span
+                style={{
+                  fontFamily: T.fonts.mono,
+                  fontSize: 12,
+                  fontWeight: 500,
+                  letterSpacing: '0.06em',
+                  color: T.colors.ink,
+                  padding: '0 8px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                }}
+              >
+                NF
+              </span>
             </div>
+            <span
+              style={{
+                fontFamily: T.fonts.brand,
+                fontSize: 22,
+                fontWeight: 700,
+                letterSpacing: '-0.02em',
+                color: T.colors.ink,
+                lineHeight: 1.1,
+              }}
+            >
+              Noor Fleet
+            </span>
           </div>
 
-          {/* Center Content: Headline & Slogan */}
-          <div className="relative z-10 my-6 sm:my-8">
-            <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold tracking-tight leading-tight">
-              Decide faster
-              <span className="block text-sky-300 font-extrabold mt-0.5">
-                so you can do more
-              </span>
+          {/* Arabic / English Toggle */}
+          <button
+            type="button"
+            onClick={toggleLanguage}
+            className="nf-focus-ring"
+            style={{
+              background: T.colors.surface,
+              border: `1px solid ${T.colors.inputBorder}`,
+              borderRadius: T.radius,
+              padding: '6px 14px',
+              fontSize: 13,
+              fontWeight: 500,
+              color: T.colors.ink,
+              cursor: 'pointer',
+              fontFamily: language === 'en' ? T.fonts.arabic : T.fonts.ui,
+              lineHeight: 1.3,
+            }}
+          >
+            {language === 'en' ? 'العربية' : 'English'}
+          </button>
+        </header>
+
+        {/* Vertically Centered Form Column (max-width 400px) */}
+        <div
+          style={{
+            width: '100%',
+            maxWidth: 400,
+            margin: '40px auto',
+          }}
+        >
+          {/* Headline & Welcome Subtitle */}
+          <div style={{ marginBottom: 28 }}>
+            <h1
+              style={{
+                fontFamily: isRTL ? T.fonts.arabic : T.fonts.brand,
+                fontSize: 44,
+                fontWeight: 700,
+                letterSpacing: isRTL ? '0' : '-0.03em',
+                lineHeight: 1.08,
+                color: T.colors.ink,
+                margin: 0,
+              }}
+            >
+              {isRTL ? 'تسجيل الدخول' : 'Log in'}
             </h1>
-            <p className="mt-3 text-xs sm:text-sm text-blue-100/80 max-w-md font-medium leading-relaxed">
-              {isRTL 
-                ? 'منظومة متكاملة لإدارة أسطول نقل الوقود، الصيانة الوقائية، وتتبع الرحلات المباشر بدقة استثنائية.'
-                : 'Intelligent fuel fleet operations, live telemetry, predictive maintenance, and seamless workshop logistics.'}
+            <p
+              style={{
+                marginTop: 10,
+                marginBottom: 0,
+                fontSize: 14,
+                lineHeight: 1.5,
+                color: T.colors.textSecondary,
+              }}
+            >
+              {isRTL
+                ? 'أهلاً بك مجدداً. أدخل بيانات حسابك المؤسسي للمتابعة.'
+                : 'Welcome back. Enter your verified enterprise credentials to continue.'}
             </p>
           </div>
 
-          {/* High-Fidelity Custom Vector Illustration (matching reference) */}
-          <div className="relative z-10 w-full flex items-end justify-center pt-2 pb-4">
-            <svg
-              className="w-full max-w-[360px] h-auto drop-shadow-lg"
-              viewBox="0 0 460 280"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+          {/* Initial Super Admin Setup Banner (Shown ONLY when 0 Super Admins exist) */}
+          {isSetupRequired && (
+            <div
+              style={{
+                marginBottom: 20,
+                padding: '14px 16px',
+                background: T.colors.surface,
+                border: `1px solid ${T.colors.ink}`,
+                borderRadius: T.radius,
+              }}
             >
-              <defs>
-                {/* Gradients */}
-                <linearGradient id="arrowGrad" x1="280" y1="210" x2="430" y2="70" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#3b82f6" stopOpacity="0.8" />
-                  <stop offset="0.6" stopColor="#60a5fa" stopOpacity="0.9" />
-                  <stop offset="1" stopColor="#93c5fd" stopOpacity="1" />
-                </linearGradient>
-                <linearGradient id="manBlazer" x1="160" y1="120" x2="250" y2="240" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#4f46e5" />
-                  <stop offset="1" stopColor="#3730a3" />
-                </linearGradient>
-                <linearGradient id="womanTop" x1="100" y1="120" x2="135" y2="180" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#ff647c" />
-                  <stop offset="1" stopColor="#e11d48" />
-                </linearGradient>
-                <linearGradient id="womanPants" x1="100" y1="180" x2="135" y2="280" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#06b6d4" />
-                  <stop offset="1" stopColor="#0891b2" />
-                </linearGradient>
-                <linearGradient id="checkGlow" x1="140" y1="130" x2="180" y2="170" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#34d399" />
-                  <stop offset="1" stopColor="#10b981" />
-                </linearGradient>
-              </defs>
-
-              {/* Background Ground Horizon Line */}
-              <path d="M10 270 Q230 255 450 270" stroke="#1e3a8a" strokeWidth="2" strokeDasharray="4 4" opacity="0.6" />
-              
-              {/* Dynamic Upward Direction Arrow */}
-              <g opacity="0.85">
-                <path d="M280 180 L400 68" stroke="url(#arrowGrad)" strokeWidth="6" strokeLinecap="round" />
-                {/* Arrow Head */}
-                <path d="M375 64 L404 64 L404 93" fill="none" stroke="#93c5fd" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-                {/* Velocity trails */}
-                <path d="M300 205 L370 135" stroke="#60a5fa" strokeWidth="2.5" strokeLinecap="round" opacity="0.6" strokeDasharray="6 4" />
-                <path d="M320 220 L350 190" stroke="#93c5fd" strokeWidth="2" strokeLinecap="round" opacity="0.4" />
-              </g>
-
-              {/* Sparkle & Accent Dots */}
-              <circle cx="415" cy="45" r="3" fill="#67e8f9" />
-              <circle cx="430" cy="55" r="2" fill="#ffffff" />
-              <circle cx="280" cy="70" r="3" fill="#fbbf24" />
-              <path d="M390 100 L394 104 M394 100 L390 104" stroke="#ffffff" strokeWidth="2" opacity="0.7" />
-
-              {/* ======================================================== */}
-              {/* LEFT FIGURE: WOMAN IN CORAL & TEAL HOLDING CHECKMARK     */}
-              {/* ======================================================== */}
-              <g id="woman">
-                {/* Head & Hair */}
-                <ellipse cx="112" cy="115" rx="14" ry="16" fill="#fbcfe8" />
-                {/* Dark Sleek Hair */}
-                <path d="M100 115 C100 95 125 95 125 110 C125 115 123 125 120 130 C114 125 110 120 105 123 C101 125 99 120 100 115 Z" fill="#0f172a" />
-                <ellipse cx="103" cy="120" rx="3" ry="5" fill="#0f172a" />
-
-                {/* Torso: Coral Sleeveless Top */}
-                <path d="M104 132 C110 130 118 130 122 132 L127 182 C120 185 106 185 101 182 Z" fill="url(#womanTop)" />
-
-                {/* Legs: Teal Trousers */}
-                <path d="M102 182 L106 270 C108 274 114 274 115 270 L118 200 L121 270 C123 274 128 274 130 270 L126 182 Z" fill="url(#womanPants)" />
-
-                {/* Shoes */}
-                <ellipse cx="110" cy="272" rx="6" ry="2.5" fill="#0f172a" />
-                <ellipse cx="125" cy="272" rx="6" ry="2.5" fill="#0f172a" />
-
-                {/* Left Arm holding glowing checkmark forward */}
-                <path d="M118 140 Q135 150 152 145" stroke="#fbcfe8" strokeWidth="7" strokeLinecap="round" />
-                
-                {/* Luminous Green Checkmark Icon in her hand */}
-                <g transform="translate(152, 130)">
-                  <circle cx="16" cy="16" r="16" fill="#10b981" fillOpacity="0.25" />
-                  <circle cx="16" cy="16" r="12" fill="url(#checkGlow)" />
-                  <path d="M10 16 L14 20 L22 12" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                </g>
-              </g>
-
-              {/* ======================================================== */}
-              {/* RIGHT FIGURE: MAN IN PURPLE BLAZER & YELLOW TROUSERS      */}
-              {/* ======================================================== */}
-              <g id="man">
-                {/* Head */}
-                <circle cx="205" cy="110" r="15" fill="#fde047" fillOpacity="0.3" />
-                <circle cx="205" cy="110" r="13" fill="#fed7aa" />
-                {/* Hair */}
-                <path d="M195 106 C195 94 216 94 216 104 C216 108 214 112 212 114 C205 110 197 110 195 106 Z" fill="#1e1b4b" />
-
-                {/* Torso: Purple-Blue Blazer */}
-                <path d="M188 126 C198 123 216 123 228 126 L238 210 C225 214 195 214 182 210 Z" fill="url(#manBlazer)" />
-                {/* Inner Shirt Collar */}
-                <path d="M205 125 L210 140 L200 140 Z" fill="#ffffff" />
-
-                {/* Left arm by side */}
-                <path d="M188 135 Q178 165 174 195" stroke="url(#manBlazer)" strokeWidth="10" strokeLinecap="round" />
-                <circle cx="173" cy="200" r="5" fill="#fed7aa" />
-
-                {/* Right arm dynamically raised pointing upward */}
-                <path d="M225 135 Q250 115 285 75" stroke="url(#manBlazer)" strokeWidth="11" strokeLinecap="round" />
-                {/* White Cuff */}
-                <path d="M280 82 L286 74" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" />
-                {/* Hand pointing */}
-                <path d="M286 74 Q292 68 296 66" stroke="#fed7aa" strokeWidth="6" strokeLinecap="round" />
-
-                {/* Yellow Trousers */}
-                <path d="M185 210 L190 270 C192 274 199 274 201 270 L210 225 L219 270 C221 274 228 274 230 270 L235 210 Z" fill="#f59e0b" />
-                {/* Belt / trim */}
-                <rect x="186" y="208" width="48" height="4" fill="#d97706" rx="2" />
-
-                {/* Shoes */}
-                <ellipse cx="196" cy="272" rx="7" ry="3" fill="#0f172a" />
-                <ellipse cx="225" cy="272" rx="7" ry="3" fill="#0f172a" />
-              </g>
-            </svg>
-          </div>
-        </div>
-
-        {/* ======================================================== */}
-        {/* RIGHT COLUMN: LOGIN FORM (46%)                          */}
-        {/* ======================================================== */}
-        <div className={`w-full md:w-[46%] bg-white p-8 sm:p-10 lg:p-12 flex flex-col justify-between ${isRTL ? '[direction:rtl] text-right' : '[direction:ltr] text-left'}`}>
-          <div>
-            {/* Top Toolbar: Language Switcher */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-                <Shield className="w-3.5 h-3.5 text-emerald-600" />
-                <span>SSL 256-bit Encrypted</span>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <ShieldAlert
+                  size={18}
+                  style={{ color: T.colors.accent, flexShrink: 0, marginTop: 2 }}
+                />
+                <div style={{ flex: 1 }}>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                      color: T.colors.ink,
+                    }}
+                  >
+                    {isRTL
+                      ? 'تهيئة النظام لأول مرة مطلوبة'
+                      : 'Initial Super Admin Setup Required'}
+                  </div>
+                  <p
+                    style={{
+                      fontSize: 12.5,
+                      color: T.colors.textSecondary,
+                      margin: '4px 0 10px',
+                      lineHeight: 1.45,
+                    }}
+                  >
+                    {isRTL
+                      ? 'لم يتم تسجيل أي حساب مشرف أعلى. أنشئ الحساب الرئيسي لتفعيل النظام.'
+                      : 'No Super Admin account exists in the database. Initialize your primary master account to activate the system.'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setIsSetupModalOpen(true)}
+                    className="nf-focus-ring"
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      background: T.colors.ink,
+                      color: T.colors.pageBg,
+                      border: 'none',
+                      borderRadius: T.radius,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {isRTL
+                      ? 'إنشاء حساب المشرف الأعلى الآن'
+                      : 'Initialize Super Admin Account'}
+                  </button>
+                </div>
               </div>
+            </div>
+          )}
 
-              {/* Language Switcher Button */}
+          {/* Authentication Error Banner */}
+          {loginError && (
+            <div
+              role="alert"
+              style={{
+                marginBottom: 18,
+                padding: '11px 14px',
+                background: '#FEF2F2',
+                border: `1px solid ${T.colors.status.outOfServiceStripe}`,
+                borderRadius: T.radius,
+                color: T.colors.status.outOfServiceText,
+                fontSize: 13,
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                gap: 10,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+                <span>{loginError}</span>
+              </div>
               <button
                 type="button"
-                onClick={toggleLanguage}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-200 text-xs font-bold text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition shadow-2xs"
-                title="Change Language"
+                onClick={clearError}
+                aria-label={isRTL ? 'إغلاق التنبيه' : 'Dismiss error'}
+                className="nf-focus-ring"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: T.colors.status.outOfServiceText,
+                  cursor: 'pointer',
+                  padding: 2,
+                  lineHeight: 1,
+                }}
               >
-                <Globe className="w-3 h-3 text-sky-600" />
-                <span>{language === 'en' ? 'العربية' : 'English'}</span>
+                <X size={14} />
               </button>
             </div>
+          )}
 
-            {/* Headline: "Log in" (Styled matching reference) */}
-            <div className="mb-6">
-              <h2 className="text-3xl sm:text-[34px] font-extrabold tracking-tight text-slate-900 leading-none">
-                {isRTL ? (
-                  <>تسجيل <span className="text-sky-500">الدخول</span></>
-                ) : (
-                  <>Log <span className="text-sky-500">in</span></>
-                )}
-              </h2>
-              <p className="text-xs text-slate-500 font-medium mt-2">
-                {isRTL
-                  ? 'أهلاً بك مجدداً. أدخل بيانات حسابك للوصول إلى لوحة التحكم والعمليات.'
-                  : 'Welcome back. Enter your verified enterprise credentials to continue.'}
-              </p>
+          {/* Email & Password Form */}
+          <form onSubmit={handleSubmit} noValidate={false}>
+            {/* Email Field */}
+            <div style={{ marginBottom: 18 }}>
+              <label
+                htmlFor="login-email"
+                style={{
+                  display: 'block',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: T.colors.ink,
+                  marginBottom: 6,
+                }}
+              >
+                {isRTL ? 'البريد الإلكتروني' : 'Email'}
+              </label>
+              <input
+                id="login-email"
+                name="email"
+                type="email"
+                autoComplete="username"
+                required
+                dir="ltr"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@alnoortransport.com"
+                className="nf-input"
+                style={{
+                  fontFamily: T.fonts.ui,
+                  textAlign: 'left',
+                }}
+              />
             </div>
 
-            {/* First-Time System Setup Banner (Shown ONLY when 0 Super Admins exist) */}
-            {isSetupRequired && (
-              <div className="mb-5 p-3.5 bg-gradient-to-r from-amber-500/15 via-amber-400/10 to-amber-500/15 border-2 border-amber-400/80 rounded-2xl shadow-xs animate-pulse">
-                <div className="flex items-start gap-2.5">
-                  <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <h4 className="text-xs font-black text-amber-950 uppercase tracking-wider">
-                      {isRTL ? 'تهيئة النظام لأول مرة مطلوبة' : 'Initial Super Admin Setup Required'}
-                    </h4>
-                    <p className="text-[11px] text-amber-900 font-medium mt-0.5 leading-snug">
-                      {isRTL
-                        ? 'لم يتم تسجيل أي حساب مشرف أعلى (Super Admin). اضغط أدناه لإنشاء حساب المشرف وتفعيل النظام.'
-                        : 'No Super Admin account exists in the database. Initialize your primary master account to activate the system.'}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setIsSetupModalOpen(true)}
-                      className="mt-2.5 w-full py-2 px-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <Sparkles className="w-4 h-4" />
-                      <span>{isRTL ? 'إنشاء حساب المشرف الأعلى الآن' : 'Initialize Super Admin Account'}</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Error Banner */}
-            {loginError && (
-              <div className="mb-4 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-start justify-between gap-2 animate-fade-in">
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-                  <span className="font-medium">{loginError}</span>
-                </div>
+            {/* Password Field */}
+            <div style={{ marginBottom: 20 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: 6,
+                }}
+              >
+                <label
+                  htmlFor="login-password"
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: T.colors.ink,
+                  }}
+                >
+                  {isRTL ? 'كلمة المرور' : 'Password'}
+                </label>
                 <button
                   type="button"
-                  onClick={clearError}
-                  className="text-rose-500 hover:text-rose-800 text-xs font-bold"
+                  onClick={() => setIsForgotPasswordOpen(true)}
+                  className="nf-focus-ring"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    fontSize: 12.5,
+                    fontWeight: 500,
+                    color: T.colors.textSecondary,
+                    textDecoration: 'underline',
+                    textUnderlineOffset: 3,
+                    cursor: 'pointer',
+                    fontFamily: fontStack,
+                  }}
                 >
-                  ✕
+                  {isRTL ? 'نسيت كلمة المرور؟' : 'Forgot password?'}
                 </button>
+              </div>
+
+              <div style={{ position: 'relative' }}>
+                <input
+                  id="login-password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="nf-input"
+                  style={{
+                    paddingInlineEnd: 64,
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-pressed={showPassword}
+                  className="nf-focus-ring"
+                  style={{
+                    position: 'absolute',
+                    insetInlineEnd: 12,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    padding: '4px 6px',
+                    fontSize: 12.5,
+                    fontWeight: 500,
+                    color: T.colors.textSecondary,
+                    textDecoration: 'underline',
+                    textUnderlineOffset: 3,
+                    cursor: 'pointer',
+                    fontFamily: fontStack,
+                  }}
+                >
+                  {showPassword
+                    ? isRTL
+                      ? 'إخفاء'
+                      : 'Hide'
+                    : isRTL
+                    ? 'إظهار'
+                    : 'Show'}
+                </button>
+              </div>
+            </div>
+
+            {/* Rate-limiting Lockout Warning */}
+            {lockoutTimer > 0 && (
+              <div
+                role="alert"
+                style={{
+                  marginBottom: 16,
+                  padding: '10px 12px',
+                  background: '#FEF2F2',
+                  border: `1px solid ${T.colors.status.outOfServiceStripe}`,
+                  borderRadius: T.radius,
+                  color: T.colors.status.outOfServiceText,
+                  fontSize: 12.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+              >
+                <AlertCircle size={15} style={{ flexShrink: 0 }} />
+                <span>
+                  {isRTL
+                    ? `تم إيقاف محاولات الدخول مؤقتاً. يرجى الانتظار ${lockoutTimer} ثانية.`
+                    : `Too many failed attempts. Login temporarily locked for ${lockoutTimer}s.`}
+                </span>
               </div>
             )}
 
-            {/* Email & Password Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  {isRTL ? 'البريد الإلكتروني' : 'E-mail'}
-                </label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@company.com"
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition"
-                  />
-                  <Mail className="w-4 h-4 text-slate-400 absolute right-3.5 rtl:right-auto rtl:left-3.5 top-3 pointer-events-none" />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-bold text-slate-700">
-                    {isRTL ? 'كلمة المرور' : 'Password'}
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setIsForgotPasswordOpen(true)}
-                    className="text-[11px] font-semibold text-slate-400 hover:text-sky-600 transition"
-                  >
-                    {isRTL ? 'نسيت كلمة المرور؟' : 'Forgot password?'}
-                  </button>
-                </div>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 rtl:right-auto rtl:left-3 top-2.5 text-slate-400 hover:text-slate-600 transition"
-                    title={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Rate-limiting warning if locked out */}
-              {lockoutTimer > 0 && (
-                <div className="mt-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                  <span>
-                    {isRTL
-                      ? `تم قفل محاولات الدخول مؤقتاً لأسباب أمنية. يرجى الانتظار ${lockoutTimer} ثانية.`
-                      : `Too many failed attempts. Login temporarily locked for ${lockoutTimer}s.`}
-                  </span>
-                </div>
-              )}
-
-              {/* Submit Button (Coral Red Gradient matching reference) */}
-              <button
-                type="submit"
-                disabled={isLoading || lockoutTimer > 0}
-                className="w-full mt-2 py-3 px-4 rounded-xl font-bold text-white text-xs sm:text-sm bg-gradient-to-r from-[#ff5266] to-[#f43f5e] hover:from-[#f43f5e] hover:to-[#e11d48] transition-all duration-200 shadow-md shadow-rose-500/30 active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>{isRTL ? 'جاري التحقق...' : 'Signing in...'}</span>
-                  </span>
-                ) : lockoutTimer > 0 ? (
-                  <span>{isRTL ? `مقفل (${lockoutTimer} ثانية)` : `Locked (${lockoutTimer}s)`}</span>
-                ) : (
-                  <span>{isRTL ? 'دخول' : 'Log In'}</span>
-                )}
-              </button>
-            </form>
-          </div>
-
-          {/* Enterprise Security Notice */}
-          <div className="mt-6 pt-5 border-t border-slate-100 space-y-3">
-            <div className="flex items-center gap-2 text-[11px] text-slate-500">
-              <Shield className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span>
-                {isRTL 
-                  ? 'تسجيل دخول مشفّر ومحمي بصلاحيات الوصول المعتمدة (RBAC).' 
-                  : 'Encrypted corporate access with verified Role-Based Access Control (RBAC).'}
-              </span>
-            </div>
-
-            {/* Public Driver Issue Reporting Portal Link (No Login Required) */}
-            <div className="pt-1">
-              <a
-                href="/driver-report"
-                className="w-full py-2 px-3 rounded-xl border border-amber-300/90 bg-amber-50/80 hover:bg-amber-100/90 text-amber-950 text-xs font-extrabold flex items-center justify-between transition shadow-2xs"
-              >
+            {/* Submit Button (48px ink background, paper text) */}
+            <button
+              type="submit"
+              disabled={isLoading || lockoutTimer > 0}
+              className="nf-focus-ring"
+              style={{
+                width: '100%',
+                height: 48,
+                background: T.colors.ink,
+                color: T.colors.pageBg,
+                border: 'none',
+                borderRadius: T.radius,
+                fontSize: 14,
+                fontWeight: 600,
+                fontFamily: fontStack,
+                cursor: isLoading || lockoutTimer > 0 ? 'not-allowed' : 'pointer',
+                opacity: isLoading || lockoutTimer > 0 ? 0.65 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+              }}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>{isRTL ? 'جاري التحقق...' : 'Signing in...'}</span>
+                </>
+              ) : lockoutTimer > 0 ? (
                 <span>
-                  {isRTL
-                    ? 'هل أنت سائق؟ أبلغ عن عطل في المركبة (بدون تسجيل دخول)'
-                    : 'Driver? Report a Vehicle Issue (No Login Required)'}
+                  {isRTL ? `مقفل (${lockoutTimer} ث)` : `Locked (${lockoutTimer}s)`}
                 </span>
-                <ArrowRight className={`w-3.5 h-3.5 text-amber-700 shrink-0 ${isRTL ? 'rotate-180' : ''}`} />
-              </a>
-            </div>
-          </div>
+              ) : (
+                <span>{isRTL ? 'تسجيل الدخول' : 'Log in'}</span>
+              )}
+            </button>
+          </form>
 
-            {/* Bottom Footer Details */}
-            <div className="mt-4 flex items-center justify-between text-[11px] text-slate-400">
-              <span>{isRTL ? 'تحتاج إلى صلاحيات؟ تواصل مع الإدارة' : 'Need access? Contact Admin'}</span>
-              <span className="font-semibold text-slate-600">Al-Noor United Est.</span>
+          {/* Corporate RBAC Note */}
+          <p
+            style={{
+              marginTop: 14,
+              marginBottom: 0,
+              fontSize: 12.5,
+              lineHeight: 1.5,
+              color: T.colors.textMuted,
+            }}
+          >
+            {isRTL
+              ? 'الوصول المؤسسي مشفّر ومراقَب وفق صلاحيات الأدوار المعتمدة.'
+              : 'Corporate access is encrypted and controlled by verified role-based permissions.'}
+          </p>
+
+          {/* Divider */}
+          <hr
+            style={{
+              margin: '24px 0',
+              border: 'none',
+              borderTop: `1px solid ${T.colors.border}`,
+            }}
+          />
+
+          {/* Driver Report Bordered Row (No Login Required) */}
+          <a
+            href="/driver-report"
+            className="nf-focus-ring"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+              padding: '14px 16px',
+              border: `1px solid ${T.colors.inputBorder}`,
+              borderRadius: T.radius,
+              background: T.colors.pageBg,
+              textDecoration: 'none',
+              color: T.colors.ink,
+              transition: 'background-color 0.12s ease, border-color 0.12s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = T.colors.rowHover;
+              e.currentTarget.style.borderColor = T.colors.ink;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = T.colors.pageBg;
+              e.currentTarget.style.borderColor = T.colors.inputBorder;
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontSize: 13.5,
+                  fontWeight: 600,
+                  color: T.colors.ink,
+                  lineHeight: 1.35,
+                }}
+              >
+                {isRTL
+                  ? 'هل أنت سائق؟ أبلغ عن عطل في المركبة'
+                  : 'Driver? Report a vehicle issue'}
+              </div>
+              <div
+                style={{
+                  fontSize: 12.5,
+                  color: T.colors.textMuted,
+                  marginTop: 2,
+                }}
+              >
+                {isRTL ? 'لا يتطلب تسجيل الدخول' : 'No login required'}
+              </div>
             </div>
-          </div>
+            <ArrowRight
+              size={16}
+              style={{
+                color: T.colors.ink,
+                flexShrink: 0,
+                transform: isRTL ? 'scaleX(-1)' : 'none',
+              }}
+            />
+          </a>
         </div>
 
-      {/* Forgot Password Modal */}
+        {/* Bottom Footer Row */}
+        <footer
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 12,
+            fontSize: 12.5,
+            width: '100%',
+          }}
+        >
+          <span style={{ color: T.colors.textMuted }}>
+            {isRTL ? 'تحتاج إلى صلاحيات؟ ' : 'Need access? '}
+            <button
+              type="button"
+              onClick={() => setIsContactAdminOpen(true)}
+              className="nf-focus-ring"
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                fontSize: 12.5,
+                fontWeight: 500,
+                color: T.colors.textSecondary,
+                textDecoration: 'underline',
+                textUnderlineOffset: 3,
+                cursor: 'pointer',
+                fontFamily: fontStack,
+              }}
+            >
+              {isRTL ? 'تواصل مع المسؤول' : 'Contact admin'}
+            </button>
+          </span>
+          <span style={{ color: T.colors.ink, fontWeight: 500 }}>
+            {isRTL ? 'مؤسسة النور المتحدة' : 'Al-Noor United Est.'}
+          </span>
+        </footer>
+      </main>
+
+      {/* ================================================================= */}
+      {/* ROUTE-MAP PANEL (Deep Green #0B3B33)                              */}
+      {/* ================================================================= */}
+      <aside
+        className="nf-login-route-panel"
+        style={{ textAlign: isRTL ? 'right' : 'left' }}
+      >
+        {/* Decorative SVG Route Telemetry Grid (Always LTR, aria-hidden) */}
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 800 900"
+          preserveAspectRatio="xMidYMid slice"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none',
+            direction: 'ltr',
+          }}
+        >
+          {/* Orthogonal grid lines */}
+          <g stroke={T.colors.routePanel.grid} strokeWidth="1">
+            <line x1="130" y1="0" x2="130" y2="900" />
+            <line x1="270" y1="0" x2="270" y2="900" />
+            <line x1="410" y1="0" x2="410" y2="900" />
+            <line x1="550" y1="0" x2="550" y2="900" />
+            <line x1="690" y1="0" x2="690" y2="900" />
+
+            <line x1="0" y1="150" x2="800" y2="150" />
+            <line x1="0" y1="300" x2="800" y2="300" />
+            <line x1="0" y1="450" x2="800" y2="450" />
+            <line x1="0" y1="600" x2="800" y2="600" />
+            <line x1="0" y1="750" x2="800" y2="750" />
+          </g>
+
+          {/* Planned route 1 (upper dotted corridor) */}
+          <path
+            d="M -20 310 C 90 345, 190 310, 270 252 C 390 165, 595 160, 820 385"
+            fill="none"
+            stroke={T.colors.routePanel.plannedRoute}
+            strokeWidth="2"
+            strokeDasharray="4 6"
+          />
+
+          {/* Planned route 2 (lower dotted feeder) */}
+          <path
+            d="M 190 920 C 260 760, 315 645, 365 555 C 430 440, 560 400, 820 450"
+            fill="none"
+            stroke={T.colors.routePanel.plannedRoute}
+            strokeWidth="2"
+            strokeDasharray="4 6"
+          />
+
+          {/* Active route (solid bright curve from lower-left to upper-right) */}
+          <path
+            d="M -20 695 C 120 635, 225 605, 340 595 C 495 582, 565 445, 635 340 C 690 258, 745 185, 820 120"
+            fill="none"
+            stroke={T.colors.routePanel.activeRoute}
+            strokeWidth="2.5"
+          />
+
+          {/* Junction Nodes & Plate Labels */}
+          <g>
+            {/* KSA-1103 */}
+            <circle
+              cx="270"
+              cy="252"
+              r="6"
+              fill={T.colors.routePanel.bg}
+              stroke={T.colors.routePanel.activeRoute}
+              strokeWidth="2"
+            />
+            <text
+              x="284"
+              y="241"
+              fill={T.colors.routePanel.label}
+              fontFamily={T.fonts.mono}
+              fontSize="13"
+              fontWeight="500"
+              letterSpacing="0.04em"
+            >
+              KSA-1103
+            </text>
+
+            {/* BND-8192 */}
+            <circle
+              cx="635"
+              cy="340"
+              r="6"
+              fill={T.colors.routePanel.bg}
+              stroke={T.colors.routePanel.activeRoute}
+              strokeWidth="2"
+            />
+            <text
+              x="649"
+              y="328"
+              fill={T.colors.routePanel.label}
+              fontFamily={T.fonts.mono}
+              fontSize="13"
+              fontWeight="500"
+              letterSpacing="0.04em"
+            >
+              BND-8192
+            </text>
+
+            {/* LBR-4921 */}
+            <circle
+              cx="340"
+              cy="595"
+              r="6"
+              fill={T.colors.routePanel.bg}
+              stroke={T.colors.routePanel.activeRoute}
+              strokeWidth="2"
+            />
+            <text
+              x="354"
+              y="620"
+              fill={T.colors.routePanel.label}
+              fontFamily={T.fonts.mono}
+              fontSize="13"
+              fontWeight="500"
+              letterSpacing="0.04em"
+            >
+              LBR-4921
+            </text>
+
+            {/* DMM-9044 */}
+            <circle
+              cx="392"
+              cy="515"
+              r="5.5"
+              fill={T.colors.routePanel.bg}
+              stroke={T.colors.routePanel.activeRoute}
+              strokeWidth="2"
+            />
+            <text
+              x="406"
+              y="520"
+              fill={T.colors.routePanel.label}
+              fontFamily={T.fonts.mono}
+              fontSize="13"
+              fontWeight="500"
+              letterSpacing="0.04em"
+            >
+              DMM-9044
+            </text>
+          </g>
+        </svg>
+
+        {/* Bottom Copy Block */}
+        <div
+          style={{
+            position: 'relative',
+            zIndex: 1,
+            maxWidth: 480,
+          }}
+        >
+          <h2
+            style={{
+              fontFamily: isRTL ? T.fonts.arabic : T.fonts.brand,
+              fontSize: 'clamp(34px, 4vw, 48px)',
+              fontWeight: 700,
+              letterSpacing: isRTL ? '0' : '-0.03em',
+              lineHeight: 1.08,
+              color: T.colors.pageBg,
+              margin: 0,
+            }}
+          >
+            {isRTL
+              ? 'كل شاحنة. كل رحلة. شاشة واحدة.'
+              : 'Every truck. Every trip. One view.'}
+          </h2>
+          <p
+            style={{
+              marginTop: 14,
+              marginBottom: 0,
+              fontSize: 15,
+              lineHeight: 1.55,
+              color: T.colors.routePanel.body,
+            }}
+          >
+            {isRTL
+              ? 'تتبع مباشر، صيانة وقائية تنبؤية، وتنسيق متكامل للورشة لأسطول نقل الوقود.'
+              : 'Live telemetry, predictive maintenance and seamless workshop logistics for your fuel fleet.'}
+          </p>
+        </div>
+      </aside>
+
+      {/* ================================================================= */}
+      {/* MODAL: FORGOT PASSWORD                                            */}
+      {/* ================================================================= */}
       {isForgotPasswordOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200">
-            <h3 className="text-base font-bold text-slate-900">
-              {isRTL ? 'استعادة كلمة المرور' : 'Reset Password'}
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 50,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+            backgroundColor: 'rgba(22, 21, 19, 0.55)',
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="forgot-pw-title"
+            style={{
+              width: '100%',
+              maxWidth: 400,
+              background: T.colors.surface,
+              border: `1px solid ${T.colors.border}`,
+              borderRadius: T.radius,
+              padding: 24,
+              color: T.colors.ink,
+            }}
+          >
+            <h3
+              id="forgot-pw-title"
+              style={{
+                fontFamily: isRTL ? T.fonts.arabic : T.fonts.brand,
+                fontSize: 18,
+                fontWeight: 700,
+                margin: 0,
+              }}
+            >
+              {isRTL ? 'استعادة كلمة المرور' : 'Reset password'}
             </h3>
-            <p className="text-xs text-slate-500 mt-1">
-              {isRTL 
+            <p
+              style={{
+                fontSize: 13,
+                color: T.colors.textSecondary,
+                marginTop: 6,
+                marginBottom: 16,
+                lineHeight: 1.5,
+              }}
+            >
+              {isRTL
                 ? 'أدخل بريدك الإلكتروني المؤسسي وسيقوم مدير النظام بإرسال رابط الاستعادة.'
                 : 'Enter your enterprise email to request a reset link from your system administrator.'}
             </p>
 
             {forgotPasswordSubmitted ? (
-              <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <div
+                style={{
+                  padding: '12px 14px',
+                  background: '#F0FDF4',
+                  border: `1px solid ${T.colors.status.availableStripe}`,
+                  borderRadius: T.radius,
+                  color: T.colors.status.availableText,
+                  fontSize: 13,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+              >
+                <CheckCircle2 size={16} style={{ flexShrink: 0 }} />
                 <span>
-                  {isRTL 
-                    ? 'تم إرسال الطلب بنجاح إلى مشرف النظام.' 
+                  {isRTL
+                    ? 'تم إرسال الطلب بنجاح إلى مشرف النظام.'
                     : 'Password reset request submitted successfully.'}
                 </span>
               </div>
             ) : (
-              <div className="mt-4 space-y-3">
-                <input
-                  type="email"
-                  placeholder="name@company.com"
-                  value={forgotEmail}
-                  onChange={(e) => setForgotEmail(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-sky-500"
-                />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div>
+                  <label
+                    htmlFor="forgot-email"
+                    style={{
+                      display: 'block',
+                      fontSize: 12.5,
+                      fontWeight: 600,
+                      marginBottom: 5,
+                    }}
+                  >
+                    {isRTL ? 'البريد الإلكتروني' : 'Email'}
+                  </label>
+                  <input
+                    id="forgot-email"
+                    type="email"
+                    dir="ltr"
+                    placeholder="name@alnoortransport.com"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    className="nf-input"
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={() => {
@@ -505,14 +963,33 @@ export const LoginPage: React.FC = () => {
                       setForgotPasswordSubmitted(true);
                     }
                   }}
-                  className="w-full py-2 bg-sky-600 text-white font-bold rounded-lg text-xs hover:bg-sky-500 transition"
+                  className="nf-focus-ring"
+                  style={{
+                    width: '100%',
+                    height: 44,
+                    background: T.colors.ink,
+                    color: T.colors.pageBg,
+                    border: 'none',
+                    borderRadius: T.radius,
+                    fontSize: 13.5,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
                 >
-                  {isRTL ? 'إرسال الطلب' : 'Send Reset Link'}
+                  {isRTL ? 'إرسال الطلب' : 'Send reset link'}
                 </button>
               </div>
             )}
 
-            <div className="mt-4 pt-3 border-t border-slate-100 flex justify-end">
+            <div
+              style={{
+                marginTop: 18,
+                paddingTop: 14,
+                borderTop: `1px solid ${T.colors.rowDivider}`,
+                display: 'flex',
+                justifyContent: 'flex-end',
+              }}
+            >
               <button
                 type="button"
                 onClick={() => {
@@ -520,7 +997,17 @@ export const LoginPage: React.FC = () => {
                   setForgotPasswordSubmitted(false);
                   setForgotEmail('');
                 }}
-                className="text-xs font-semibold text-slate-500 hover:text-slate-800"
+                className="nf-focus-ring"
+                style={{
+                  background: 'none',
+                  border: `1px solid ${T.colors.inputBorder}`,
+                  borderRadius: T.radius,
+                  padding: '6px 14px',
+                  fontSize: 12.5,
+                  fontWeight: 500,
+                  color: T.colors.textSecondary,
+                  cursor: 'pointer',
+                }}
               >
                 {isRTL ? 'إغلاق' : 'Close'}
               </button>
@@ -529,128 +1016,407 @@ export const LoginPage: React.FC = () => {
         </div>
       )}
 
-      {/* First-Time Super Admin Setup Modal */}
+      {/* ================================================================= */}
+      {/* MODAL: CONTACT ADMIN                                              */}
+      {/* ================================================================= */}
+      {isContactAdminOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 50,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+            backgroundColor: 'rgba(22, 21, 19, 0.55)',
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="contact-admin-title"
+            style={{
+              width: '100%',
+              maxWidth: 400,
+              background: T.colors.surface,
+              border: `1px solid ${T.colors.border}`,
+              borderRadius: T.radius,
+              padding: 24,
+              color: T.colors.ink,
+            }}
+          >
+            <h3
+              id="contact-admin-title"
+              style={{
+                fontFamily: isRTL ? T.fonts.arabic : T.fonts.brand,
+                fontSize: 18,
+                fontWeight: 700,
+                margin: 0,
+              }}
+            >
+              {isRTL ? 'طلب صلاحية وصول' : 'Request system access'}
+            </h3>
+            <p
+              style={{
+                fontSize: 13,
+                color: T.colors.textSecondary,
+                marginTop: 8,
+                marginBottom: 16,
+                lineHeight: 1.55,
+              }}
+            >
+              {isRTL
+                ? 'تُنشأ حسابات مؤسسة النور المتحدة من قِبل مدير النظام أو مدير الأسطول. يرجى التواصل مع مكتب تكنولوجيا المعلومات أو الإدارة للحصول على بيانات الدخول.'
+                : 'Al-Noor United Est. ERP accounts are provisioned by your Super Admin or Fleet Manager. Contact your fleet administrator or IT desk to receive credentials.'}
+            </p>
+            <div
+              dir="ltr"
+              style={{
+                padding: '10px 12px',
+                background: T.colors.pageBg,
+                border: `1px solid ${T.colors.border}`,
+                borderRadius: T.radius,
+                fontFamily: T.fonts.mono,
+                fontSize: 12.5,
+                color: T.colors.ink,
+              }}
+            >
+              admin@alnoortransport.com
+            </div>
+            <div
+              style={{
+                marginTop: 18,
+                paddingTop: 14,
+                borderTop: `1px solid ${T.colors.rowDivider}`,
+                display: 'flex',
+                justifyContent: 'flex-end',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setIsContactAdminOpen(false)}
+                className="nf-focus-ring"
+                style={{
+                  background: T.colors.ink,
+                  color: T.colors.pageBg,
+                  border: 'none',
+                  borderRadius: T.radius,
+                  padding: '8px 16px',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                {isRTL ? 'حسناً' : 'Close'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================================================================= */}
+      {/* MODAL: FIRST-TIME SUPER ADMIN SETUP                               */}
+      {/* ================================================================= */}
       {isSetupModalOpen && isSetupRequired && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-fade-in [direction:ltr]">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shadow-md shadow-amber-400/20">
-                  <Shield className="w-5 h-5 fill-current" />
-                </div>
-                <div>
-                  <h3 className="text-base font-black text-slate-900">Initialize Super Admin Account</h3>
-                  <p className="text-[11px] text-amber-800 font-bold">One-Time System Activation</p>
-                </div>
+        <div
+          dir="ltr"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 50,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+            backgroundColor: 'rgba(22, 21, 19, 0.7)',
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="setup-modal-title"
+            style={{
+              width: '100%',
+              maxWidth: 440,
+              background: T.colors.surface,
+              border: `1px solid ${T.colors.border}`,
+              borderRadius: T.radius,
+              padding: 28,
+              color: T.colors.ink,
+              fontFamily: T.fonts.ui,
+              textAlign: 'left',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                paddingBottom: 14,
+                borderBottom: `1px solid ${T.colors.rowDivider}`,
+              }}
+            >
+              <div>
+                <h3
+                  id="setup-modal-title"
+                  style={{
+                    fontFamily: T.fonts.brand,
+                    fontSize: 18,
+                    fontWeight: 700,
+                    margin: 0,
+                  }}
+                >
+                  Initialize Super Admin Account
+                </h3>
+                <p
+                  style={{
+                    fontSize: 12,
+                    color: T.colors.textSecondary,
+                    margin: '2px 0 0',
+                  }}
+                >
+                  One-time system activation
+                </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsSetupModalOpen(false)}
-                className="text-slate-400 hover:text-slate-700"
+                aria-label="Close setup dialog"
+                className="nf-focus-ring"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: T.colors.textMuted,
+                  cursor: 'pointer',
+                  padding: 4,
+                }}
               >
-                <X className="w-5 h-5" />
+                <X size={18} />
               </button>
             </div>
 
-            <div className="mt-3 p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-950 text-[11px] leading-relaxed">
-              <strong>Security Protocol:</strong> This master account has full authority over the fleet system and database. Once this first Super Admin is provisioned, this registration wizard will be permanently locked for all future visitors.
+            <div
+              style={{
+                marginTop: 14,
+                padding: '10px 12px',
+                background: T.colors.pageBg,
+                border: `1px solid ${T.colors.border}`,
+                borderRadius: T.radius,
+                fontSize: 12,
+                lineHeight: 1.5,
+                color: T.colors.textSecondary,
+              }}
+            >
+              <strong>Security protocol:</strong> This master account has full
+              authority over the fleet system and database. Once provisioned, this
+              wizard locks permanently.
             </div>
 
             {setupError && (
-              <div className="mt-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              <div
+                role="alert"
+                style={{
+                  marginTop: 12,
+                  padding: '10px 12px',
+                  background: '#FEF2F2',
+                  border: `1px solid ${T.colors.status.outOfServiceStripe}`,
+                  borderRadius: T.radius,
+                  color: T.colors.status.outOfServiceText,
+                  fontSize: 12.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+              >
+                <AlertCircle size={15} style={{ flexShrink: 0 }} />
                 <span>{setupError}</span>
               </div>
             )}
 
-            <form onSubmit={handleSetupSubmit} className="mt-4 space-y-3.5">
+            <form
+              onSubmit={handleSetupSubmit}
+              style={{
+                marginTop: 16,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 14,
+              }}
+            >
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Full Legal Name <span className="text-rose-500">*</span>
+                <label
+                  htmlFor="setup-full-name"
+                  style={{
+                    display: 'block',
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                    marginBottom: 5,
+                  }}
+                >
+                  Full Legal Name *
                 </label>
                 <input
+                  id="setup-full-name"
                   type="text"
                   required
                   placeholder="e.g. Faisal Al-Noor"
                   value={setupFullName}
                   onChange={(e) => setSetupFullName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+                  className="nf-input"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Corporate Email Address <span className="text-rose-500">*</span>
+                <label
+                  htmlFor="setup-email"
+                  style={{
+                    display: 'block',
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                    marginBottom: 5,
+                  }}
+                >
+                  Corporate Email Address *
                 </label>
                 <input
+                  id="setup-email"
                   type="email"
                   required
                   placeholder="e.g. admin@alnoortransport.com"
                   value={setupEmail}
                   onChange={(e) => setSetupEmail(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-mono text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+                  className="nf-input"
+                  style={{ fontFamily: T.fonts.mono, fontSize: 13 }}
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Master Password <span className="text-rose-500">*</span>
+                <label
+                  htmlFor="setup-password"
+                  style={{
+                    display: 'block',
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                    marginBottom: 5,
+                  }}
+                >
+                  Master Password *
                 </label>
-                <div className="relative">
+                <div style={{ position: 'relative' }}>
                   <input
+                    id="setup-password"
                     type={showSetupPassword ? 'text' : 'password'}
                     required
                     minLength={8}
                     placeholder="Minimum 8 characters"
                     value={setupPassword}
                     onChange={(e) => setSetupPassword(e.target.value)}
-                    className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-slate-300 font-mono text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+                    className="nf-input"
+                    style={{
+                      fontFamily: T.fonts.mono,
+                      fontSize: 13,
+                      paddingRight: 64,
+                    }}
                   />
                   <button
                     type="button"
                     onClick={() => setShowSetupPassword(!showSetupPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                    className="nf-focus-ring"
+                    style={{
+                      position: 'absolute',
+                      right: 12,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      padding: '4px 6px',
+                      fontSize: 12,
+                      fontWeight: 500,
+                      color: T.colors.textSecondary,
+                      textDecoration: 'underline',
+                      cursor: 'pointer',
+                    }}
                   >
-                    {showSetupPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showSetupPassword ? 'Hide' : 'Show'}
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
+                <label
+                  htmlFor="setup-department"
+                  style={{
+                    display: 'block',
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                    marginBottom: 5,
+                  }}
+                >
                   Department
                 </label>
                 <input
+                  id="setup-department"
                   type="text"
                   value={setupDepartment}
                   onChange={(e) => setSetupDepartment(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-medium text-slate-900 focus:outline-none focus:border-amber-500"
+                  className="nf-input"
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+              <div
+                style={{
+                  marginTop: 6,
+                  paddingTop: 14,
+                  borderTop: `1px solid ${T.colors.rowDivider}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-end',
+                  gap: 8,
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => setIsSetupModalOpen(false)}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition"
+                  className="nf-focus-ring"
+                  style={{
+                    padding: '9px 16px',
+                    background: 'transparent',
+                    border: `1px solid ${T.colors.inputBorder}`,
+                    borderRadius: T.radius,
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: T.colors.textSecondary,
+                    cursor: 'pointer',
+                  }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSettingUp}
-                  className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs rounded-xl shadow-md transition active:scale-95 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="nf-focus-ring"
+                  style={{
+                    padding: '9px 18px',
+                    background: T.colors.ink,
+                    color: T.colors.pageBg,
+                    border: 'none',
+                    borderRadius: T.radius,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: isSettingUp ? 'not-allowed' : 'pointer',
+                    opacity: isSettingUp ? 0.65 : 1,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}
                 >
                   {isSettingUp ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Activating System...</span>
+                      <Loader2 size={14} className="animate-spin" />
+                      <span>Activating...</span>
                     </>
                   ) : (
-                    <>
-                      <Sparkles className="w-4 h-4" />
-                      <span>Activate & Sign In</span>
-                    </>
+                    <span>Activate &amp; Sign In</span>
                   )}
                 </button>
               </div>
