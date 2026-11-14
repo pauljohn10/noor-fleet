@@ -6,6 +6,7 @@ import { useI18n } from '../../context/I18nContext';
 export type NavItemKey =
   | 'dashboard'
   | 'vehicles'
+  | 'smallVehicles'
   | 'trailers'
   | 'liveMap'
   | 'trips'
@@ -60,8 +61,9 @@ const NAV_GROUPS: NavGroup[] = [
     title: 'Fleet Management',
     titleAr: 'إدارة الأسطول',
     items: [
-      { key: 'vehicles',  label: 'Trucks Master',    labelAr: 'الشاحنات الرئيسية' },
-      { key: 'trailers',  label: 'Tanker Trailers',  labelAr: 'مقطورات الصهريج' },
+      { key: 'vehicles',      label: 'Trucks Master',          labelAr: 'الشاحنات الرئيسية' },
+      { key: 'smallVehicles',  label: 'Small Vehicles Master',  labelAr: 'المركبات الصغيرة' },
+      { key: 'trailers',      label: 'Tanker Trailers',        labelAr: 'مقطورات الصهريج' },
     ],
   },
   {

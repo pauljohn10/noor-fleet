@@ -16,8 +16,9 @@ interface HeaderProps {
 const getBreadcrumb = (tab: NavItemKey, isRTL: boolean): { section: string; page: string } => {
   const map: Partial<Record<NavItemKey, { section: string; sectionAr: string; page: string; pageAr: string }>> = {
     dashboard:      { section: 'Home',         sectionAr: 'الرئيسية',    page: 'Dashboard',               pageAr: 'لوحة القيادة' },
-    vehicles:       { section: 'Operations',   sectionAr: 'العمليات',    page: 'Vehicles',                pageAr: 'المركبات' },
-    trailers:       { section: 'Operations',   sectionAr: 'العمليات',    page: 'Trailers',                pageAr: 'المقطورات' },
+    vehicles:       { section: 'Fleet',        sectionAr: 'الأسطول',     page: 'Trucks Master',           pageAr: 'الشاحنات الرئيسية' },
+    smallVehicles:  { section: 'Fleet',        sectionAr: 'الأسطول',     page: 'Small Vehicles Master',   pageAr: 'المركبات الصغيرة' },
+    trailers:       { section: 'Fleet',        sectionAr: 'الأسطول',     page: 'Tanker Trailers',         pageAr: 'مقطورات الصهريج' },
     liveMap:        { section: 'GPS',          sectionAr: 'GPS',         page: 'Live Map',                pageAr: 'الخريطة المباشرة' },
     trips:          { section: 'GPS',          sectionAr: 'GPS',         page: 'Trip Management',         pageAr: 'إدارة الرحلات' },
     fuelMonitoring: { section: 'GPS',          sectionAr: 'GPS',         page: 'Fuel Consumption',        pageAr: 'استهلاك الوقود' },

@@ -13,6 +13,7 @@ import { FleetManagerDashboard } from './components/dashboards/FleetManagerDashb
 import { ManagementDashboard } from './components/dashboards/ManagementDashboard';
 
 import { VehicleList } from './components/vehicles/VehicleList';
+import { SmallVehicleList } from './components/vehicles/SmallVehicleList';
 import { TrailerList } from './components/trailers/TrailerList';
 import { JobCardList } from './components/workOrders/JobCardList';
 import { MaintenanceScheduleList } from './components/preventive/MaintenanceScheduleList';
@@ -112,6 +113,8 @@ export function AppContent() {
         return <GpsSyncStatusView />;
       case 'vehicles':
         return <VehicleList />;
+      case 'smallVehicles':
+        return <SmallVehicleList />;
       case 'trailers':
         return <TrailerList />;
       case 'workOrders':
