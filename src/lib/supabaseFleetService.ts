@@ -771,9 +771,19 @@ export async function fetchDefectReports(): Promise<DefectReport[]> {
 }
 
 export async function updateDefectReportInDb(id: string, updates: Partial<DefectReport>): Promise<void> {
+  // Allowlist: only send columns that exist in the live DB schema.
+  // If a column is missing from the DB it causes a 400; keep this list
+  // in sync with supabase/migrations.
+  const ALLOWED_COLUMNS: (keyof DefectReport)[] = [
+    'status', 'workshop_response', 'fleet_manager_notes', 'action_taken',
+    'work_order_id', 'assigned_maintenance_team', 'internal_notes', 'severity',
+  ];
+  const safeUpdates = Object.fromEntries(
+    Object.entries(updates).filter(([k]) => ALLOWED_COLUMNS.includes(k as keyof DefectReport))
+  );
   const { error } = await supabase
     .from('defect_reports')
-    .update({ ...updates, updated_at: new Date().toISOString() })
+    .update({ ...safeUpdates, updated_at: new Date().toISOString() })
     .eq('id', id);
   if (error) throw error;
 }
