@@ -5,37 +5,37 @@
     /* ── Noor Fleet Design Tokens (warm-paper editorial theme) ── */
 
     /* Fonts */
-    --font-brand:   'Bricolage Grotesque', system-ui, sans-serif;
-    --font-ui:      'Instrument Sans', system-ui, sans-serif;
-    --font-mono:    'DM Mono', 'Courier New', monospace;
-    --font-arabic:  'IBM Plex Sans Arabic', system-ui, sans-serif;
+    --font-brand: 'Bricolage Grotesque', system-ui, sans-serif;
+    --font-ui: 'Instrument Sans', system-ui, sans-serif;
+    --font-mono: 'DM Mono', 'Courier New', monospace;
+    --font-arabic: 'IBM Plex Sans Arabic', system-ui, sans-serif;
 
     /* Palette */
-    --color-page-bg:        #F4F1EA;
-    --color-surface:        #FFFDF8;
-    --color-ink:            #161513;
+    --color-page-bg: #F4F1EA;
+    --color-surface: #FFFDF8;
+    --color-ink: #161513;
     --color-text-secondary: #5B574F;
-    --color-text-muted:     #6B665C;
+    --color-text-muted: #6B665C;
 
     /* Borders & dividers */
-    --color-border:         #D9D4C8;
-    --color-row-divider:    #DDD8CB;
-    --color-input-border:   #CFC9BA;
+    --color-border: #D9D4C8;
+    --color-row-divider: #DDD8CB;
+    --color-input-border: #CFC9BA;
 
     /* Interaction */
-    --color-row-hover:      #ECE8DE;
-    --color-sidebar-hover:  #E8E3D8;
-    --color-brand-accent:   #0F5C4D;
+    --color-row-hover: #ECE8DE;
+    --color-sidebar-hover: #E8E3D8;
+    --color-brand-accent: #0F5C4D;
 
     /* Status — text / stripe */
-    --color-available-text:   #166534;
+    --color-available-text: #166534;
     --color-available-stripe: #16A34A;
-    --color-ontrip-text:      #1E40AF;
-    --color-ontrip-stripe:    #2563EB;
-    --color-workshop-text:    #92400E;
-    --color-workshop-stripe:  #D97706;
-    --color-oos-text:         #991B1B;
-    --color-oos-stripe:       #DC2626;
+    --color-ontrip-text: #1E40AF;
+    --color-ontrip-stripe: #2563EB;
+    --color-workshop-text: #92400E;
+    --color-workshop-stripe: #D97706;
+    --color-oos-text: #991B1B;
+    --color-oos-stripe: #DC2626;
 
     /* Radius */
     --radius: 4px;
@@ -50,12 +50,14 @@
     min-height: 100vh;
   }
 
-  :lang(ar), [dir="rtl"] {
+  :lang(ar),
+  [dir="rtl"] {
     font-family: var(--font-arabic);
   }
 
   /* Plates, fleet numbers, odometer — always LTR even in RTL context */
-  .font-mono, [data-ltr] {
+  .font-mono,
+  [data-ltr] {
     font-family: var(--font-mono);
     direction: ltr;
     unicode-bidi: embed;
@@ -88,6 +90,7 @@
     opacity: 0;
     transform: translateY(4px);
   }
+
   to {
     opacity: 1;
     transform: none;
@@ -99,6 +102,7 @@
     opacity: 0;
     transform: translateY(-6px);
   }
+
   to {
     opacity: 1;
     transform: none;
@@ -143,11 +147,11 @@
   font-family: var(--font-arabic);
 }
 
-[dir="rtl"] .space-x-1 > :not([hidden]) ~ :not([hidden]),
-[dir="rtl"] .space-x-2 > :not([hidden]) ~ :not([hidden]),
-[dir="rtl"] .space-x-2\.5 > :not([hidden]) ~ :not([hidden]),
-[dir="rtl"] .space-x-3 > :not([hidden]) ~ :not([hidden]),
-[dir="rtl"] .space-x-4 > :not([hidden]) ~ :not([hidden]) {
+[dir="rtl"] .space-x-1> :not([hidden])~ :not([hidden]),
+[dir="rtl"] .space-x-2> :not([hidden])~ :not([hidden]),
+[dir="rtl"] .space-x-2\.5> :not([hidden])~ :not([hidden]),
+[dir="rtl"] .space-x-3> :not([hidden])~ :not([hidden]),
+[dir="rtl"] .space-x-4> :not([hidden])~ :not([hidden]) {
   --tw-space-x-reverse: 1;
 }
 
