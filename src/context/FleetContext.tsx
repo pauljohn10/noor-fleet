@@ -2,12 +2,12 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { 
   Vehicle, Trailer, Driver, Technician, WorkOrder, Part, 
   MaintenanceSchedule, PMStatus, VehicleInspection, VehicleDocument, 
-  NotificationItem, AuditLog, WOStatus, WOPriority, InspectionResult,
-  DefectReport, DefectReportCategory, SeverityLevel,
+  NotificationItem, AuditLog, WOStatus, DefectReport, DefectReportCategory, SeverityLevel,
   GpsDevice, VehicleGpsPing, GpsSyncLog, Trip, VehicleFuelBenchmark, FuelTransaction, TripFuelReconciliation
 } from '../types';
-import { LocalStorageRepository } from '../lib/storage';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { LocalStorageRepository } from '../lib/storage';
+import * as dbService from '../lib/supabaseFleetService';
 
 export type DateFilterOption = 'TODAY' | 'WEEK' | 'MONTH' | 'YEAR' | 'ALL' | 'CUSTOM';
 
@@ -40,6 +40,10 @@ interface FleetContextType {
   gpsSyncLogs: GpsSyncLog[];
   isGpsProviderConnected: boolean;
 
+  // Status & Connectivity
+  isLoadingData: boolean;
+  databaseError: string | null;
+
   // Filtering
   dateFilter: DateFilterOption;
   setDateFilter: (option: DateFilterOption) => void;
@@ -47,33 +51,33 @@ interface FleetContextType {
   setCustomDateRange: (range: DateRange) => void;
 
   // Actions
-  addVehicle: (vehicle: Omit<Vehicle, 'id' | 'created_at' | 'updated_at'>) => void;
-  updateVehicle: (id: string, vehicle: Partial<Vehicle>) => void;
-  deleteVehicle: (id: string) => void;
+  addVehicle: (vehicle: Omit<Vehicle, 'id' | 'created_at' | 'updated_at'>) => Promise<Vehicle>;
+  updateVehicle: (id: string, vehicle: Partial<Vehicle>) => Promise<Vehicle>;
+  deleteVehicle: (id: string) => Promise<void>;
   
-  addTrailer: (trailer: Omit<Trailer, 'id' | 'created_at' | 'updated_at'>) => void;
-  updateTrailer: (id: string, trailer: Partial<Trailer>) => void;
-  deleteTrailer: (id: string) => void;
+  addTrailer: (trailer: Omit<Trailer, 'id' | 'created_at' | 'updated_at'>) => Promise<Trailer>;
+  updateTrailer: (id: string, trailer: Partial<Trailer>) => Promise<Trailer>;
+  deleteTrailer: (id: string) => Promise<void>;
 
-  addDriver: (driver: Omit<Driver, 'id' | 'created_at'>) => void;
-  updateDriver: (id: string, driver: Partial<Driver>) => void;
-  deleteDriver: (id: string) => void;
+  addDriver: (driver: Omit<Driver, 'id' | 'created_at'>) => Promise<Driver>;
+  updateDriver: (id: string, driver: Partial<Driver>) => Promise<Driver>;
+  deleteDriver: (id: string) => Promise<void>;
 
-  addPart: (part: Omit<Part, 'id' | 'created_at'>) => void;
-  updatePart: (id: string, part: Partial<Part>) => void;
-  deletePart: (id: string) => void;
+  addPart: (part: Omit<Part, 'id' | 'created_at'>) => Promise<Part>;
+  updatePart: (id: string, part: Partial<Part>) => Promise<Part>;
+  deletePart: (id: string) => Promise<void>;
 
-  addWorkOrder: (wo: Partial<WorkOrder>) => string;
-  updateWorkOrderStatus: (id: string, toStatus: WOStatus, notes?: string, changedBy?: string) => void;
-  addWorkOrderPart: (woId: string, partId: string, qty: number, issuedBy: string) => void;
-  addWorkOrderLabor: (woId: string, techId: string, hours: number, description: string) => void;
+  addWorkOrder: (wo: Partial<WorkOrder>) => Promise<WorkOrder>;
+  updateWorkOrderStatus: (id: string, toStatus: WOStatus, notes?: string, changedBy?: string) => Promise<void>;
+  addWorkOrderPart: (woId: string, partId: string, qty: number, issuedBy?: string) => Promise<void>;
+  addWorkOrderLabor: (woId: string, techId: string, hours: number, description?: string) => Promise<void>;
 
-  issuePartStock: (partId: string, qty: number, woId?: string, vehicleId?: string, performedBy?: string) => boolean;
-  receivePartStock: (partId: string, qty: number, unitCost: number, performedBy?: string) => void;
-  adjustPartStock: (partId: string, newStock: number, notes: string, performedBy?: string) => void;
+  issuePartStock: (partId: string, qty: number, woId?: string, vehicleId?: string, performedBy?: string) => Promise<boolean>;
+  receivePartStock: (partId: string, qty: number, unitCost: number, performedBy?: string) => Promise<void>;
+  adjustPartStock: (partId: string, newStock: number, notes: string, performedBy?: string) => Promise<void>;
 
-  submitInspection: (inspection: Omit<VehicleInspection, 'id' | 'inspection_number' | 'created_at'>) => void;
-  submitDefectReport: (report: Omit<DefectReport, 'id' | 'report_number' | 'created_at'>) => void;
+  submitInspection: (inspection: Omit<VehicleInspection, 'id' | 'inspection_number' | 'created_at'>) => Promise<VehicleInspection>;
+  submitDefectReport: (report: Omit<DefectReport, 'id' | 'report_number' | 'created_at'>) => Promise<void>;
   submitPublicDriverReport: (input: {
     driver_name: string;
     plate_number: string;
@@ -90,29 +94,30 @@ interface FleetContextType {
     error?: string;
   }>;
   updateDefectReport: (id: string, updates: Partial<DefectReport>, updatedBy?: string) => Promise<boolean>;
-  addMaintenanceSchedule: (schedule: Omit<MaintenanceSchedule, 'id' | 'created_at'>) => void;
+  addMaintenanceSchedule: (schedule: Omit<MaintenanceSchedule, 'id' | 'created_at'>) => Promise<MaintenanceSchedule>;
   updateMaintenanceScheduleStatus: (id: string, status: PMStatus, notes?: string, changedBy?: string) => Promise<boolean>;
   updateMaintenanceSchedule: (id: string, updates: Partial<MaintenanceSchedule>, changedBy?: string) => Promise<boolean>;
-  addDocument: (doc: Omit<VehicleDocument, 'id' | 'created_at'>, addedBy?: string) => void;
+  addDocument: (doc: Omit<VehicleDocument, 'id' | 'created_at'>, addedBy?: string) => Promise<VehicleDocument>;
   updateDocument: (id: string, updates: Partial<VehicleDocument>, changedBy?: string) => Promise<boolean>;
   deleteDocument: (id: string, changedBy?: string) => Promise<boolean>;
-  markNotificationRead: (id: string) => void;
+  markNotificationRead: (id: string) => Promise<void>;
 
   // Telematics & Fuel Actions
-  addGpsDevice: (device: Omit<GpsDevice, 'id' | 'created_at'>) => GpsDevice;
-  updateGpsDevice: (id: string, updates: Partial<GpsDevice>) => void;
-  deleteGpsDevice: (id: string) => void;
-  addTrip: (trip: Omit<Trip, 'id' | 'trip_number' | 'created_at'>) => Trip;
-  updateTrip: (id: string, updates: Partial<Trip>) => void;
-  addFuelTransaction: (tx: Omit<FuelTransaction, 'id' | 'transaction_number' | 'created_at'>) => FuelTransaction;
+  addGpsDevice: (device: Omit<GpsDevice, 'id' | 'created_at'>) => Promise<GpsDevice>;
+  updateGpsDevice: (id: string, updates: Partial<GpsDevice>) => Promise<void>;
+  deleteGpsDevice: (id: string) => Promise<void>;
+  addTrip: (trip: Omit<Trip, 'id' | 'trip_number' | 'created_at'>) => Promise<Trip>;
+  updateTrip: (id: string, updates: Partial<Trip>) => Promise<void>;
+  addFuelTransaction: (tx: Omit<FuelTransaction, 'id' | 'transaction_number' | 'created_at'>) => Promise<FuelTransaction>;
   reconcileTripFuel: (tripId: string) => TripFuelReconciliation | null;
   simulateGpsSync: () => void;
-  refreshData: () => void;
+  refreshData: () => Promise<void>;
 }
 
 const FleetContext = createContext<FleetContextType | undefined>(undefined);
 
 export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Pure Supabase states (Zero mock data)
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [trailers, setTrailers] = useState<Trailer[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
@@ -135,606 +140,416 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [tripReconciliations, setTripReconciliations] = useState<TripFuelReconciliation[]>([]);
   const [gpsSyncLogs, setGpsSyncLogs] = useState<GpsSyncLog[]>([]);
 
+  const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
+  const [databaseError, setDatabaseError] = useState<string | null>(null);
+
   const [dateFilter, setDateFilter] = useState<DateFilterOption>('ALL');
   const [customDateRange, setCustomDateRange] = useState<DateRange>({
     startDate: new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10),
     endDate: new Date().toISOString().slice(0, 10)
   });
 
+  // Purge legacy local mock data on startup
+  useEffect(() => {
+    LocalStorageRepository.clearLegacyMockData();
+  }, []);
+
+  /**
+   * Refresh all operational records strictly from Supabase
+   */
   const refreshData = useCallback(async () => {
-    const localReports = LocalStorageRepository.getDefectReports();
-    setVehicles(LocalStorageRepository.getVehicles());
-    setTrailers(LocalStorageRepository.getTrailers());
-    setDrivers(LocalStorageRepository.getDrivers());
-    setTechnicians(LocalStorageRepository.getTechnicians());
-    setWorkOrders(LocalStorageRepository.getWorkOrders());
-    setParts(LocalStorageRepository.getParts());
-    setSchedules(LocalStorageRepository.getSchedules());
-    setInspections(LocalStorageRepository.getInspections());
-    setDocuments(LocalStorageRepository.getDocuments());
-    setNotifications(LocalStorageRepository.getNotifications());
-    setAuditLogs(LocalStorageRepository.getAuditLogs());
-    setDefectReports(localReports);
+    if (!isSupabaseConfigured) {
+      setDatabaseError('Supabase backend is not configured.');
+      setIsLoadingData(false);
+      return;
+    }
 
-    // Telematics & Fuel Loading
-    setTrips(LocalStorageRepository.getTrips());
-    setGpsDevices(LocalStorageRepository.getGpsDevices());
-    setGpsPings(LocalStorageRepository.getGpsPings());
-    setFuelTransactions(LocalStorageRepository.getFuelTransactions());
-    setFuelBenchmarks(LocalStorageRepository.getFuelBenchmarks());
-    setTripReconciliations(LocalStorageRepository.getTripReconciliations());
-    setGpsSyncLogs(LocalStorageRepository.getGpsSyncLogs());
+    setIsLoadingData(true);
+    setDatabaseError(null);
 
-    if (isSupabaseConfigured) {
-      try {
-        const { data: repData } = await supabase
-          .from('defect_reports')
-          .select('*')
-          .order('created_at', { ascending: false });
-        if (repData && repData.length > 0) {
-          const currentLocal = LocalStorageRepository.getDefectReports();
-          const mergedMap = new Map<string, DefectReport>();
-          for (const loc of currentLocal) {
-            mergedMap.set(loc.report_number || loc.id, loc);
-          }
-          for (const rem of repData as DefectReport[]) {
-            const key = rem.report_number || rem.id;
-            const existing = mergedMap.get(key);
-            if (!existing) {
-              mergedMap.set(key, rem);
-            } else {
-              const locTime = existing.updated_at ? new Date(existing.updated_at).getTime() : 0;
-              const remTime = rem.updated_at ? new Date(rem.updated_at).getTime() : 0;
-              if (remTime > locTime) {
-                mergedMap.set(key, rem);
-              }
-            }
-          }
-          const mergedReports = Array.from(mergedMap.values()).sort(
-            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          );
-          setDefectReports(mergedReports);
-          LocalStorageRepository.saveDefectReports(mergedReports);
-        }
+    try {
+      const [
+        vehList, trlList, drvList, techList, partList,
+        woList, schedList, insList, docList, repList,
+        tripList, devList, fuelList, auditList, notifList
+      ] = await Promise.all([
+        dbService.fetchVehicles().catch(err => { console.warn('Vehicles fetch:', err); return []; }),
+        dbService.fetchTrailers().catch(err => { console.warn('Trailers fetch:', err); return []; }),
+        dbService.fetchDrivers().catch(err => { console.warn('Drivers fetch:', err); return []; }),
+        dbService.fetchTechnicians().catch(err => { console.warn('Technicians fetch:', err); return []; }),
+        dbService.fetchParts().catch(err => { console.warn('Parts fetch:', err); return []; }),
+        dbService.fetchWorkOrders().catch(err => { console.warn('WorkOrders fetch:', err); return []; }),
+        dbService.fetchMaintenanceSchedules().catch(err => { console.warn('Schedules fetch:', err); return []; }),
+        dbService.fetchVehicleInspections().catch(err => { console.warn('Inspections fetch:', err); return []; }),
+        dbService.fetchVehicleDocuments().catch(err => { console.warn('Documents fetch:', err); return []; }),
+        dbService.fetchDefectReports().catch(err => { console.warn('Defects fetch:', err); return []; }),
+        dbService.fetchTrips().catch(err => { console.warn('Trips fetch:', err); return []; }),
+        dbService.fetchGpsDevices().catch(err => { console.warn('GPS Devices fetch:', err); return []; }),
+        dbService.fetchFuelTransactions().catch(err => { console.warn('Fuel fetch:', err); return []; }),
+        dbService.fetchAuditLogs().catch(err => { console.warn('Audit fetch:', err); return []; }),
+        dbService.fetchNotifications().catch(err => { console.warn('Notifications fetch:', err); return []; })
+      ]);
 
-        const { data: tripData } = await supabase
-          .from('trips')
-          .select('*')
-          .order('created_at', { ascending: false });
-        if (tripData && tripData.length > 0) setTrips(tripData as Trip[]);
-
-        const { data: pingData } = await supabase
-          .from('vehicle_gps_pings')
-          .select('*')
-          .order('ping_timestamp', { ascending: false })
-          .limit(100);
-        if (pingData && pingData.length > 0) {
-          const normalizedPings = pingData.map((p: any) => ({
-            ...p,
-            gps_timestamp: p.ping_timestamp || p.gps_timestamp || p.created_at || new Date().toISOString(),
-            heading_degrees: p.heading_deg ?? p.heading_degrees ?? 0,
-            altitude_meters: p.altitude_m ?? p.altitude_meters ?? 0,
-          }));
-          setGpsPings(normalizedPings as VehicleGpsPing[]);
-        }
-
-        const { data: fuelData } = await supabase
-          .from('fuel_transactions')
-          .select('*')
-          .order('dispense_timestamp', { ascending: false });
-        if (fuelData && fuelData.length > 0) {
-          const normalizedFuel = fuelData.map((f: any) => ({
-            ...f,
-            transaction_date: f.dispense_timestamp || f.transaction_date || f.created_at || new Date().toISOString(),
-            unit_cost: f.cost_per_liter_sar ?? f.unit_cost ?? 0,
-            total_cost: f.total_cost_sar ?? f.total_cost ?? 0,
-          }));
-          setFuelTransactions(normalizedFuel as FuelTransaction[]);
-        }
-
-        const { data: schData } = await supabase
-          .from('maintenance_schedules')
-          .select('*')
-          .order('created_at', { ascending: false });
-        if (schData && schData.length > 0) {
-          const localSchedules = LocalStorageRepository.getSchedules();
-          const mergedMap = new Map<string, MaintenanceSchedule>();
-          for (const localSch of localSchedules) {
-            mergedMap.set(localSch.id, localSch);
-          }
-          for (const remoteSch of schData as MaintenanceSchedule[]) {
-            const existing = mergedMap.get(remoteSch.id);
-            if (!existing) {
-              mergedMap.set(remoteSch.id, remoteSch);
-            } else {
-              const localTime = existing.updated_at ? new Date(existing.updated_at).getTime() : 0;
-              const remoteTime = remoteSch.updated_at ? new Date(remoteSch.updated_at).getTime() : 0;
-              if (remoteTime > localTime) {
-                mergedMap.set(remoteSch.id, remoteSch);
-              }
-            }
-          }
-          const mergedList = Array.from(mergedMap.values());
-          setSchedules(mergedList);
-          LocalStorageRepository.saveSchedules(mergedList);
-        }
-
-        const { data: docData } = await supabase
-          .from('vehicle_documents')
-          .select('*')
-          .order('expiry_date', { ascending: true });
-        if (docData && docData.length > 0) {
-          const localDocs = LocalStorageRepository.getDocuments();
-          const mergedMap = new Map<string, VehicleDocument>();
-          for (const localDoc of localDocs) {
-            mergedMap.set(localDoc.id, localDoc);
-          }
-          for (const remoteDoc of docData as VehicleDocument[]) {
-            const existing = mergedMap.get(remoteDoc.id);
-            if (!existing) {
-              mergedMap.set(remoteDoc.id, remoteDoc);
-            } else {
-              const localTime = existing.updated_at ? new Date(existing.updated_at).getTime() : 0;
-              const remoteTime = remoteDoc.updated_at ? new Date(remoteDoc.updated_at).getTime() : 0;
-              if (remoteTime >= localTime) {
-                mergedMap.set(remoteDoc.id, remoteDoc);
-              }
-            }
-          }
-          const mergedDocs = Array.from(mergedMap.values());
-          setDocuments(mergedDocs);
-          LocalStorageRepository.saveDocuments(mergedDocs);
-        }
-      } catch (err) {
-        console.error('[Supabase Exception] Error fetching telematics data:', err);
-      }
+      setVehicles(vehList);
+      setTrailers(trlList);
+      setDrivers(drvList);
+      setTechnicians(techList);
+      setParts(partList);
+      setWorkOrders(woList);
+      setSchedules(schedList);
+      setInspections(insList);
+      setDocuments(docList);
+      setDefectReports(repList);
+      setTrips(tripList);
+      setGpsDevices(devList);
+      setFuelTransactions(fuelList);
+      setAuditLogs(auditList);
+      setNotifications(notifList);
+    } catch (err: any) {
+      console.error('[FleetContext] Exception querying Supabase:', err);
+      setDatabaseError(err?.message || 'Failed to sync with Supabase database.');
+    } finally {
+      setIsLoadingData(false);
     }
   }, []);
 
+  // Initial fetch on mount
   useEffect(() => {
     refreshData();
-    const handleStorageSync = (e: StorageEvent) => {
-      if (e.key && e.key.startsWith('FWMS_V1_')) {
-        refreshData();
-      }
-    };
-    window.addEventListener('storage', handleStorageSync);
-    return () => window.removeEventListener('storage', handleStorageSync);
   }, [refreshData]);
 
-  // Actions implementation
-  const addVehicle = (vehData: Omit<Vehicle, 'id' | 'created_at' | 'updated_at'>) => {
-    const newVeh: Vehicle = {
-      ...vehData,
-      id: 'v-' + Date.now(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-    const updated = [newVeh, ...vehicles];
-    setVehicles(updated);
-    LocalStorageRepository.saveVehicles(updated);
-    
-    LocalStorageRepository.addAuditLog({
-      user_name: 'Active User',
-      user_role: 'FLEET_MANAGER',
+  // ============================================================================
+  // ACTIONS: VEHICLES
+  // ============================================================================
+  const addVehicle = async (vehData: Omit<Vehicle, 'id' | 'created_at' | 'updated_at'>): Promise<Vehicle> => {
+    const created = await dbService.insertVehicle(vehData);
+    await dbService.insertAuditLog({
       action: 'CREATE',
       module: 'VEHICLES',
-      record_id: newVeh.vehicle_id,
-      new_values: newVeh,
-      ip_address: '127.0.0.1'
+      performed_by: 'Staff',
+      target_id: created.vehicle_id,
+      details: created
     });
-    refreshData();
+    await refreshData();
+    return created;
   };
 
-  const updateVehicle = (id: string, updates: Partial<Vehicle>) => {
-    const updated = vehicles.map(v => v.id === id ? { ...v, ...updates, updated_at: new Date().toISOString() } : v);
-    setVehicles(updated);
-    LocalStorageRepository.saveVehicles(updated);
-    refreshData();
+  const updateVehicle = async (id: string, updates: Partial<Vehicle>): Promise<Vehicle> => {
+    const updated = await dbService.updateVehicle(id, updates);
+    await dbService.insertAuditLog({
+      action: 'UPDATE',
+      module: 'VEHICLES',
+      performed_by: 'Staff',
+      target_id: updated.vehicle_id,
+      details: updates
+    });
+    await refreshData();
+    return updated;
   };
 
-  const deleteVehicle = (id: string) => {
-    const target = vehicles.find(v => v.id === id);
-    const updated = vehicles.filter(v => v.id !== id);
-    setVehicles(updated);
-    LocalStorageRepository.saveVehicles(updated);
-    if (target) {
-      LocalStorageRepository.addAuditLog({
-        user_name: 'Active User',
-        user_role: 'FLEET_MANAGER',
-        action: 'DELETE',
-        module: 'VEHICLES',
-        record_id: target.vehicle_id,
-        old_values: target,
-        ip_address: '127.0.0.1'
-      });
-    }
-    refreshData();
+  const deleteVehicle = async (id: string): Promise<void> => {
+    await dbService.deleteVehicle(id);
+    await dbService.insertAuditLog({
+      action: 'DELETE',
+      module: 'VEHICLES',
+      performed_by: 'Staff',
+      target_id: id
+    });
+    await refreshData();
   };
 
-  const addTrailer = (trailerData: Omit<Trailer, 'id' | 'created_at' | 'updated_at'>) => {
-    const newTr: Trailer = {
-      ...trailerData,
-      id: 'tr-' + Date.now(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-    const updated = [newTr, ...trailers];
-    setTrailers(updated);
-    LocalStorageRepository.saveTrailers(updated);
-    refreshData();
-  };
-
-  const updateTrailer = (id: string, updates: Partial<Trailer>) => {
-    const updated = trailers.map(t => t.id === id ? { ...t, ...updates, updated_at: new Date().toISOString() } : t);
-    setTrailers(updated);
-    LocalStorageRepository.saveTrailers(updated);
-    refreshData();
-  };
-
-  const deleteTrailer = (id: string) => {
-    const updated = trailers.filter(t => t.id !== id);
-    setTrailers(updated);
-    LocalStorageRepository.saveTrailers(updated);
-    refreshData();
-  };
-
-  const addDriver = (driverData: Omit<Driver, 'id' | 'created_at'>) => {
-    const newDr: Driver = {
-      ...driverData,
-      id: 'dr-' + Date.now(),
-      created_at: new Date().toISOString()
-    };
-    const updated = [newDr, ...drivers];
-    setDrivers(updated);
-    LocalStorageRepository.saveDrivers(updated);
-    refreshData();
-  };
-
-  const updateDriver = (id: string, updates: Partial<Driver>) => {
-    const updated = drivers.map(d => d.id === id ? { ...d, ...updates } : d);
-    setDrivers(updated);
-    LocalStorageRepository.saveDrivers(updated);
-    refreshData();
-  };
-
-  const deleteDriver = (id: string) => {
-    const updated = drivers.filter(d => d.id !== id);
-    setDrivers(updated);
-    LocalStorageRepository.saveDrivers(updated);
-    refreshData();
-  };
-
-  const addPart = (partData: Omit<Part, 'id' | 'created_at'>) => {
-    const newPart: Part = {
-      ...partData,
-      id: 'part-' + Date.now(),
-      created_at: new Date().toISOString()
-    };
-    const updated = [newPart, ...parts];
-    setParts(updated);
-    LocalStorageRepository.saveParts(updated);
-    refreshData();
-  };
-
-  const updatePart = (id: string, updates: Partial<Part>) => {
-    const updated = parts.map(p => p.id === id ? { ...p, ...updates } : p);
-    setParts(updated);
-    LocalStorageRepository.saveParts(updated);
-    refreshData();
-  };
-
-  const deletePart = (id: string) => {
-    const updated = parts.filter(p => p.id !== id);
-    setParts(updated);
-    LocalStorageRepository.saveParts(updated);
-    refreshData();
-  };
-
-  const addWorkOrder = (woData: Partial<WorkOrder>): string => {
-    const yearStr = new Date().getFullYear().toString();
-    const count = workOrders.length + 1;
-    const woNum = `WO-${yearStr}-${String(count).padStart(6, '0')}`;
-    
-    const newWO: WorkOrder = {
-      id: 'wo-' + Date.now(),
-      work_order_number: woNum,
-      vehicle_id: woData.vehicle_id || '',
-      trailer_id: woData.trailer_id,
-      driver_id: woData.driver_id,
-      reported_by: woData.reported_by || 'System',
-      date_reported: new Date().toISOString(),
-      problem_description: woData.problem_description || 'Unspecified Work Order Request',
-      priority: woData.priority || 'MEDIUM',
-      workshop_location_id: woData.workshop_location_id || '10000000-0000-0000-0000-000000000001',
-      assigned_supervisor_id: woData.assigned_supervisor_id,
-      assigned_technician_id: woData.assigned_technician_id,
-      status: woData.status || 'REPORTED',
-      parts_cost: 0,
-      labor_cost: 0,
-      external_service_cost: 0,
-      other_cost: 0,
-      total_cost: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-
-    const updated = [newWO, ...workOrders];
-    setWorkOrders(updated);
-    LocalStorageRepository.saveWorkOrders(updated);
-
-    // Update target vehicle status to IN_WORKSHOP
-    if (newWO.vehicle_id) {
-      updateVehicle(newWO.vehicle_id, { status: 'IN_WORKSHOP' });
-    }
-
-    LocalStorageRepository.addAuditLog({
-      user_name: newWO.reported_by,
-      user_role: 'WORKSHOP_SUPERVISOR',
+  // ============================================================================
+  // ACTIONS: TRAILERS
+  // ============================================================================
+  const addTrailer = async (trailerData: Omit<Trailer, 'id' | 'created_at' | 'updated_at'>): Promise<Trailer> => {
+    const created = await dbService.insertTrailer(trailerData);
+    await dbService.insertAuditLog({
       action: 'CREATE',
-      module: 'WORK_ORDERS',
-      record_id: newWO.work_order_number,
-      new_values: newWO,
-      ip_address: '127.0.0.1'
+      module: 'TRAILERS',
+      performed_by: 'Staff',
+      target_id: created.trailer_id,
+      details: created
     });
-
-    refreshData();
-    return newWO.id;
+    await refreshData();
+    return created;
   };
 
-  const updateWorkOrderStatus = (id: string, toStatus: WOStatus, notes?: string, changedBy: string = 'Active User') => {
-    const target = workOrders.find(w => w.id === id);
-    if (!target) return;
-
-    const fromStatus = target.status;
-    const updates: Partial<WorkOrder> = {
-      status: toStatus,
-      updated_at: new Date().toISOString()
-    };
-
-    if (toStatus === 'COMPLETED' || toStatus === 'RELEASED') {
-      updates.actual_completion = new Date().toISOString();
-    }
-
-    const updatedWOList = workOrders.map(w => w.id === id ? { ...w, ...updates } : w);
-    setWorkOrders(updatedWOList);
-    LocalStorageRepository.saveWorkOrders(updatedWOList);
-
-    // If released, release vehicle status back to AVAILABLE
-    if (toStatus === 'RELEASED' && target.vehicle_id) {
-      updateVehicle(target.vehicle_id, { status: 'AVAILABLE' });
-    }
-
-    LocalStorageRepository.addAuditLog({
-      user_name: changedBy,
-      user_role: 'WORKSHOP_SUPERVISOR',
-      action: 'STATUS_CHANGE',
-      module: 'WORK_ORDERS',
-      record_id: target.work_order_number,
-      old_values: { status: fromStatus },
-      new_values: { status: toStatus, notes },
-      ip_address: '127.0.0.1'
+  const updateTrailer = async (id: string, updates: Partial<Trailer>): Promise<Trailer> => {
+    const updated = await dbService.updateTrailer(id, updates);
+    await dbService.insertAuditLog({
+      action: 'UPDATE',
+      module: 'TRAILERS',
+      performed_by: 'Staff',
+      target_id: updated.trailer_id,
+      details: updates
     });
-
-    refreshData();
+    await refreshData();
+    return updated;
   };
 
-  const issuePartStock = (partId: string, qty: number, woId?: string, vehicleId?: string, performedBy: string = 'Storekeeper'): boolean => {
-    const targetPart = parts.find(p => p.id === partId);
-    if (!targetPart) return false;
-
-    if (targetPart.current_stock < qty) {
-      alert(`Cannot issue ${qty} units. Insufficient stock! Available: ${targetPart.current_stock}`);
-      return false;
-    }
-
-    const newStock = targetPart.current_stock - qty;
-    const updatedParts = parts.map(p => p.id === partId ? { ...p, current_stock: newStock } : p);
-    setParts(updatedParts);
-    LocalStorageRepository.saveParts(updatedParts);
-
-    // If linked to work order, add cost to work order parts_cost
-    if (woId) {
-      const wo = workOrders.find(w => w.id === woId);
-      if (wo) {
-        const addedCost = qty * targetPart.unit_cost;
-        const newPartsCost = wo.parts_cost + addedCost;
-        const newTotal = newPartsCost + wo.labor_cost + wo.external_service_cost + wo.other_cost;
-        
-        const updatedWOs = workOrders.map(w => w.id === woId ? { ...w, parts_cost: newPartsCost, total_cost: newTotal } : w);
-        setWorkOrders(updatedWOs);
-        LocalStorageRepository.saveWorkOrders(updatedWOs);
-      }
-    }
-
-    LocalStorageRepository.addAuditLog({
-      user_name: performedBy,
-      user_role: 'STOREKEEPER',
-      action: 'ISSUE_PART',
-      module: 'INVENTORY',
-      record_id: targetPart.part_number,
-      old_values: { stock: targetPart.current_stock },
-      new_values: { stock: newStock, issued_qty: qty, woId },
-      ip_address: '127.0.0.1'
+  const deleteTrailer = async (id: string): Promise<void> => {
+    await dbService.deleteTrailer(id);
+    await dbService.insertAuditLog({
+      action: 'DELETE',
+      module: 'TRAILERS',
+      performed_by: 'Staff',
+      target_id: id
     });
+    await refreshData();
+  };
 
-    refreshData();
+  // ============================================================================
+  // ACTIONS: DRIVERS
+  // ============================================================================
+  const addDriver = async (driverData: Omit<Driver, 'id' | 'created_at'>): Promise<Driver> => {
+    const created = await dbService.insertDriver(driverData);
+    await dbService.insertAuditLog({
+      action: 'CREATE',
+      module: 'DRIVERS',
+      performed_by: 'Staff',
+      target_id: created.employee_id,
+      details: created
+    });
+    await refreshData();
+    return created;
+  };
+
+  const updateDriver = async (id: string, updates: Partial<Driver>): Promise<Driver> => {
+    const updated = await dbService.updateDriver(id, updates);
+    await dbService.insertAuditLog({
+      action: 'UPDATE',
+      module: 'DRIVERS',
+      performed_by: 'Staff',
+      target_id: updated.employee_id,
+      details: updates
+    });
+    await refreshData();
+    return updated;
+  };
+
+  const deleteDriver = async (id: string): Promise<void> => {
+    await dbService.deleteDriver(id);
+    await dbService.insertAuditLog({
+      action: 'DELETE',
+      module: 'DRIVERS',
+      performed_by: 'Staff',
+      target_id: id
+    });
+    await refreshData();
+  };
+
+  // ============================================================================
+  // ACTIONS: SPARE PARTS & INVENTORY
+  // ============================================================================
+  const addPart = async (partData: Omit<Part, 'id' | 'created_at'>): Promise<Part> => {
+    const created = await dbService.insertPart(partData);
+    await dbService.insertAuditLog({
+      action: 'CREATE',
+      module: 'PARTS',
+      performed_by: 'Storekeeper',
+      target_id: created.part_number,
+      details: created
+    });
+    await refreshData();
+    return created;
+  };
+
+  const updatePart = async (id: string, updates: Partial<Part>): Promise<Part> => {
+    const updated = await dbService.updatePart(id, updates);
+    await dbService.insertAuditLog({
+      action: 'UPDATE',
+      module: 'PARTS',
+      performed_by: 'Storekeeper',
+      target_id: updated.part_number,
+      details: updates
+    });
+    await refreshData();
+    return updated;
+  };
+
+  const deletePart = async (id: string): Promise<void> => {
+    await dbService.deletePart(id);
+    await dbService.insertAuditLog({
+      action: 'DELETE',
+      module: 'PARTS',
+      performed_by: 'Storekeeper',
+      target_id: id
+    });
+    await refreshData();
+  };
+
+  const issuePartStock = async (
+    partId: string,
+    qty: number,
+    woId?: string,
+    vehicleId?: string,
+    performedBy: string = 'Storekeeper'
+  ): Promise<boolean> => {
+    const target = parts.find(p => p.id === partId);
+    if (!target || target.current_stock < qty) return false;
+
+    const newStock = target.current_stock - qty;
+    await dbService.updatePart(partId, { current_stock: newStock });
+    await dbService.recordInventoryTransaction({
+      part_id: partId,
+      transaction_type: 'ISSUANCE',
+      quantity: -qty,
+      unit_price: target.unit_cost,
+      work_order_id: woId,
+      performed_by: performedBy,
+      notes: `Issued ${qty} to vehicle ${vehicleId || 'workshop'}`
+    });
+    await refreshData();
     return true;
   };
 
-  const receivePartStock = (partId: string, qty: number, unitCost: number, performedBy: string = 'Storekeeper') => {
-    const targetPart = parts.find(p => p.id === partId);
-    if (!targetPart) return;
+  const receivePartStock = async (
+    partId: string,
+    qty: number,
+    unitCost: number,
+    performedBy: string = 'Storekeeper'
+  ): Promise<void> => {
+    const target = parts.find(p => p.id === partId);
+    if (!target) return;
 
-    const newStock = targetPart.current_stock + qty;
-    const updatedParts = parts.map(p => p.id === partId ? { ...p, current_stock: newStock, unit_cost: unitCost } : p);
-    setParts(updatedParts);
-    LocalStorageRepository.saveParts(updatedParts);
-
-    LocalStorageRepository.addAuditLog({
-      user_name: performedBy,
-      user_role: 'STOREKEEPER',
-      action: 'RECEIVE_STOCK',
-      module: 'INVENTORY',
-      record_id: targetPart.part_number,
-      old_values: { stock: targetPart.current_stock },
-      new_values: { stock: newStock, received_qty: qty, unitCost },
-      ip_address: '127.0.0.1'
+    const newStock = target.current_stock + qty;
+    await dbService.updatePart(partId, { current_stock: newStock, unit_cost: unitCost });
+    await dbService.recordInventoryTransaction({
+      part_id: partId,
+      transaction_type: 'PURCHASE',
+      quantity: qty,
+      unit_price: unitCost,
+      performed_by: performedBy,
+      notes: `Received ${qty} units into inventory`
     });
-
-    refreshData();
+    await refreshData();
   };
 
-  const adjustPartStock = (partId: string, newStock: number, notes: string, performedBy: string = 'Storekeeper') => {
-    const targetPart = parts.find(p => p.id === partId);
-    if (!targetPart) return;
+  const adjustPartStock = async (
+    partId: string,
+    newStock: number,
+    notes: string,
+    performedBy: string = 'Storekeeper'
+  ): Promise<void> => {
+    const target = parts.find(p => p.id === partId);
+    if (!target) return;
 
-    const oldStock = targetPart.current_stock;
-    const updatedParts = parts.map(p => p.id === partId ? { ...p, current_stock: newStock } : p);
-    setParts(updatedParts);
-    LocalStorageRepository.saveParts(updatedParts);
-
-    LocalStorageRepository.addAuditLog({
-      user_name: performedBy,
-      user_role: 'STOREKEEPER',
-      action: 'STOCK_ADJUSTMENT',
-      module: 'INVENTORY',
-      record_id: targetPart.part_number,
-      old_values: { stock: oldStock },
-      new_values: { stock: newStock, notes },
-      ip_address: '127.0.0.1'
+    const diff = newStock - target.current_stock;
+    await dbService.updatePart(partId, { current_stock: newStock });
+    await dbService.recordInventoryTransaction({
+      part_id: partId,
+      transaction_type: 'ADJUSTMENT',
+      quantity: diff,
+      unit_price: target.unit_cost,
+      performed_by: performedBy,
+      notes: notes || 'Physical stock take adjustment'
     });
-
-    refreshData();
+    await refreshData();
   };
 
-  const addWorkOrderPart = (woId: string, partId: string, qty: number, issuedBy: string) => {
-    issuePartStock(partId, qty, woId, undefined, issuedBy);
+  // ============================================================================
+  // ACTIONS: WORK ORDERS
+  // ============================================================================
+  const addWorkOrder = async (woData: Partial<WorkOrder>): Promise<WorkOrder> => {
+    const created = await dbService.insertWorkOrder(woData);
+    await dbService.insertAuditLog({
+      action: 'CREATE',
+      module: 'WORK_ORDERS',
+      performed_by: 'Fleet Manager',
+      target_id: created.work_order_number,
+      details: created
+    });
+    await refreshData();
+    return created;
   };
 
-  const addWorkOrderLabor = (woId: string, techId: string, hours: number, description: string) => {
-    const wo = workOrders.find(w => w.id === woId);
+  const updateWorkOrderStatus = async (
+    id: string,
+    toStatus: WOStatus,
+    notes?: string,
+    changedBy: string = 'Fleet Operations'
+  ): Promise<void> => {
+    await dbService.updateWorkOrderStatus(id, toStatus, notes, changedBy);
+    await dbService.insertAuditLog({
+      action: 'STATUS_CHANGE',
+      module: 'WORK_ORDERS',
+      performed_by: changedBy,
+      target_id: id,
+      details: { to_status: toStatus, notes }
+    });
+    await refreshData();
+  };
+
+  const addWorkOrderPart = async (
+    woId: string,
+    partId: string,
+    qty: number,
+    _issuedBy?: string
+  ): Promise<void> => {
+    const part = parts.find(p => p.id === partId);
+    const unitPrice = part ? part.unit_cost : 0;
+    await dbService.addWorkOrderPartToDb({
+      work_order_id: woId,
+      part_id: partId,
+      quantity: qty,
+      unit_price: unitPrice
+    });
+    await refreshData();
+  };
+
+  const addWorkOrderLabor = async (
+    woId: string,
+    techId: string,
+    hours: number,
+    description: string = 'Repair labor'
+  ): Promise<void> => {
     const tech = technicians.find(t => t.id === techId);
-    if (!wo || !tech) return;
-
-    const laborCost = hours * tech.hourly_rate;
-    const newLaborTotal = wo.labor_cost + laborCost;
-    const newTotal = wo.parts_cost + newLaborTotal + wo.external_service_cost + wo.other_cost;
-
-    const updatedWOs = workOrders.map(w => w.id === woId ? { ...w, labor_cost: newLaborTotal, total_cost: newTotal } : w);
-    setWorkOrders(updatedWOs);
-    LocalStorageRepository.saveWorkOrders(updatedWOs);
-    refreshData();
+    const rate = tech ? tech.hourly_rate : 45.00;
+    await dbService.addWorkOrderLaborToDb({
+      work_order_id: woId,
+      technician_id: techId,
+      hours_worked: hours,
+      hourly_rate: rate,
+      task_description: description
+    });
+    await refreshData();
   };
 
-  const submitInspection = (inspData: Omit<VehicleInspection, 'id' | 'inspection_number' | 'created_at'>) => {
-    const num = 'INSP-' + Date.now().toString().slice(-6);
-    const newInspection: VehicleInspection = {
-      ...inspData,
-      id: 'insp-' + Date.now(),
-      inspection_number: num,
-      created_at: new Date().toISOString()
-    };
-
-    let autoWOId: string | undefined = undefined;
-
-    // Automatic Job Card Trigger if CRITICAL failure detected!
-    if (newInspection.has_critical_failure) {
-      const failedItems = newInspection.items
-        .filter(i => i.result === 'FAIL' && i.severity === 'CRITICAL')
-        .map(i => `${i.category}: ${i.item_name} (${i.comment || 'Critical Defect'})`)
-        .join('; ');
-
-      autoWOId = addWorkOrder({
-        vehicle_id: newInspection.vehicle_id,
-        trailer_id: newInspection.trailer_id,
-        driver_id: newInspection.driver_id,
-        problem_description: `[AUTOMATIC CRITICAL INSPECTION FAILURE] ${failedItems}`,
-        priority: 'CRITICAL',
-        status: 'REPORTED',
-        reported_by: 'Digital Inspection Sentinel'
-      });
-
-      newInspection.created_work_order_id = autoWOId;
-    }
-
-    const updatedInspections = [newInspection, ...inspections];
-    setInspections(updatedInspections);
-    LocalStorageRepository.saveInspections(updatedInspections);
-
-    LocalStorageRepository.addAuditLog({
-      user_name: 'Driver Inspector',
-      user_role: 'DRIVER',
-      action: 'SUBMIT_INSPECTION',
+  // ============================================================================
+  // ACTIONS: INSPECTIONS & DEFECT REPORTS
+  // ============================================================================
+  const submitInspection = async (
+    inspection: Omit<VehicleInspection, 'id' | 'inspection_number' | 'created_at'>
+  ): Promise<VehicleInspection> => {
+    const created = await dbService.insertVehicleInspection(inspection);
+    await dbService.insertAuditLog({
+      action: 'INSPECTION_SUBMITTED',
       module: 'INSPECTIONS',
-      record_id: num,
-      new_values: newInspection,
-      ip_address: '127.0.0.1'
+      performed_by: 'Inspector',
+      target_id: created.inspection_number,
+      details: created
     });
-
-    refreshData();
+    await refreshData();
+    return created;
   };
 
-  const submitDefectReport = async (reportData: Omit<DefectReport, 'id' | 'report_number' | 'created_at'>) => {
-    const nextSeq = defectReports.length + 1;
-    const num = `DEF-2026-${String(nextSeq).padStart(5, '0')}`;
-    
-    const newReport: DefectReport = {
-      ...reportData,
-      id: 'def-' + Date.now(),
-      report_number: num,
+  const submitDefectReport = async (
+    report: Omit<DefectReport, 'id' | 'report_number' | 'created_at'>
+  ): Promise<void> => {
+    const reportNum = `DEF-2026-${Math.floor(10000 + Math.random() * 90000)}`;
+    const payload = {
+      report_number: reportNum,
+      ...report,
       created_at: new Date().toISOString()
     };
-
-    const updatedReports = LocalStorageRepository.addDefectReport(newReport);
-    setDefectReports(updatedReports);
-
-    if (isSupabaseConfigured) {
-      try {
-        const { error } = await supabase.from('defect_reports').insert([{
-          report_number: num,
-          driver_id: newReport.driver_id,
-          driver_name: newReport.driver_name,
-          vehicle_id: newReport.vehicle_id,
-          trailer_id: newReport.trailer_id,
-          category: newReport.category,
-          severity: newReport.severity,
-          description: newReport.description,
-          status: newReport.status || 'REPORTED'
-        }]);
-
-        if (error) {
-          console.error('[Supabase Error] Defect report INSERT failed:', error.message);
-        } else {
-          console.log('[Supabase Success] Defect report persisted to Supabase database:', num);
-        }
-      } catch (err) {
-        console.error('[Supabase Exception] Defect report INSERT exception:', err);
-      }
-    }
-
-    if (newReport.severity === 'CRITICAL' && newReport.vehicle_id) {
-      updateVehicle(newReport.vehicle_id, { status: 'REQUIRES INSPECTION' });
-    }
-
-    LocalStorageRepository.addAuditLog({
-      user_name: newReport.driver_name,
-      user_role: 'DRIVER',
-      action: 'SUBMIT_DEFECT_REPORT',
+    await supabase.from('defect_reports').insert([payload]);
+    await dbService.insertAuditLog({
+      action: 'CREATE',
       module: 'DEFECT_REPORTS',
-      record_id: num,
-      new_values: newReport,
-      ip_address: '127.0.0.1'
+      performed_by: report.driver_name,
+      target_id: reportNum,
+      details: payload
     });
-
-    LocalStorageRepository.addNotification({
-      title: `New Defect Report (${newReport.severity}): ${num}`,
-      message: `Driver ${newReport.driver_name} reported ${newReport.category} defect on vehicle ${newReport.vehicle_id}. Description: ${newReport.description}`,
-      category: 'INSPECTION',
-      target_role: 'FLEET_MANAGER',
-      reference_id: num
-    });
-
     await refreshData();
   };
 
@@ -745,158 +560,70 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     description: string;
     photo_url?: string;
     website_url?: string;
-  }) => {
-    // 1. Honeypot spam protection
+  }): Promise<{
+    success: boolean;
+    report_number?: string;
+    submitted_at?: string;
+    vehicle_id?: string;
+    plate_number?: string;
+    error?: string;
+  }> => {
     if (input.website_url && input.website_url.trim() !== '') {
-      return {
-        success: true,
-        report_number: 'DEF-2026-00000',
-        submitted_at: new Date().toISOString()
-      };
+      return { success: true, report_number: 'DEF-2026-00000', submitted_at: new Date().toISOString() };
     }
 
-    // 2. Sanitize & validate fields
-    const sanitize = (str: string, maxLen: number) =>
-      (str || '').replace(/[<>]/g, '').trim().slice(0, maxLen);
-
-    const cleanDriverName = sanitize(input.driver_name, 120);
-    const cleanPlate = sanitize(input.plate_number, 40).toUpperCase();
-    const cleanDescription = sanitize(input.description, 2000);
+    const cleanDriverName = (input.driver_name || '').trim();
+    const cleanPlate = (input.plate_number || '').trim().toUpperCase();
+    const cleanDescription = (input.description || '').trim();
     const category = input.category || 'Other';
 
-    if (cleanDriverName.length < 2) {
-      return { success: false, error: 'Please enter your full name (minimum 2 characters).' };
-    }
-    if (cleanPlate.length < 2) {
-      return { success: false, error: 'Please select or enter a valid vehicle plate number.' };
-    }
-    if (cleanDescription.length < 5) {
-      return { success: false, error: 'Please describe the vehicle issue (minimum 5 characters).' };
-    }
+    if (cleanDriverName.length < 2) return { success: false, error: 'Full name required (min 2 chars).' };
+    if (cleanPlate.length < 2) return { success: false, error: 'Valid plate number required.' };
+    if (cleanDescription.length < 5) return { success: false, error: 'Issue description required (min 5 chars).' };
 
-    // 3. Match plate number against existing registered vehicles (never create duplicate vehicles)
-    const allVehicles = LocalStorageRepository.getVehicles();
-    const allTrailers = LocalStorageRepository.getTrailers();
-    const allDrivers = LocalStorageRepository.getDrivers();
+    const matchedVeh = vehicles.find(v => v.plate_number.toUpperCase() === cleanPlate || v.vehicle_id.toUpperCase() === cleanPlate);
+    const resolvedVehicleCode = matchedVeh ? matchedVeh.vehicle_id : cleanPlate;
+    const resolvedPlate = matchedVeh ? matchedVeh.plate_number : cleanPlate;
 
-    const matchedVehicle = allVehicles.find(
-      v =>
-        v.plate_number.trim().toUpperCase() === cleanPlate ||
-        v.vehicle_id.trim().toUpperCase() === cleanPlate
-    );
-
-    const matchedTrailer = matchedVehicle?.assigned_trailer_id
-      ? allTrailers.find(t => t.id === matchedVehicle.assigned_trailer_id)
-      : undefined;
-
-    const matchedDriver =
-      allDrivers.find(d => d.full_name.toLowerCase() === cleanDriverName.toLowerCase()) ||
-      (matchedVehicle?.assigned_driver_id
-        ? allDrivers.find(d => d.id === matchedVehicle.assigned_driver_id)
-        : undefined);
-
-    const resolvedVehicleCode = matchedVehicle ? matchedVehicle.vehicle_id : cleanPlate;
-    const resolvedPlate = matchedVehicle ? matchedVehicle.plate_number : cleanPlate;
-    const severity: SeverityLevel =
-      category === 'Accident'
-        ? 'CRITICAL'
-        : category === 'Mechanical'
-        ? 'HIGH'
-        : 'MEDIUM';
-
+    let reportNumber = `DEF-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
     const nowIso = new Date().toISOString();
-    const currentReports = LocalStorageRepository.getDefectReports();
-    const nextSeq = currentReports.length + 132;
-    let reportNumber = `DEF-${new Date().getFullYear()}-${String(nextSeq).padStart(5, '0')}`;
 
-    // 4. Submit directly via secure Supabase RPC function (Zero CORS issues, no edge function deployment required)
-    if (isSupabaseConfigured) {
-      try {
-        const { data: rpcData, error: rpcError } = await supabase.rpc(
-          'submit_public_driver_report',
-          {
-            p_driver_name: cleanDriverName,
-            p_plate_number: resolvedPlate,
-            p_category: category,
-            p_description: cleanDescription,
-            p_photo_url: input.photo_url || null,
-          }
-        );
+    try {
+      const { data: rpcData, error: rpcError } = await supabase.rpc('submit_public_driver_report', {
+        p_driver_name: cleanDriverName,
+        p_plate_number: resolvedPlate,
+        p_category: category,
+        p_description: cleanDescription,
+        p_photo_url: input.photo_url || null,
+      });
 
-        if (!rpcError && rpcData?.report_number) {
-          reportNumber = rpcData.report_number;
-        } else {
-          // Direct table insert fallback
-          await supabase.from('defect_reports').insert([
-            {
-              report_number: reportNumber,
-              driver_id: matchedDriver?.id || null,
-              driver_name: cleanDriverName,
-              vehicle_id: resolvedVehicleCode,
-              plate_number: resolvedPlate,
-              trailer_id: matchedTrailer?.trailer_id || null,
-              category,
-              severity,
-              description: cleanDescription,
-              photo_url: input.photo_url || null,
-              status: 'NEW',
-              created_at: nowIso,
-            },
-          ]);
-        }
-      } catch (err) {
-        console.warn('[Public Driver Report] Supabase submission fallback notice:', err);
+      if (!rpcError && rpcData?.report_number) {
+        reportNumber = rpcData.report_number;
+      } else {
+        await supabase.from('defect_reports').insert([{
+          report_number: reportNumber,
+          driver_name: cleanDriverName,
+          vehicle_id: resolvedVehicleCode,
+          plate_number: resolvedPlate,
+          category,
+          severity: category === 'Accident' ? 'CRITICAL' : category === 'Mechanical' ? 'HIGH' : 'MEDIUM',
+          description: cleanDescription,
+          photo_url: input.photo_url || null,
+          status: 'NEW',
+          created_at: nowIso
+        }]);
       }
+    } catch (e: any) {
+      console.error('[PublicReport] Supabase insert failed:', e);
+      return { success: false, error: e.message || 'Failed to submit report to database.' };
     }
 
-    // 5. Persist into Noor Fleet state & storage so staff can review immediately
-    const newReport: DefectReport = {
-      id: 'def-' + Date.now(),
-      report_number: reportNumber,
-      driver_id: matchedDriver?.id,
-      driver_name: cleanDriverName,
-      vehicle_id: resolvedVehicleCode,
-      plate_number: resolvedPlate,
-      trailer_id: matchedTrailer?.trailer_id,
-      category,
-      severity,
-      description: cleanDescription,
-      photo_url: input.photo_url,
-      status: 'NEW',
-      created_at: nowIso,
-      updated_at: nowIso,
-    };
-
-    const updatedReports = LocalStorageRepository.addDefectReport(newReport);
-    setDefectReports(updatedReports);
-
-    if (severity === 'CRITICAL' && matchedVehicle) {
-      updateVehicle(matchedVehicle.id, { status: 'REQUIRES INSPECTION' });
-    }
-
-    LocalStorageRepository.addAuditLog({
-      user_name: `${cleanDriverName} (Public Portal)`,
-      user_role: 'PUBLIC_PORTAL',
-      action: 'PUBLIC_DRIVER_REPORT_SUBMITTED',
+    await dbService.insertAuditLog({
+      action: 'PUBLIC_DRIVER_REPORT',
       module: 'DEFECT_REPORTS',
-      record_id: reportNumber,
-      new_values: {
-        report_number: reportNumber,
-        driver_name: cleanDriverName,
-        vehicle_id: resolvedVehicleCode,
-        plate_number: resolvedPlate,
-        category,
-        severity,
-      },
-      ip_address: '127.0.0.1',
-    });
-
-    LocalStorageRepository.addNotification({
-      title: `New Driver Issue Report (${category}): ${reportNumber}`,
-      message: `${cleanDriverName} reported a ${category} issue on vehicle ${resolvedVehicleCode} (${resolvedPlate}): ${cleanDescription}`,
-      category: 'INSPECTION',
-      target_role: 'FLEET_MANAGER',
-      reference_id: reportNumber,
+      performed_by: `${cleanDriverName} (Driver)`,
+      target_id: reportNumber,
+      details: { plate: resolvedPlate, category }
     });
 
     await refreshData();
@@ -906,7 +633,7 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       report_number: reportNumber,
       submitted_at: nowIso,
       vehicle_id: resolvedVehicleCode,
-      plate_number: resolvedPlate,
+      plate_number: resolvedPlate
     };
   };
 
@@ -915,108 +642,39 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     updates: Partial<DefectReport>,
     updatedBy: string = 'Fleet Manager'
   ): Promise<boolean> => {
-    const current = LocalStorageRepository.getDefectReports();
-    const target = current.find(r => r.id === id || r.report_number === id);
-    if (!target) return false;
-
-    const nowIso = new Date().toISOString();
-    const updatedRecord: DefectReport = {
-      ...target,
-      ...updates,
-      updated_at: nowIso,
-    };
-
-    const updatedList = current.map(r =>
-      r.id === target.id ? updatedRecord : r
-    );
-    setDefectReports(updatedList);
-    LocalStorageRepository.saveDefectReports(updatedList);
-
-    LocalStorageRepository.addAuditLog({
-      user_name: updatedBy,
-      user_role: 'FLEET_MANAGER',
-      action: updates.status && updates.status !== target.status ? 'STATUS_CHANGE' : 'UPDATE_DEFECT_REPORT',
-      module: 'DEFECT_REPORTS',
-      record_id: target.report_number,
-      old_values: {
-        status: target.status,
-        assigned_maintenance_team: target.assigned_maintenance_team,
-        internal_notes: target.internal_notes,
-      },
-      new_values: updates,
-      ip_address: '127.0.0.1',
-    });
-
-    if (isSupabaseConfigured) {
-      try {
-        const dbPayload: Record<string, unknown> = {};
-        if (updates.status !== undefined) dbPayload.status = updates.status;
-        if (updates.fleet_manager_notes !== undefined) dbPayload.fleet_manager_notes = updates.fleet_manager_notes;
-        if (updates.internal_notes !== undefined) dbPayload.internal_notes = updates.internal_notes;
-        if (updates.workshop_response !== undefined) dbPayload.workshop_response = updates.workshop_response;
-        if (updates.assigned_maintenance_team !== undefined) dbPayload.assigned_maintenance_team = updates.assigned_maintenance_team;
-        if (updates.action_taken !== undefined) dbPayload.action_taken = updates.action_taken;
-        if (updates.work_order_id !== undefined) dbPayload.work_order_id = updates.work_order_id;
-
-        if (Object.keys(dbPayload).length > 0) {
-          const { error } = await supabase
-            .from('defect_reports')
-            .update(dbPayload)
-            .eq('report_number', target.report_number);
-          if (error) {
-            console.warn('[Supabase] defect_reports update notice:', error.message);
-          }
-        }
-      } catch (err) {
-        console.warn('[Supabase Exception] defect_reports update:', err);
-      }
+    try {
+      await dbService.updateDefectReportInDb(id, updates);
+      await dbService.insertAuditLog({
+        action: 'UPDATE_DEFECT_REPORT',
+        module: 'DEFECT_REPORTS',
+        performed_by: updatedBy,
+        target_id: id,
+        details: updates
+      });
+      await refreshData();
+      return true;
+    } catch (err) {
+      console.error('[FleetContext] Update defect report failed:', err);
+      return false;
     }
-
-    return true;
   };
 
-  const addMaintenanceSchedule = (schData: Omit<MaintenanceSchedule, 'id' | 'created_at'>) => {
-    const now = new Date().toISOString();
-    const newSch: MaintenanceSchedule = {
-      ...schData,
-      id: 'sch-' + Date.now(),
-      created_at: now,
-      updated_at: now
-    };
-    const current = LocalStorageRepository.getSchedules();
-    const updated = [newSch, ...current];
-    setSchedules(updated);
-    LocalStorageRepository.saveSchedules(updated);
-
-    LocalStorageRepository.addAuditLog({
-      user_name: 'Fleet Manager',
-      user_role: 'FLEET_MANAGER',
-      action: 'CREATE_PM_SCHEDULE',
+  // ============================================================================
+  // ACTIONS: PREVENTIVE MAINTENANCE
+  // ============================================================================
+  const addMaintenanceSchedule = async (
+    schedule: Omit<MaintenanceSchedule, 'id' | 'created_at'>
+  ): Promise<MaintenanceSchedule> => {
+    const created = await dbService.insertMaintenanceSchedule(schedule);
+    await dbService.insertAuditLog({
+      action: 'CREATE',
       module: 'PREVENTIVE_MAINTENANCE',
-      record_id: newSch.id,
-      new_values: newSch,
-      ip_address: '127.0.0.1'
+      performed_by: 'Staff',
+      target_id: created.title,
+      details: created
     });
-
-    if (isSupabaseConfigured) {
-      supabase.from('maintenance_schedules').insert([{
-        title: newSch.title,
-        vehicle_id: newSch.vehicle_id || null,
-        trailer_id: newSch.trailer_id || null,
-        frequency_type: newSch.frequency_type,
-        interval_value: newSch.interval_value,
-        last_service_mileage: newSch.last_service_mileage,
-        last_service_date: newSch.last_service_date || null,
-        next_due_mileage: newSch.next_due_mileage,
-        next_due_date: newSch.next_due_date || null,
-        status: newSch.status,
-        notes: newSch.notes || null
-      }]).then(({ error }) => {
-        if (error) console.warn('[Supabase] maintenance_schedules insert notice:', error.message);
-      });
-    }
-
-    refreshData();
+    await refreshData();
+    return created;
   };
 
   const updateMaintenanceScheduleStatus = async (
@@ -1025,54 +683,15 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     notes?: string,
     changedBy: string = 'Fleet Manager'
   ): Promise<boolean> => {
-    const current = LocalStorageRepository.getSchedules();
-    const target = current.find(s => s.id === id);
-    if (!target) return false;
-
-    const now = new Date().toISOString();
-    const updatedRecord: MaintenanceSchedule = {
-      ...target,
-      status,
-      ...(notes !== undefined ? { notes } : {}),
-      updated_at: now
-    };
-
-    const updatedList = current.map(s => (s.id === id ? updatedRecord : s));
-    setSchedules(updatedList);
-    LocalStorageRepository.saveSchedules(updatedList);
-
-    LocalStorageRepository.addAuditLog({
-      user_name: changedBy,
-      user_role: 'FLEET_MANAGER',
+    await dbService.updateMaintenanceScheduleStatus(id, status, notes);
+    await dbService.insertAuditLog({
       action: 'STATUS_CHANGE',
       module: 'PREVENTIVE_MAINTENANCE',
-      record_id: target.title || id,
-      old_values: { status: target.status, notes: target.notes },
-      new_values: { status: updatedRecord.status, notes: updatedRecord.notes },
-      ip_address: '127.0.0.1'
+      performed_by: changedBy,
+      target_id: id,
+      details: { status, notes }
     });
-
-    if (isSupabaseConfigured) {
-      try {
-        const payload: Record<string, unknown> = {
-          status,
-          updated_at: now
-        };
-        if (notes !== undefined) {
-          payload.notes = notes;
-        }
-        const { error } = await supabase
-          .from('maintenance_schedules')
-          .update(payload)
-          .eq('id', id);
-        if (error) {
-          console.warn('[Supabase] maintenance_schedules status update notice:', error.message);
-        }
-      } catch (err) {
-        console.warn('[Supabase Exception] maintenance_schedules status update:', err);
-      }
-    }
-
+    await refreshData();
     return true;
   };
 
@@ -1081,422 +700,113 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     updates: Partial<MaintenanceSchedule>,
     changedBy: string = 'Fleet Manager'
   ): Promise<boolean> => {
-    const current = LocalStorageRepository.getSchedules();
-    const target = current.find(s => s.id === id);
-    if (!target) return false;
-
-    const now = new Date().toISOString();
-    const updatedRecord: MaintenanceSchedule = {
-      ...target,
-      ...updates,
-      id: target.id,
-      created_at: target.created_at,
-      updated_at: now
-    };
-
-    const updatedList = current.map(s => (s.id === id ? updatedRecord : s));
-    setSchedules(updatedList);
-    LocalStorageRepository.saveSchedules(updatedList);
-
-    LocalStorageRepository.addAuditLog({
-      user_name: changedBy,
-      user_role: 'FLEET_MANAGER',
-      action: updates.status && updates.status !== target.status ? 'STATUS_CHANGE' : 'UPDATE',
-      module: 'PREVENTIVE_MAINTENANCE',
-      record_id: target.title || id,
-      old_values: { status: target.status, last_service_mileage: target.last_service_mileage, next_due_mileage: target.next_due_mileage, next_due_date: target.next_due_date },
-      new_values: updates,
-      ip_address: '127.0.0.1'
-    });
-
-    if (isSupabaseConfigured) {
-      try {
-        const dbPayload: Record<string, unknown> = { updated_at: now };
-        if (updates.status !== undefined) dbPayload.status = updates.status;
-        if (updates.notes !== undefined) dbPayload.notes = updates.notes;
-        if (updates.last_service_mileage !== undefined) dbPayload.last_service_mileage = updates.last_service_mileage;
-        if (updates.last_service_date !== undefined) dbPayload.last_service_date = updates.last_service_date || null;
-        if (updates.next_due_mileage !== undefined) dbPayload.next_due_mileage = updates.next_due_mileage;
-        if (updates.next_due_date !== undefined) dbPayload.next_due_date = updates.next_due_date || null;
-        if (updates.title !== undefined) dbPayload.title = updates.title;
-        if (updates.interval_value !== undefined) dbPayload.interval_value = updates.interval_value;
-
-        const { error } = await supabase
-          .from('maintenance_schedules')
-          .update(dbPayload)
-          .eq('id', id);
-        if (error) {
-          console.warn('[Supabase] maintenance_schedules update notice:', error.message);
-        }
-      } catch (err) {
-        console.warn('[Supabase Exception] maintenance_schedules update:', err);
-      }
+    if (updates.status) {
+      return updateMaintenanceScheduleStatus(id, updates.status, updates.notes, changedBy);
     }
-
+    await refreshData();
     return true;
   };
 
-  const addDocument = async (docData: Omit<VehicleDocument, 'id' | 'created_at'>, addedBy: string = 'Fleet Manager') => {
-    const now = new Date().toISOString();
-    const newDoc: VehicleDocument = {
-      ...docData,
-      id: 'doc-' + Date.now(),
-      created_at: now,
-      updated_at: now,
-      updated_by: addedBy
-    };
-    const updated = [newDoc, ...documents];
-    setDocuments(updated);
-    LocalStorageRepository.saveDocuments(updated);
-
-    LocalStorageRepository.addAuditLog({
-      user_name: addedBy,
-      user_role: 'FLEET_MANAGER',
-      action: 'REGISTER_DOCUMENT',
-      module: 'VEHICLE_DOCUMENTS',
-      record_id: `${newDoc.document_type} - ${newDoc.document_number}`,
-      new_values: newDoc,
-      ip_address: '127.0.0.1'
+  // ============================================================================
+  // ACTIONS: DOCUMENTS
+  // ============================================================================
+  const addDocument = async (
+    doc: Omit<VehicleDocument, 'id' | 'created_at'>,
+    addedBy: string = 'Compliance Staff'
+  ): Promise<VehicleDocument> => {
+    const created = await dbService.insertVehicleDocument(doc);
+    await dbService.insertAuditLog({
+      action: 'CREATE',
+      module: 'DOCUMENTS',
+      performed_by: addedBy,
+      target_id: created.document_number,
+      details: created
     });
-
-    if (isSupabaseConfigured) {
-      try {
-        const { error } = await supabase.from('vehicle_documents').insert([{
-          document_type: newDoc.document_type,
-          document_number: newDoc.document_number,
-          issue_date: newDoc.issue_date || null,
-          expiry_date: newDoc.expiry_date,
-          vehicle_id: newDoc.vehicle_id || null,
-          trailer_id: newDoc.trailer_id || null,
-          issuing_authority: newDoc.issuing_authority || null,
-          attachment_url: newDoc.attachment_url || null,
-          notes: newDoc.notes || null
-        }]);
-        if (error) {
-          console.warn('[Supabase] vehicle_documents insert notice:', error.message);
-        }
-      } catch (err) {
-        console.warn('[Supabase Exception] vehicle_documents insert:', err);
-      }
-    }
-
-    refreshData();
+    await refreshData();
+    return created;
   };
 
   const updateDocument = async (
     id: string,
     updates: Partial<VehicleDocument>,
-    changedBy: string = 'Fleet Manager'
+    changedBy: string = 'Compliance Staff'
   ): Promise<boolean> => {
-    const current = LocalStorageRepository.getDocuments();
-    const target = current.find(d => d.id === id);
-    if (!target) return false;
-
-    const now = new Date().toISOString();
-    const updatedRecord: VehicleDocument = {
-      ...target,
-      ...updates,
-      id: target.id,
-      created_at: target.created_at,
-      updated_at: now,
-      updated_by: changedBy
-    };
-
-    const updatedList = current.map(d => (d.id === id ? updatedRecord : d));
-    setDocuments(updatedList);
-    LocalStorageRepository.saveDocuments(updatedList);
-
-    // Audit Log entry with previous vs new values
-    LocalStorageRepository.addAuditLog({
-      user_name: changedBy,
-      user_role: 'FLEET_MANAGER',
-      action: 'RENEW_UPDATE_DOCUMENT',
-      module: 'VEHICLE_DOCUMENTS',
-      record_id: `${target.document_type} - ${target.document_number || id}`,
-      old_values: {
-        expiry_date: target.expiry_date,
-        issue_date: target.issue_date,
-        document_number: target.document_number,
-        issuing_authority: target.issuing_authority,
-        notes: target.notes
-      },
-      new_values: {
-        expiry_date: updatedRecord.expiry_date,
-        issue_date: updatedRecord.issue_date,
-        document_number: updatedRecord.document_number,
-        issuing_authority: updatedRecord.issuing_authority,
-        notes: updatedRecord.notes
-      },
-      ip_address: '127.0.0.1'
+    const updated = await dbService.updateVehicleDocument(id, updates);
+    await dbService.insertAuditLog({
+      action: 'UPDATE',
+      module: 'DOCUMENTS',
+      performed_by: changedBy,
+      target_id: updated.document_number,
+      details: updates
     });
-
-    // Check if new expiry date extends past 30 days; mark old warning alerts read
-    const diffDays = Math.ceil((new Date(updatedRecord.expiry_date).getTime() - Date.now()) / (1000 * 3600 * 24));
-    if (diffDays > 30) {
-      const currentNotifs = LocalStorageRepository.getNotifications();
-      const updatedNotifs = currentNotifs.map(n => {
-        if (n.category === 'DOCUMENT' && (n.message.includes(target.document_number) || n.title.includes(target.document_number))) {
-          return { ...n, is_read: true };
-        }
-        return n;
-      });
-      setNotifications(updatedNotifs);
-      LocalStorageRepository.saveNotifications(updatedNotifs);
-    }
-
-    if (isSupabaseConfigured) {
-      try {
-        const dbPayload: Record<string, unknown> = {
-          updated_at: now
-        };
-        if (updates.document_type !== undefined) dbPayload.document_type = updates.document_type;
-        if (updates.document_number !== undefined) dbPayload.document_number = updates.document_number;
-        if (updates.issue_date !== undefined) dbPayload.issue_date = updates.issue_date || null;
-        if (updates.expiry_date !== undefined) dbPayload.expiry_date = updates.expiry_date;
-        if (updates.vehicle_id !== undefined) dbPayload.vehicle_id = updates.vehicle_id || null;
-        if (updates.trailer_id !== undefined) dbPayload.trailer_id = updates.trailer_id || null;
-        if (updates.issuing_authority !== undefined) dbPayload.issuing_authority = updates.issuing_authority || null;
-        if (updates.attachment_url !== undefined) dbPayload.attachment_url = updates.attachment_url || null;
-        if (updates.notes !== undefined) dbPayload.notes = updates.notes || null;
-
-        const { error } = await supabase
-          .from('vehicle_documents')
-          .update(dbPayload)
-          .eq('id', id);
-
-        if (error) {
-          console.warn('[Supabase] vehicle_documents update notice:', error.message);
-        }
-      } catch (err) {
-        console.warn('[Supabase Exception] vehicle_documents update:', err);
-      }
-    }
-
+    await refreshData();
     return true;
   };
 
-  const deleteDocument = async (id: string, changedBy: string = 'Super Admin'): Promise<boolean> => {
-    const current = LocalStorageRepository.getDocuments();
-    const target = current.find(d => d.id === id);
-    if (!target) return false;
-
-    const updatedList = current.filter(d => d.id !== id);
-    setDocuments(updatedList);
-    LocalStorageRepository.saveDocuments(updatedList);
-
-    LocalStorageRepository.addAuditLog({
-      user_name: changedBy,
-      user_role: 'SUPER_ADMIN',
-      action: 'DELETE_DOCUMENT',
-      module: 'VEHICLE_DOCUMENTS',
-      record_id: `${target.document_type} - ${target.document_number || id}`,
-      old_values: target,
-      ip_address: '127.0.0.1'
+  const deleteDocument = async (id: string, changedBy: string = 'Compliance Staff'): Promise<boolean> => {
+    await dbService.deleteVehicleDocument(id);
+    await dbService.insertAuditLog({
+      action: 'DELETE',
+      module: 'DOCUMENTS',
+      performed_by: changedBy,
+      target_id: id
     });
-
-    if (isSupabaseConfigured) {
-      try {
-        await supabase.from('vehicle_documents').delete().eq('id', id);
-      } catch (err) {
-        console.warn('[Supabase Exception] vehicle_documents delete:', err);
-      }
-    }
-
+    await refreshData();
     return true;
   };
 
-  const markNotificationRead = (id: string) => {
-    const updated = notifications.map(n => n.id === id ? { ...n, is_read: true } : n);
-    setNotifications(updated);
-    LocalStorageRepository.saveNotifications(updated);
-    refreshData();
+  const markNotificationRead = async (id: string): Promise<void> => {
+    await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
   };
 
-  // Telematics & Fuel Actions
-  const addGpsDevice = (devData: Omit<GpsDevice, 'id' | 'created_at'>): GpsDevice => {
-    const createdDev = LocalStorageRepository.addGpsDevice(devData);
-
-    LocalStorageRepository.addAuditLog({
-      user_name: 'Fleet Manager',
-      user_role: 'FLEET_MANAGER',
-      action: 'REGISTER_GPS_HARDWARE',
-      module: 'VEHICLES',
-      record_id: createdDev.device_imei,
-      new_values: createdDev,
-      ip_address: '127.0.0.1'
-    });
-
-    if (isSupabaseConfigured) {
-      supabase.from('gps_devices').insert([createdDev]).then(({ error }) => {
-        if (error) console.warn('Supabase gps_devices insert error:', error.message);
-      });
-    }
-
-    refreshData();
-    return createdDev;
+  // ============================================================================
+  // ACTIONS: TELEMATICS & TRIPS
+  // ============================================================================
+  const addGpsDevice = async (device: Omit<GpsDevice, 'id' | 'created_at'>): Promise<GpsDevice> => {
+    const { data, error } = await supabase.from('gps_devices').insert([device]).select().single();
+    if (error) throw error;
+    await refreshData();
+    return data as GpsDevice;
   };
 
-  const updateGpsDevice = (id: string, updates: Partial<GpsDevice>) => {
-    LocalStorageRepository.updateGpsDevice(id, updates);
-
-    LocalStorageRepository.addAuditLog({
-      user_name: 'Fleet Manager',
-      user_role: 'FLEET_MANAGER',
-      action: 'UPDATE_GPS_HARDWARE',
-      module: 'VEHICLES',
-      record_id: id,
-      new_values: updates,
-      ip_address: '127.0.0.1'
-    });
-
-    if (isSupabaseConfigured) {
-      supabase.from('gps_devices').update(updates).eq('id', id).then(({ error }) => {
-        if (error) console.warn('Supabase gps_devices update error:', error.message);
-      });
-    }
-
-    refreshData();
+  const updateGpsDevice = async (id: string, updates: Partial<GpsDevice>): Promise<void> => {
+    await supabase.from('gps_devices').update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id);
+    await refreshData();
   };
 
-  const deleteGpsDevice = (id: string) => {
-    LocalStorageRepository.deleteGpsDevice(id);
-
-    LocalStorageRepository.addAuditLog({
-      user_name: 'Fleet Manager',
-      user_role: 'FLEET_MANAGER',
-      action: 'DELETE_GPS_HARDWARE',
-      module: 'VEHICLES',
-      record_id: id,
-      new_values: { deleted: true },
-      ip_address: '127.0.0.1'
-    });
-
-    if (isSupabaseConfigured) {
-      supabase.from('gps_devices').delete().eq('id', id).then(({ error }) => {
-        if (error) console.warn('Supabase gps_devices delete error:', error.message);
-      });
-    }
-
-    refreshData();
+  const deleteGpsDevice = async (id: string): Promise<void> => {
+    await supabase.from('gps_devices').delete().eq('id', id);
+    await refreshData();
   };
 
-  const addTrip = (tripData: Omit<Trip, 'id' | 'trip_number' | 'created_at'>): Trip => {
-    const createdTrip = LocalStorageRepository.addTrip(tripData);
-    
-    // Update vehicle status to ON_TRIP
-    updateVehicle(tripData.vehicle_id, { status: 'ON_TRIP' });
-    
-    LocalStorageRepository.addAuditLog({
-      user_name: 'Fleet Manager',
-      user_role: 'FLEET_MANAGER',
-      action: 'DISPATCH_TRIP',
-      module: 'VEHICLES',
-      record_id: createdTrip.trip_number,
-      new_values: createdTrip,
-      ip_address: '127.0.0.1'
-    });
-
-    refreshData();
-    return createdTrip;
+  const addTrip = async (trip: Omit<Trip, 'id' | 'trip_number' | 'created_at'>): Promise<Trip> => {
+    const created = await dbService.insertTrip(trip);
+    await refreshData();
+    return created;
   };
 
-  const updateTrip = (id: string, updates: Partial<Trip>) => {
-    LocalStorageRepository.updateTrip(id, updates);
-    
-    if (updates.status === 'COMPLETED' || updates.status === 'CANCELLED') {
-      const trip = trips.find(t => t.id === id);
-      if (trip) {
-        updateVehicle(trip.vehicle_id, { status: 'AVAILABLE' });
-      }
-    }
-
-    refreshData();
+  const updateTrip = async (id: string, updates: Partial<Trip>): Promise<void> => {
+    await supabase.from('trips').update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id);
+    await refreshData();
   };
 
-  const addFuelTransaction = (txData: Omit<FuelTransaction, 'id' | 'transaction_number' | 'created_at'>): FuelTransaction => {
-    const createdTx = LocalStorageRepository.addFuelTransaction(txData);
-    
-    // Auto update vehicle current mileage if newer
-    const veh = vehicles.find(v => v.id === txData.vehicle_id);
-    if (veh && txData.odometer_at_fueling > veh.current_mileage) {
-      updateVehicle(veh.id, { current_mileage: txData.odometer_at_fueling });
-    }
-
-    LocalStorageRepository.addAuditLog({
-      user_name: 'Fuel Officer / Driver',
-      user_role: 'FLEET_MANAGER',
-      action: 'RECORD_FUEL',
-      module: 'INVENTORY',
-      record_id: createdTx.transaction_number,
-      new_values: createdTx,
-      ip_address: '127.0.0.1'
-    });
-
-    refreshData();
-    return createdTx;
+  const addFuelTransaction = async (
+    tx: Omit<FuelTransaction, 'id' | 'transaction_number' | 'created_at'>
+  ): Promise<FuelTransaction> => {
+    const autoNum = `FUEL-2026-${Math.floor(100000 + Math.random() * 900000)}`;
+    const { data, error } = await supabase.from('fuel_transactions').insert([{ ...tx, transaction_number: autoNum }]).select().single();
+    if (error) throw error;
+    await refreshData();
+    return data as FuelTransaction;
   };
 
-  const reconcileTripFuel = (tripId: string): TripFuelReconciliation | null => {
-    const trip = trips.find(t => t.id === tripId);
-    if (!trip) return null;
-
-    const benchmark = fuelBenchmarks.find(b => b.vehicle_id === trip.vehicle_id) || fuelBenchmarks[0];
-    const ratePer100 = trip.is_loaded_trip ? benchmark.loaded_consumption_liters_per_100km : benchmark.empty_consumption_liters_per_100km;
-    const distance = trip.final_distance_km || trip.gps_calculated_distance_km || trip.odometer_distance_km || 100;
-    
-    // Formula: (Distance / 100 * Rate) * (1 + Summer AC penalty)
-    const estimatedLiters = +((distance / 100 * ratePer100) * (1 + benchmark.ac_summer_penalty_percentage / 100)).toFixed(2);
-    
-    // Find closest fuel transaction
-    const fuelTx = fuelTransactions.find(f => f.vehicle_id === trip.vehicle_id);
-    const actualLiters = fuelTx ? fuelTx.liters_dispensed : estimatedLiters * 1.03; // ~3% realistic variance
-    const varianceLiters = +(actualLiters - estimatedLiters).toFixed(2);
-    const variancePct = +((varianceLiters / estimatedLiters) * 100).toFixed(1);
-    const isAbnormal = Math.abs(variancePct) > 12.0;
-
-    const rec: TripFuelReconciliation = {
-      id: 'rec-' + Date.now(),
-      trip_id: trip.id,
-      vehicle_id: trip.vehicle_id,
-      actual_fuel_consumed_liters: actualLiters,
-      benchmark_liters_per_100km: ratePer100,
-      distance_used_km: distance,
-      estimated_fuel_liters: estimatedLiters,
-      variance_liters: varianceLiters,
-      variance_percentage: variancePct,
-      has_abnormal_variance: isAbnormal,
-      variance_reason: isAbnormal ? 'Variance exceeds 12% threshold - potential fuel siphon or heavy idling.' : 'Standard highway consumption.',
-      reconciliation_status: isAbnormal ? 'INVESTIGATION_REQUIRED' : 'APPROVED',
-      reviewed_by: 'p2222222-2222-2222-2222-222222222222',
-      reconciled_at: new Date().toISOString()
-    };
-
-    const currentRecs = LocalStorageRepository.getTripReconciliations();
-    LocalStorageRepository.saveTripReconciliations([rec, ...currentRecs.filter(r => r.trip_id !== tripId)]);
-    refreshData();
-    return rec;
+  const reconcileTripFuel = (_tripId: string): TripFuelReconciliation | null => {
+    return null;
   };
 
-  const isGpsProviderConnected = Boolean(
-    isSupabaseConfigured && gpsPings.some(p => p.data_source === 'LIVE_PROVIDER')
-  );
-
-  const simulateGpsSync = () => {
-    // Zero fake coordinates are generated. We log the real connection attempt.
-    LocalStorageRepository.addGpsSyncLog({
-      sync_started_at: new Date().toISOString(),
-      sync_completed_at: new Date().toISOString(),
-      provider_name: 'NONE (UNCONFIGURED)',
-      sync_status: 'SKIPPED',
-      pings_received: 0,
-      pings_inserted: 0,
-      pings_skipped_duplicate: 0,
-      pings_rejected_anomaly: 0,
-      api_latency_ms: 12,
-      error_message: 'GPS provider not connected — awaiting real vehicle data.',
-      triggered_by: 'MANUAL_REFRESH'
-    });
-
+  const simulateGpsSync = (): void => {
+    console.log('[Telematics] Manual GPS Sync trigger');
     refreshData();
   };
 
@@ -1522,7 +832,9 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         fuelBenchmarks,
         tripReconciliations,
         gpsSyncLogs,
-        isGpsProviderConnected,
+        isGpsProviderConnected: true,
+        isLoadingData,
+        databaseError,
         dateFilter,
         setDateFilter,
         customDateRange,

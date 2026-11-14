@@ -10,7 +10,6 @@ import { ImageLightboxModal } from '../common/ImageLightboxModal';
 import { VehicleFormModal } from '../vehicles/VehicleFormModal';
 import { TrailerFormModal } from '../trailers/TrailerFormModal';
 import { DefectReport, SeverityLevel, VehicleStatus, DefectReportStatus, PMStatus } from '../../types';
-import { LocalStorageRepository } from '../../lib/storage';
 
 interface FleetManagerDashboardProps {
   onNavigateTab: (tab: any) => void;
@@ -19,7 +18,7 @@ interface FleetManagerDashboardProps {
 export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ onNavigateTab }) => {
   const { 
     vehicles, trailers, schedules, workOrders, defectReports, drivers,
-    addWorkOrder, addMaintenanceSchedule, updateMaintenanceScheduleStatus, updateVehicle, refreshData 
+    addWorkOrder, addMaintenanceSchedule, updateMaintenanceScheduleStatus, updateVehicle, updateDefectReport, refreshData 
   } = useFleet();
   const { t, isRTL } = useI18n();
 
@@ -70,9 +69,9 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
   const outOfServiceCount = vehicles.filter(v => v.status === 'OUT_OF_SERVICE').length;
 
   // Fleet Manager Action Handlers
-  const handleCreateWorkOrder = (rep: DefectReport) => {
-    const veh = vehicles.find(v => v.vehicle_id === rep.vehicle_id);
-    const woId = addWorkOrder({
+  const handleCreateWorkOrder = async (rep: DefectReport) => {
+    const veh = vehicles.find(v => v.vehicle_id === rep.vehicle_id || v.id === rep.vehicle_id);
+    const wo = await addWorkOrder({
       vehicle_id: veh?.id || rep.vehicle_id,
       trailer_id: rep.trailer_id,
       driver_id: rep.driver_id,
@@ -82,38 +81,26 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
       status: 'REPORTED'
     });
 
-    const updated = defectReports.map(r => r.id === rep.id ? {
-      ...r,
+    await updateDefectReport(rep.id, {
       status: 'WORK_ORDER_CREATED' as DefectReportStatus,
-      work_order_id: woId,
-      action_taken: `Work Order ${woId} created by Fleet Manager.`,
+      work_order_id: wo.id,
+      action_taken: `Work Order ${wo.work_order_number} created by Fleet Manager.`,
       workshop_response: `Work order created by Fleet Manager.`
-    } : r);
-    LocalStorageRepository.saveDefectReports(updated);
-
-    if (veh) {
-      updateVehicle(veh.id, { status: 'IN_WORKSHOP' });
-    }
-
-    LocalStorageRepository.addAuditLog({
-      user_name: 'Tariq Al-Ghamdi',
-      user_role: 'FLEET_MANAGER',
-      action: 'CONVERT_DEFECT_TO_WORK_ORDER',
-      module: 'DEFECT_REPORTS',
-      record_id: rep.report_number,
-      new_values: { work_order_id: woId, target_vehicle: rep.vehicle_id },
-      ip_address: '127.0.0.1'
     });
 
-    alert(`Work Order ${woId} created successfully! Vehicle ${rep.vehicle_id} set to IN WORKSHOP.`);
+    if (veh) {
+      await updateVehicle(veh.id, { status: 'IN_WORKSHOP' });
+    }
+
+    alert(`Work Order ${wo.work_order_number} created successfully! Vehicle ${rep.vehicle_id} set to IN WORKSHOP.`);
     setSelectedReport(null);
     setActionNotes('');
-    refreshData();
+    await refreshData();
   };
 
-  const handleSchedulePM = (rep: DefectReport) => {
-    const veh = vehicles.find(v => v.vehicle_id === rep.vehicle_id);
-    addMaintenanceSchedule({
+  const handleSchedulePM = async (rep: DefectReport) => {
+    const veh = vehicles.find(v => v.vehicle_id === rep.vehicle_id || v.id === rep.vehicle_id);
+    await addMaintenanceSchedule({
       vehicle_id: veh?.id,
       title: `Scheduled Repair: ${rep.category} (${rep.report_number})`,
       frequency_type: 'DAYS',
@@ -126,68 +113,60 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
       notes: `Defect Report ${rep.report_number}: ${rep.description}`
     });
 
-    const updated = defectReports.map(r => r.id === rep.id ? {
-      ...r,
+    await updateDefectReport(rep.id, {
       status: 'SCHEDULED' as DefectReportStatus,
       action_taken: 'Scheduled maintenance item created.',
       workshop_response: 'Scheduled for workshop repair within 7 days.'
-    } : r);
-    LocalStorageRepository.saveDefectReports(updated);
+    });
 
     alert(`Maintenance scheduled for vehicle ${rep.vehicle_id}.`);
     setSelectedReport(null);
     setActionNotes('');
-    refreshData();
+    await refreshData();
   };
 
-  const handleRequestMoreInfo = (rep: DefectReport) => {
+  const handleRequestMoreInfo = async (rep: DefectReport) => {
     if (!actionNotes.trim()) {
       alert('Please provide notes specifying what additional information is needed from the driver.');
       return;
     }
 
-    const updated = defectReports.map(r => r.id === rep.id ? {
-      ...r,
+    await updateDefectReport(rep.id, {
       status: 'MORE_INFO_REQUESTED' as DefectReportStatus,
       fleet_manager_notes: actionNotes,
       workshop_response: `Fleet Manager request: ${actionNotes}`
-    } : r);
-    LocalStorageRepository.saveDefectReports(updated);
+    });
 
     alert(`Information request sent to Driver ${rep.driver_name}.`);
     setSelectedReport(null);
     setActionNotes('');
-    refreshData();
+    await refreshData();
   };
 
-  const handleMarkResolved = (rep: DefectReport) => {
+  const handleMarkResolved = async (rep: DefectReport) => {
     const note = actionNotes.trim() || 'Reviewed by Fleet Manager. Issue addressed.';
-    const updated = defectReports.map(r => r.id === rep.id ? {
-      ...r,
+    await updateDefectReport(rep.id, {
       status: 'RESOLVED' as DefectReportStatus,
       fleet_manager_notes: note,
       workshop_response: note
-    } : r);
-    LocalStorageRepository.saveDefectReports(updated);
+    });
 
     alert(`Defect report ${rep.report_number} marked as RESOLVED.`);
     setSelectedReport(null);
     setActionNotes('');
-    refreshData();
+    await refreshData();
   };
 
-  const handleMarkDuplicate = (rep: DefectReport) => {
-    const updated = defectReports.map(r => r.id === rep.id ? {
-      ...r,
+  const handleMarkDuplicate = async (rep: DefectReport) => {
+    await updateDefectReport(rep.id, {
       status: 'DUPLICATE' as DefectReportStatus,
       workshop_response: 'Closed as duplicate report.'
-    } : r);
-    LocalStorageRepository.saveDefectReports(updated);
+    });
 
     alert(`Defect report ${rep.report_number} marked as DUPLICATE.`);
     setSelectedReport(null);
     setActionNotes('');
-    refreshData();
+    await refreshData();
   };
 
   const handleUpdateVehicleStatus = (rep: DefectReport, newStatus: VehicleStatus) => {

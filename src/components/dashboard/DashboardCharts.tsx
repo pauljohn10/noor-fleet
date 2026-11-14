@@ -13,30 +13,25 @@ interface DashboardChartsProps {
   schedules: MaintenanceSchedule[];
 }
 
-const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
-
 export const DashboardCharts: React.FC<DashboardChartsProps> = ({
   vehicles,
-  trailers,
-  workOrders,
-  parts,
-  schedules
+  workOrders
 }) => {
-
-  // 1. Fleet Status Pie Chart Data
+  // 1. Real Fleet Status Data (Derived strictly from live Supabase vehicles)
   const availableCount = vehicles.filter(v => v.status === 'AVAILABLE').length;
   const onTripCount = vehicles.filter(v => v.status === 'ON_TRIP').length;
   const inWorkshopCount = vehicles.filter(v => v.status === 'IN_WORKSHOP').length;
   const outOfServiceCount = vehicles.filter(v => v.status === 'OUT_OF_SERVICE').length;
+  const totalFleetCount = vehicles.length;
 
   const fleetStatusData = [
-    { name: 'Available', value: availableCount || 2, color: '#10b981' },
-    { name: 'On Trip', value: onTripCount || 3, color: '#3b82f6' },
-    { name: 'In Workshop', value: inWorkshopCount || 1, color: '#f59e0b' },
-    { name: 'Out of Service', value: outOfServiceCount || 1, color: '#ef4444' }
-  ];
+    { name: 'Available', value: availableCount, color: '#10b981' },
+    { name: 'On Trip', value: onTripCount, color: '#3b82f6' },
+    { name: 'In Workshop', value: inWorkshopCount, color: '#f59e0b' },
+    { name: 'Out of Service', value: outOfServiceCount, color: '#ef4444' }
+  ].filter(item => item.value > 0);
 
-  // 2. Workshop Job Card Status Breakdown
+  // 2. Real Workshop Work Order Pipeline Status
   const woStatusCounts: Record<string, number> = {};
   workOrders.forEach(w => {
     woStatusCounts[w.status] = (woStatusCounts[w.status] || 0) + 1;
@@ -47,31 +42,40 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
     count: woStatusCounts[status]
   }));
 
-  // 3. Maintenance Cost Trend (Monthly SAR)
-  const monthlyCostData = [
-    { month: 'May 2026', parts: 4200, labor: 2800, external: 1200 },
-    { month: 'Jun 2026', parts: 6100, labor: 3500, external: 1800 },
-    { month: 'Jul 2026', parts: 3800, labor: 2900, external: 900 },
-    { month: 'Aug 2026', parts: 8400, labor: 4100, external: 2500 },
-    { month: 'Sep 2026', parts: 5200, labor: 3200, external: 1500 }
-  ];
+  // 3. Real Monthly Maintenance Cost Trend (Calculated from actual Supabase work orders)
+  const monthlyCostMap = new Map<string, { parts: number; labor: number; external: number }>();
+  workOrders.forEach(w => {
+    const rawDate = w.date_reported || w.created_at;
+    const date = rawDate ? new Date(rawDate) : new Date();
+    const key = date.toLocaleString('default', { month: 'short', year: 'numeric' });
+    const existing = monthlyCostMap.get(key) || { parts: 0, labor: 0, external: 0 };
+    existing.parts += Number(w.parts_cost) || 0;
+    existing.labor += Number(w.labor_cost) || 0;
+    existing.external += Number(w.external_service_cost) || 0;
+    monthlyCostMap.set(key, existing);
+  });
 
-  // 4. Maintenance Cost by Vehicle (Top Vehicles)
-  const costByVehicle = vehicles.map(v => {
-    const vWOs = workOrders.filter(w => w.vehicle_id === v.id);
-    const totalCost = vWOs.reduce((acc, w) => acc + (w.total_cost || 0), 0);
-    return {
-      vehicleId: v.vehicle_id,
-      plate: v.plate_number,
-      cost: totalCost > 0 ? totalCost : Math.floor(Math.random() * 3000) + 500
-    };
-  }).slice(0, 5);
+  const monthlyCostData = Array.from(monthlyCostMap.entries()).map(([month, data]) => ({
+    month,
+    parts: data.parts,
+    labor: data.labor,
+    external: data.external
+  }));
 
-  // 5. Preventive vs Corrective Maintenance Ratio
-  const pmVsCorrectiveData = [
-    { name: 'Preventive Maint.', value: schedules.length || 8, color: '#10b981' },
-    { name: 'Corrective Repair', value: workOrders.length || 5, color: '#f59e0b' }
-  ];
+  // 4. Real Maintenance Cost by Vehicle
+  const costByVehicle = vehicles
+    .map(v => {
+      const vWOs = workOrders.filter(w => w.vehicle_id === v.id);
+      const totalCost = vWOs.reduce((acc, w) => acc + (Number(w.total_cost) || 0), 0);
+      return {
+        vehicleId: v.vehicle_id,
+        plate: v.plate_number,
+        cost: totalCost
+      };
+    })
+    .filter(item => item.cost > 0)
+    .sort((a, b) => b.cost - a.cost)
+    .slice(0, 5);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -80,26 +84,33 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
         <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-4">
           Fleet Operational Status
         </h4>
-        <div className="h-64 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={fleetStatusData}
-                cx="50%"
-                cy="50%"
-                innerRadius={55}
-                outerRadius={85}
-                paddingAngle={4}
-                dataKey="value"
-              >
-                {fleetStatusData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', color: '#0f172a', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} />
-              <Legend verticalAlign="bottom" height={36} iconType="circle" />
-            </PieChart>
-          </ResponsiveContainer>
+        <div className="h-64 w-full flex items-center justify-center">
+          {totalFleetCount === 0 || fleetStatusData.length === 0 ? (
+            <div className="text-center text-slate-400 text-xs">
+              <p className="font-bold">No active vehicles in fleet</p>
+              <p className="text-[11px] text-slate-400 mt-1">Add vehicles to view live status distribution</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={fleetStatusData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={55}
+                  outerRadius={85}
+                  paddingAngle={4}
+                  dataKey="value"
+                >
+                  {fleetStatusData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', color: '#0f172a', borderRadius: '8px' }} />
+                <Legend verticalAlign="bottom" height={36} iconType="circle" />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
 
@@ -108,18 +119,25 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
         <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-4">
           Monthly Maintenance Expense Trend (SAR)
         </h4>
-        <div className="h-64 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={monthlyCostData}>
-              <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
-              <YAxis stroke="#64748b" fontSize={12} />
-              <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', color: '#0f172a', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} />
-              <Legend />
-              <Area type="monotone" dataKey="parts" stackId="1" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.4} name="Parts Cost" />
-              <Area type="monotone" dataKey="labor" stackId="1" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.4} name="Labor Cost" />
-              <Area type="monotone" dataKey="external" stackId="1" stroke="#10b981" fill="#10b981" fillOpacity={0.4} name="External Service" />
-            </AreaChart>
-          </ResponsiveContainer>
+        <div className="h-64 w-full flex items-center justify-center">
+          {monthlyCostData.length === 0 ? (
+            <div className="text-center text-slate-400 text-xs">
+              <p className="font-bold">No maintenance expenditure recorded</p>
+              <p className="text-[11px] text-slate-400 mt-1">Expenses will plot dynamically as work orders are completed</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={monthlyCostData}>
+                <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
+                <YAxis stroke="#64748b" fontSize={12} />
+                <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', color: '#0f172a', borderRadius: '8px' }} />
+                <Legend />
+                <Area type="monotone" dataKey="parts" stackId="1" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.4} name="Parts Cost" />
+                <Area type="monotone" dataKey="labor" stackId="1" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.4} name="Labor Cost" />
+                <Area type="monotone" dataKey="external" stackId="1" stroke="#10b981" fill="#10b981" fillOpacity={0.4} name="External Service" />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
 
@@ -128,15 +146,22 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
         <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-4">
           Workshop Work Order Pipeline
         </h4>
-        <div className="h-64 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={woJobStatusData}>
-              <XAxis dataKey="status" stroke="#64748b" fontSize={10} interval={0} angle={-15} textAnchor="end" />
-              <YAxis stroke="#64748b" fontSize={12} />
-              <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', color: '#0f172a', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} />
-              <Bar dataKey="count" fill="#0284c7" radius={[4, 4, 0, 0]} name="Active Jobs" />
-            </BarChart>
-          </ResponsiveContainer>
+        <div className="h-64 w-full flex items-center justify-center">
+          {woJobStatusData.length === 0 ? (
+            <div className="text-center text-slate-400 text-xs">
+              <p className="font-bold">No active job cards in workshop</p>
+              <p className="text-[11px] text-slate-400 mt-1">Open work orders will be categorized by stage here</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={woJobStatusData}>
+                <XAxis dataKey="status" stroke="#64748b" fontSize={10} interval={0} angle={-15} textAnchor="end" />
+                <YAxis stroke="#64748b" fontSize={12} />
+                <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', color: '#0f172a', borderRadius: '8px' }} />
+                <Bar dataKey="count" fill="#0284c7" radius={[4, 4, 0, 0]} name="Active Jobs" />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
 
@@ -145,15 +170,22 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
         <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-4">
           Highest Repair Cost Vehicles (SAR)
         </h4>
-        <div className="h-64 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={costByVehicle} layout="vertical">
-              <XAxis type="number" stroke="#64748b" fontSize={10} />
-              <YAxis dataKey="vehicleId" type="category" stroke="#64748b" fontSize={12} />
-              <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', color: '#0f172a', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} />
-              <Bar dataKey="cost" fill="#e11d48" radius={[0, 4, 4, 0]} name="Total Cost (SAR)" />
-            </BarChart>
-          </ResponsiveContainer>
+        <div className="h-64 w-full flex items-center justify-center">
+          {costByVehicle.length === 0 ? (
+            <div className="text-center text-slate-400 text-xs">
+              <p className="font-bold">No repair cost data yet</p>
+              <p className="text-[11px] text-slate-400 mt-1">Costs will rank highest-maintenance vehicles</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={costByVehicle} layout="vertical">
+                <XAxis type="number" stroke="#64748b" fontSize={10} />
+                <YAxis dataKey="vehicleId" type="category" stroke="#64748b" fontSize={12} />
+                <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', color: '#0f172a', borderRadius: '8px' }} />
+                <Bar dataKey="cost" fill="#e11d48" radius={[0, 4, 4, 0]} name="Total Cost (SAR)" />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
     </div>

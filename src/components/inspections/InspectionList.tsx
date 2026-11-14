@@ -240,7 +240,7 @@ export const InspectionList: React.FC = () => {
     const veh = vehicles.find(
       v => v.vehicle_id === rep.vehicle_id || v.plate_number === rep.plate_number
     );
-    const woId = addWorkOrder({
+    const wo = await addWorkOrder({
       vehicle_id: veh?.id || rep.vehicle_id,
       trailer_id: rep.trailer_id,
       driver_id: rep.driver_id,
@@ -249,6 +249,7 @@ export const InspectionList: React.FC = () => {
       reported_by: rep.driver_name,
       status: 'REPORTED',
     });
+    const woId = typeof wo === 'string' ? wo : (wo as any)?.work_order_number || (wo as any)?.id || 'WO-CREATED';
 
     await updateDefectReport(
       rep.id,
