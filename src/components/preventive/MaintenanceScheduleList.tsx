@@ -285,9 +285,9 @@ export const MaintenanceScheduleList: React.FC = () => {
       return [
         s.title,
         veh ? `${veh.vehicle_id} (${veh.plate_number})` : trl ? `${trl.trailer_id} (${trl.plate_number})` : 'Unassigned',
-        s.frequency_type === 'MILEAGE' ? `Every ${s.interval_value.toLocaleString()} KM` : `Every ${s.interval_value} Days`,
-        s.last_service_mileage ? `${s.last_service_mileage.toLocaleString()} KM` : 'N/A',
-        s.next_due_mileage ? `${s.next_due_mileage.toLocaleString()} KM` : 'N/A',
+        s.frequency_type === 'MILEAGE' ? `Every ${(s.interval_value || 0).toLocaleString()} KM` : `Every ${s.interval_value || 0} Days`,
+        s.last_service_mileage ? `${(s.last_service_mileage || 0).toLocaleString()} KM` : 'N/A',
+        s.next_due_mileage ? `${(s.next_due_mileage || 0).toLocaleString()} KM` : 'N/A',
         s.next_due_date || 'N/A',
         s.status.replace(/_/g, ' ')
       ];
@@ -567,14 +567,14 @@ export const MaintenanceScheduleList: React.FC = () => {
                         </span>
                       </td>
                       <td className="p-3.5 font-mono font-bold text-slate-900">
-                        {s.interval_value.toLocaleString()}{' '}
+                        {(s.interval_value || 0).toLocaleString()}{' '}
                         {s.frequency_type === 'MILEAGE' ? 'KM' : s.frequency_type === 'HOURS' ? 'Hrs' : 'Days'}
                       </td>
                       <td className="p-3.5 font-mono text-slate-600">
                         <div>{s.next_due_date || 'N/A'}</div>
-                        {s.next_due_mileage > 0 && (
+                        {(s.next_due_mileage || 0) > 0 && (
                           <div className="text-[11px] text-slate-400">
-                            Target: {s.next_due_mileage.toLocaleString()} KM
+                            Target: {(s.next_due_mileage || 0).toLocaleString()} KM
                           </div>
                         )}
                       </td>
@@ -666,7 +666,7 @@ export const MaintenanceScheduleList: React.FC = () => {
                 <div>
                   <span className="text-slate-400 font-semibold block">Interval Rule</span>
                   <span className="font-mono font-bold text-slate-800">
-                    {selectedSchedule.interval_value.toLocaleString()} {selectedSchedule.frequency_type}
+                    {(selectedSchedule.interval_value || 0).toLocaleString()} {selectedSchedule.frequency_type}
                   </span>
                 </div>
                 <div>
@@ -674,7 +674,7 @@ export const MaintenanceScheduleList: React.FC = () => {
                   <span className="font-mono font-bold text-slate-800">
                     {selectedSchedule.next_due_date ||
                       (selectedSchedule.next_due_mileage
-                        ? `${selectedSchedule.next_due_mileage.toLocaleString()} KM`
+                        ? `${(selectedSchedule.next_due_mileage || 0).toLocaleString()} KM`
                         : 'N/A')}
                   </span>
                 </div>

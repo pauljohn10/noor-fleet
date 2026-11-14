@@ -59,7 +59,7 @@ export const ReportsCenter: React.FC = () => {
           `${v.make} ${v.model}`,
           trl ? `${trl.trailer_id} (${trl.plate_number})` : 'Uncoupled',
           v.station_location || 'Dammam',
-          `${v.current_mileage.toLocaleString()} KM`,
+          `${(v.current_mileage || 0).toLocaleString()} KM`,
           v.status
         ];
       });
@@ -94,10 +94,10 @@ export const ReportsCenter: React.FC = () => {
           w.priority,
           w.status.replace(/_/g, ' '),
           new Date(w.date_reported).toLocaleDateString(),
-          `${w.parts_cost.toLocaleString()} SAR`,
-          `${w.labor_cost.toLocaleString()} SAR`,
+          `${(w.parts_cost || 0).toLocaleString()} SAR`,
+          `${(w.labor_cost || 0).toLocaleString()} SAR`,
           `${(w.external_service_cost || 0).toLocaleString()} SAR`,
-          `${w.total_cost.toLocaleString()} SAR`
+          `${(w.total_cost || 0).toLocaleString()} SAR`
         ];
       });
 
@@ -114,7 +114,7 @@ export const ReportsCenter: React.FC = () => {
           subtitle: 'Central Maintenance Workshop Repair Records, Labor Billing & Spare Parts Consumption Ledger',
           summaryKPIs: [
             { label: 'Total Work Orders', value: workOrders.length, color: 'slate' },
-            { label: 'Cumulative Cost', value: `${totalExpense.toLocaleString()} SAR`, color: 'emerald' },
+            { label: 'Cumulative Cost', value: `${(totalExpense || 0).toLocaleString()} SAR`, color: 'emerald' },
             { label: 'Critical Repairs', value: criticalCount, color: criticalCount > 0 ? 'rose' : 'emerald' }
           ]
         }
@@ -129,11 +129,11 @@ export const ReportsCenter: React.FC = () => {
         p.location_rack || 'Main Store',
         `${p.current_stock} ${p.unit}`,
         `${p.minimum_stock} ${p.unit}`,
-        `${p.unit_cost.toLocaleString()} SAR`,
-        `${(p.current_stock * p.unit_cost).toLocaleString()} SAR`
+        `${(p.unit_cost || 0).toLocaleString()} SAR`,
+        `${((p.current_stock || 0) * (p.unit_cost || 0)).toLocaleString()} SAR`
       ]);
 
-      const totalVal = parts.reduce((sum, p) => sum + (p.current_stock * p.unit_cost), 0);
+      const totalVal = parts.reduce((sum, p) => sum + ((p.current_stock || 0) * (p.unit_cost || 0)), 0);
       const lowStockCount = parts.filter(p => p.current_stock <= p.minimum_stock).length;
 
       exportToPDFReport(
@@ -146,7 +146,7 @@ export const ReportsCenter: React.FC = () => {
           subtitle: 'Central Workshop Spare Parts Inventory Valuation & Reorder Point Status',
           summaryKPIs: [
             { label: 'Total Catalog SKUs', value: parts.length, color: 'slate' },
-            { label: 'Total Store Valuation', value: `${totalVal.toLocaleString()} SAR`, color: 'emerald' },
+            { label: 'Total Store Valuation', value: `${(totalVal || 0).toLocaleString()} SAR`, color: 'emerald' },
             { label: 'Low Stock Alerts', value: lowStockCount, color: lowStockCount > 0 ? 'amber' : 'emerald' }
           ]
         }
@@ -202,9 +202,9 @@ export const ReportsCenter: React.FC = () => {
         return [
           s.title,
           veh ? `${veh.vehicle_id} (${veh.plate_number})` : trl ? `${trl.trailer_id} (${trl.plate_number})` : 'Unassigned',
-          s.frequency_type === 'MILEAGE' ? `Every ${s.interval_value.toLocaleString()} KM` : `Every ${s.interval_value} Days`,
-          s.last_service_mileage ? `${s.last_service_mileage.toLocaleString()} KM` : 'N/A',
-          s.next_due_mileage ? `${s.next_due_mileage.toLocaleString()} KM` : 'N/A',
+          s.frequency_type === 'MILEAGE' ? `Every ${(s.interval_value || 0).toLocaleString()} KM` : `Every ${s.interval_value || 0} Days`,
+          s.last_service_mileage ? `${(s.last_service_mileage || 0).toLocaleString()} KM` : 'N/A',
+          s.next_due_mileage ? `${(s.next_due_mileage || 0).toLocaleString()} KM` : 'N/A',
           s.next_due_date || 'N/A',
           s.status.replace(/_/g, ' ')
         ];
@@ -241,15 +241,15 @@ export const ReportsCenter: React.FC = () => {
           drv ? drv.full_name : 'Unassigned',
           `${f.fuel_station_name} (${f.station_city})`,
           f.fuel_type || 'Diesel',
-          `${f.liters_dispensed.toLocaleString()} L`,
-          `${f.unit_cost.toFixed(2)} SAR`,
-          `${f.total_cost.toLocaleString()} SAR`,
+          `${(f.liters_dispensed || 0).toLocaleString()} L`,
+          `${(f.unit_cost || 0).toFixed(2)} SAR`,
+          `${(f.total_cost || 0).toLocaleString()} SAR`,
           f.payment_method.replace(/_/g, ' ')
         ];
       });
 
-      const totalLiters = fuelTransactions.reduce((acc, f) => acc + f.liters_dispensed, 0);
-      const totalFuelCost = fuelTransactions.reduce((acc, f) => acc + f.total_cost, 0);
+      const totalLiters = fuelTransactions.reduce((acc, f) => acc + (f.liters_dispensed || 0), 0);
+      const totalFuelCost = fuelTransactions.reduce((acc, f) => acc + (f.total_cost || 0), 0);
 
       exportToPDFReport(
         'Commercial Trips & Fuel Expense Audit Report',
@@ -261,8 +261,8 @@ export const ReportsCenter: React.FC = () => {
           subtitle: 'Fleet Fuel Transactions, Terminal Dispenser Invoices & Consumption Ledger',
           summaryKPIs: [
             { label: 'Fuel Invoices', value: fuelTransactions.length, color: 'slate' },
-            { label: 'Total Liters', value: `${totalLiters.toLocaleString()} L`, color: 'sky' },
-            { label: 'Total Fuel Expense', value: `${totalFuelCost.toLocaleString()} SAR`, color: 'emerald' }
+            { label: 'Total Liters', value: `${(totalLiters || 0).toLocaleString()} L`, color: 'sky' },
+            { label: 'Total Fuel Expense', value: `${(totalFuelCost || 0).toLocaleString()} SAR`, color: 'emerald' }
           ]
         }
       );

@@ -112,7 +112,7 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
           <div className="flex flex-col sm:items-end gap-2 shrink-0">
             <div className="text-left sm:text-right">
               <p className="text-[10px] text-slate-500 uppercase font-bold">Total Work Order Cost</p>
-              <p className="text-xl font-black font-mono text-emerald-700">{workOrder.total_cost.toLocaleString()} SAR</p>
+              <p className="text-xl font-black font-mono text-emerald-700">{(workOrder.total_cost || 0).toLocaleString()} SAR</p>
             </div>
             <button
               type="button"
@@ -189,23 +189,23 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
                   <p className="text-[10px] text-slate-500 uppercase font-bold">Parts Cost</p>
-                  <p className="font-mono font-bold text-amber-800 text-sm mt-1">{workOrder.parts_cost.toLocaleString()} SAR</p>
+                  <p className="font-mono font-bold text-amber-800 text-sm mt-1">{(workOrder.parts_cost || 0).toLocaleString()} SAR</p>
                 </div>
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
                   <p className="text-[10px] text-slate-500 uppercase font-bold">Labor Cost</p>
-                  <p className="font-mono font-bold text-sky-800 text-sm mt-1">{workOrder.labor_cost.toLocaleString()} SAR</p>
+                  <p className="font-mono font-bold text-sky-800 text-sm mt-1">{(workOrder.labor_cost || 0).toLocaleString()} SAR</p>
                 </div>
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
                   <p className="text-[10px] text-slate-500 uppercase font-bold">External Service</p>
-                  <p className="font-mono font-bold text-purple-800 text-sm mt-1">{workOrder.external_service_cost.toLocaleString()} SAR</p>
+                  <p className="font-mono font-bold text-purple-800 text-sm mt-1">{(workOrder.external_service_cost || 0).toLocaleString()} SAR</p>
                 </div>
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
                   <p className="text-[10px] text-slate-500 uppercase font-bold">Other Fees</p>
-                  <p className="font-mono font-bold text-slate-700 text-sm mt-1">{workOrder.other_cost.toLocaleString()} SAR</p>
+                  <p className="font-mono font-bold text-slate-700 text-sm mt-1">{(workOrder.other_cost || 0).toLocaleString()} SAR</p>
                 </div>
                 <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl">
                   <p className="text-[10px] text-amber-900 uppercase font-bold">TOTAL COST</p>
-                  <p className="font-mono font-black text-emerald-700 text-sm mt-1">{workOrder.total_cost.toLocaleString()} SAR</p>
+                  <p className="font-mono font-black text-emerald-700 text-sm mt-1">{(workOrder.total_cost || 0).toLocaleString()} SAR</p>
                 </div>
               </div>
             </div>
@@ -278,7 +278,7 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
 
             <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-xs">
               <h4 className="font-bold text-slate-800 mb-2">Parts Consumed Summary</h4>
-              <p className="text-slate-600">Total Parts Expenses: <span className="font-mono text-amber-800 font-bold">{workOrder.parts_cost.toLocaleString()} SAR</span></p>
+              <p className="text-slate-600">Total Parts Expenses: <span className="font-mono text-amber-800 font-bold">{(workOrder.parts_cost || 0).toLocaleString()} SAR</span></p>
             </div>
           </div>
         )}
@@ -318,7 +318,7 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
             )}
 
             <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-xs">
-              <p className="text-slate-600">Logged Labor Expenses: <span className="font-mono text-sky-800 font-bold">{workOrder.labor_cost.toLocaleString()} SAR</span></p>
+              <p className="text-slate-600">Logged Labor Expenses: <span className="font-mono text-sky-800 font-bold">{(workOrder.labor_cost || 0).toLocaleString()} SAR</span></p>
             </div>
           </div>
         )}

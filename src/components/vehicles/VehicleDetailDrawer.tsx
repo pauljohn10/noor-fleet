@@ -82,7 +82,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
           </div>
           <div className="text-right">
             <p className="text-[10px] text-slate-500 uppercase font-bold">Total Repair Expense</p>
-            <p className="text-base font-mono font-black text-amber-700">{totalMaintCost.toLocaleString()} SAR</p>
+            <p className="text-base font-mono font-black text-amber-700">{(totalMaintCost || 0).toLocaleString()} SAR</p>
           </div>
         </div>
 
@@ -96,11 +96,11 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4 bg-white border border-slate-200 rounded-xl shadow-xs">
               <div>
                 <p className="text-slate-500 font-bold uppercase text-[10px]">Odometer Reading</p>
-                <p className="font-mono font-bold text-slate-900 text-sm mt-0.5">{vehicle.current_mileage.toLocaleString()} KM</p>
+                <p className="font-mono font-bold text-slate-900 text-sm mt-0.5">{(vehicle.current_mileage || 0).toLocaleString()} KM</p>
               </div>
               <div>
                 <p className="text-slate-500 font-bold uppercase text-[10px]">Engine Hours</p>
-                <p className="font-mono font-bold text-slate-900 text-sm mt-0.5">{vehicle.current_engine_hours.toLocaleString()} HRS</p>
+                <p className="font-mono font-bold text-slate-900 text-sm mt-0.5">{(vehicle.current_engine_hours || 0).toLocaleString()} HRS</p>
               </div>
               <div>
                 <p className="text-slate-500 font-bold uppercase text-[10px]">Engine Serial</p>
@@ -116,7 +116,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
               </div>
                 <div>
                   <p className="text-slate-500 font-bold uppercase text-[10px]">Purchase Cost</p>
-                  <p className="font-mono font-bold text-emerald-700 text-xs mt-0.5">{vehicle.purchase_cost?.toLocaleString()} SAR</p>
+                  <p className="font-mono font-bold text-emerald-700 text-xs mt-0.5">{(vehicle.purchase_cost || 0).toLocaleString()} SAR</p>
                 </div>
             </div>
 
@@ -146,7 +146,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                 {assignedTrailer ? (
                   <div>
                     <p className="font-bold text-sky-800">{assignedTrailer.trailer_id} ({assignedTrailer.plate_number})</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">{assignedTrailer.tank_capacity_liters.toLocaleString()} L - {assignedTrailer.number_of_compartments} Compartments</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">{(assignedTrailer.tank_capacity_liters || 0).toLocaleString()} L - {assignedTrailer.number_of_compartments} Compartments</p>
                     <p className="text-[10px] text-slate-600 mt-1">{assignedTrailer.tank_type}</p>
                   </div>
                 ) : (
@@ -175,7 +175,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                   </div>
                   <div className="text-right">
                     <Badge variant={wo.status === 'RELEASED' ? 'success' : 'purple'} size="sm">{wo.status}</Badge>
-                    <p className="font-mono font-bold text-slate-900 mt-1">{wo.total_cost.toLocaleString()} SAR</p>
+                    <p className="font-mono font-bold text-slate-900 mt-1">{(wo.total_cost || 0).toLocaleString()} SAR</p>
                   </div>
                 </div>
               ))
@@ -193,7 +193,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                 <div key={i.id} className="p-3.5 bg-white border border-slate-200 rounded-xl flex items-center justify-between shadow-xs">
                   <div>
                     <span className="font-mono font-bold text-sky-800">{i.inspection_number}</span>
-                    <p className="text-slate-500 text-[10px] mt-0.5">Odometer: {i.odometer_reading.toLocaleString()} KM</p>
+                    <p className="text-slate-500 text-[10px] mt-0.5">Odometer: {(i.odometer_reading || 0).toLocaleString()} KM</p>
                     <p className="text-slate-500 text-[10px]">{new Date(i.inspection_date).toLocaleString()}</p>
                   </div>
                   <Badge variant={i.overall_status === 'PASS' ? 'success' : 'danger'}>

@@ -67,10 +67,10 @@ export const PartsList: React.FC = () => {
         p.part_number,
         p.part_name,
         p.location_rack || 'Main Store',
-        `${p.current_stock.toLocaleString()} ${p.unit}`,
-        `${p.minimum_stock.toLocaleString()} ${p.unit}`,
-        `${p.unit_cost.toLocaleString()} SAR`,
-        `${(p.current_stock * p.unit_cost).toLocaleString()} SAR`,
+        `${(p.current_stock || 0).toLocaleString()} ${p.unit}`,
+        `${(p.minimum_stock || 0).toLocaleString()} ${p.unit}`,
+        `${(p.unit_cost || 0).toLocaleString()} SAR`,
+        `${((p.current_stock || 0) * (p.unit_cost || 0)).toLocaleString()} SAR`,
         isLow ? 'LOW STOCK' : 'IN STOCK'
       ];
     });
@@ -88,7 +88,7 @@ export const PartsList: React.FC = () => {
         subtitle: 'Central Workshop Storehouse Inventory Valuation, Stock Balances & Reorder Thresholds',
         summaryKPIs: [
           { label: 'Total Catalog SKUs', value: parts.length, color: 'slate' },
-          { label: 'Total Store Valuation', value: `${totalValuation.toLocaleString()} SAR`, color: 'emerald' },
+          { label: 'Total Store Valuation', value: `${(totalValuation || 0).toLocaleString()} SAR`, color: 'emerald' },
           { label: 'Low Stock Alerts', value: lowStockCount, color: lowStockCount > 0 ? 'amber' : 'emerald' }
         ],
         metadata: [
@@ -160,7 +160,7 @@ export const PartsList: React.FC = () => {
         <div className="p-3 bg-white border border-slate-200 rounded-md flex items-center justify-between shadow-xs">
           <div>
             <p className="text-[10px] font-bold text-slate-500 uppercase">Inventory Valuation</p>
-            <p className="text-base font-extrabold font-mono text-emerald-800 mt-0.5">{totalInventoryValue.toLocaleString()} SAR</p>
+            <p className="text-base font-extrabold font-mono text-emerald-800 mt-0.5">{(totalInventoryValue || 0).toLocaleString()} SAR</p>
           </div>
           <div className="p-2 bg-emerald-50 border border-emerald-200 rounded text-emerald-700">
             <DollarSign className="w-5 h-5" />
@@ -261,7 +261,7 @@ export const PartsList: React.FC = () => {
                       </td>
                       <td className="p-2.5 font-mono font-bold text-slate-900">{p.unit_cost} SAR</td>
                       <td className="p-2.5 font-mono font-bold text-emerald-800">
-                        {(p.current_stock * p.unit_cost).toLocaleString()} SAR
+                        {((p.current_stock || 0) * (p.unit_cost || 0)).toLocaleString()} SAR
                       </td>
                       <td className="p-2.5 text-right space-x-1 whitespace-nowrap">
                         {hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER']) && (

@@ -428,7 +428,7 @@ export const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
                 <option value="">-- Unassigned --</option>
                 {trailers.map(t => (
                   <option key={t.id} value={t.id}>
-                    {t.trailer_id} ({t.plate_number}) - {t.tank_capacity_liters.toLocaleString()}L
+                    {t.trailer_id} ({t.plate_number}) - {(t.tank_capacity_liters || 0).toLocaleString()}L
                   </option>
                 ))}
               </select>

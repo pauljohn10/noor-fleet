@@ -107,14 +107,14 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
                 <div>
                   <span className="text-slate-500 text-[10px] block">CURRENT ODOMETER</span>
                   <span className="font-mono font-bold text-slate-900">
-                    {linkedVehicle.current_mileage.toLocaleString()} KM
+                    {(linkedVehicle.current_mileage || 0).toLocaleString()} KM
                   </span>
                 </div>
 
                 <div>
                   <span className="text-slate-500 text-[10px] block">ENGINE HOURS</span>
                   <span className="font-mono font-bold text-slate-900">
-                    {linkedVehicle.current_engine_hours.toLocaleString()} Hours
+                    {(linkedVehicle.current_engine_hours || 0).toLocaleString()} Hours
                   </span>
                 </div>
 
@@ -204,7 +204,7 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
               <div>
                 <span className="text-slate-500 text-[10px] block">ODOMETER AT INSTALL</span>
                 <span className="font-mono font-semibold text-slate-800">
-                  {device.installation_odometer.toLocaleString()} KM
+                  {(device.installation_odometer || 0).toLocaleString()} KM
                 </span>
               </div>
               <div>

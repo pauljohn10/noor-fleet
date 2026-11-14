@@ -43,7 +43,7 @@ export const CostAnalysisView: React.FC = () => {
       r.vehicle.plate_number,
       `${r.vehicle.make} ${r.vehicle.model}`,
       `${r.repairsCount} work orders`,
-      `${r.cost.toLocaleString()} SAR`,
+      `${(r.cost || 0).toLocaleString()} SAR`,
       r.vehicle.status
     ]);
 
@@ -56,9 +56,9 @@ export const CostAnalysisView: React.FC = () => {
         orientation: 'landscape',
         subtitle: 'Workshop Repair Expenditure Analysis (Spare Parts + Labor + External Subcontracting)',
         summaryKPIs: [
-          { label: 'Total Maintenance', value: `${totalGrandCost.toLocaleString()} SAR`, color: 'emerald' },
-          { label: 'Parts Incurred', value: `${totalPartsCost.toLocaleString()} SAR`, color: 'amber' },
-          { label: 'Labor Hours Billed', value: `${totalLaborCost.toLocaleString()} SAR`, color: 'sky' }
+          { label: 'Total Maintenance', value: `${(totalGrandCost || 0).toLocaleString()} SAR`, color: 'emerald' },
+          { label: 'Parts Incurred', value: `${(totalPartsCost || 0).toLocaleString()} SAR`, color: 'amber' },
+          { label: 'Labor Hours Billed', value: `${(totalLaborCost || 0).toLocaleString()} SAR`, color: 'sky' }
         ],
         metadata: [
           { label: 'Total Vehicles Audited', value: `${vehicles.length} units` },
@@ -105,28 +105,28 @@ export const CostAnalysisView: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <StatCard
           title="TOTAL MAINTENANCE EXPENSE"
-          value={`${totalGrandCost.toLocaleString()} SAR`}
+          value={`${(totalGrandCost || 0).toLocaleString()} SAR`}
           subtitle="Cumulative Maintenance"
           icon={<DollarSign className="w-5 h-5 text-emerald-600" />}
           color="emerald"
         />
         <StatCard
           title="PARTS EXPENSE"
-          value={`${totalPartsCost.toLocaleString()} SAR`}
+          value={`${(totalPartsCost || 0).toLocaleString()} SAR`}
           subtitle="Spare Parts Issued"
           icon={<DollarSign className="w-5 h-5 text-amber-600" />}
           color="amber"
         />
         <StatCard
           title="LABOR EXPENSE"
-          value={`${totalLaborCost.toLocaleString()} SAR`}
+          value={`${(totalLaborCost || 0).toLocaleString()} SAR`}
           subtitle="Technician Hours"
           icon={<Clock className="w-5 h-5 text-blue-600" />}
           color="blue"
         />
         <StatCard
           title="EXTERNAL SERVICES"
-          value={`${totalExternalCost.toLocaleString()} SAR`}
+          value={`${(totalExternalCost || 0).toLocaleString()} SAR`}
           subtitle="Specialized Subcontract"
           icon={<Wrench className="w-5 h-5 text-purple-600" />}
           color="purple"
@@ -147,7 +147,7 @@ export const CostAnalysisView: React.FC = () => {
                   <p className="text-[11px] text-slate-500 mt-0.5">{item.vehicle.make} {item.vehicle.model} - {item.repairsCount} Repairs Logged</p>
                 </div>
                 <div className="text-right">
-                  <span className="font-mono font-bold text-slate-900 text-xs">{item.cost.toLocaleString()} SAR</span>
+                  <span className="font-mono font-bold text-slate-900 text-xs">{(item.cost || 0).toLocaleString()} SAR</span>
                 </div>
               </div>
             ))}

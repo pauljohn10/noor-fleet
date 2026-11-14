@@ -454,7 +454,7 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
                   <option value="">-- Choose Tanker --</option>
                   {trailers.map(t => (
                     <option key={t.id} value={t.id}>
-                      {t.trailer_id} ({t.plate_number}) - {t.tank_capacity_liters.toLocaleString()}L ({t.model})
+                      {t.trailer_id} ({t.plate_number}) - {(t.tank_capacity_liters || 0).toLocaleString()}L ({t.model})
                     </option>
                   ))}
                 </select>

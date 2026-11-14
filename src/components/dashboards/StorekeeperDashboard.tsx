@@ -115,7 +115,7 @@ export const StorekeeperDashboard: React.FC<StorekeeperDashboardProps> = ({ onNa
         />
         <StatCard
           title="STORE VALUATION"
-          value={`${totalValuation.toLocaleString()} SAR`}
+          value={`${(totalValuation || 0).toLocaleString()} SAR`}
           subtitle="Stock Value"
           icon={<DollarSign className="w-4 h-4 text-emerald-400" />}
           color="emerald"

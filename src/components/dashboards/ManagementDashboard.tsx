@@ -134,7 +134,7 @@ export const ManagementDashboard: React.FC<ManagementDashboardProps> = ({ onNavi
         />
         <StatCard
           title="MONTHLY COST"
-          value={`${totalMonthlyMaintCost.toLocaleString()} SAR`}
+          value={`${(totalMonthlyMaintCost || 0).toLocaleString()} SAR`}
           subtitle="Total Maintenance"
           icon={<DollarSign className="w-4 h-4 text-emerald-600" />}
           color="emerald"
@@ -142,7 +142,7 @@ export const ManagementDashboard: React.FC<ManagementDashboardProps> = ({ onNavi
         />
         <StatCard
           title="PARTS COST"
-          value={`${totalMonthlyPartsCost.toLocaleString()} SAR`}
+          value={`${(totalMonthlyPartsCost || 0).toLocaleString()} SAR`}
           subtitle="Spare Parts"
           icon={<DollarSign className="w-4 h-4 text-amber-600" />}
           color="amber"

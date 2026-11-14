@@ -673,7 +673,7 @@ export async function generateJobCardOfficialPDF(
   const vRows = [
     { label: 'Tractor Head:', val: vehicle ? `${vehicle.vehicle_id} (${vehicle.plate_number})` : 'N/A' },
     { label: 'Make & Model:', val: vehicle ? `${vehicle.make} ${vehicle.model} (${vehicle.year})` : 'N/A' },
-    { label: 'Odometer (KM):', val: vehicle ? `${vehicle.current_mileage.toLocaleString()} KM` : 'N/A' },
+    { label: 'Odometer (KM):', val: vehicle ? `${(vehicle.current_mileage || 0).toLocaleString()} KM` : 'N/A' },
     { label: 'Coupled Trailer:', val: trailer ? `${trailer.trailer_id} (${trailer.plate_number})` : 'No Trailer Coupled' }
   ];
 
@@ -784,9 +784,9 @@ export async function generateJobCardOfficialPDF(
       doc.text(ip.part.part_number, margin + 3, curY + 4.2);
       doc.text(ip.part.part_name, margin + 40, curY + 4.2);
       doc.text(`${ip.quantity} ${ip.part.unit}`, margin + 115, curY + 4.2, { align: 'center' });
-      doc.text(`${ip.part.unit_cost.toLocaleString()} SAR`, margin + 145, curY + 4.2, { align: 'right' });
+      doc.text(`${((ip.part && ip.part.unit_cost) || 0).toLocaleString()} SAR`, margin + 145, curY + 4.2, { align: 'right' });
       doc.setFont('helvetica', 'bold');
-      doc.text(`${(ip.quantity * ip.part.unit_cost).toLocaleString()} SAR`, margin + contentWidth - 3, curY + 4.2, { align: 'right' });
+      doc.text(`${((ip.quantity || 0) * ((ip.part && ip.part.unit_cost) || 0)).toLocaleString()} SAR`, margin + contentWidth - 3, curY + 4.2, { align: 'right' });
 
       curY += lineH;
     });

@@ -57,9 +57,9 @@ export const JobCardList: React.FC = () => {
         w.status.replace(/_/g, ' '),
         tech ? tech.full_name : 'Unassigned',
         w.problem_description,
-        `${w.parts_cost.toLocaleString()} SAR`,
-        `${w.labor_cost.toLocaleString()} SAR`,
-        `${w.total_cost.toLocaleString()} SAR`
+        `${(w.parts_cost || 0).toLocaleString()} SAR`,
+        `${(w.labor_cost || 0).toLocaleString()} SAR`,
+        `${(w.total_cost || 0).toLocaleString()} SAR`
       ];
     });
 
@@ -77,7 +77,7 @@ export const JobCardList: React.FC = () => {
         summaryKPIs: [
           { label: 'Total Job Cards', value: workOrders.length, color: 'slate' },
           { label: 'Active In Bay', value: inProgressCount, color: 'amber' },
-          { label: 'Total Workshop Cost', value: `${totalCost.toLocaleString()} SAR`, color: 'emerald' }
+          { label: 'Total Workshop Cost', value: `${(totalCost || 0).toLocaleString()} SAR`, color: 'emerald' }
         ],
         metadata: [
           { label: 'Status Filter', value: statusFilter },
@@ -238,7 +238,7 @@ export const JobCardList: React.FC = () => {
                       </td>
                       <td className="p-2.5">{getStatusBadge(w.status)}</td>
                       <td className="p-2.5 font-mono font-bold text-emerald-800">
-                        {w.total_cost.toLocaleString()} SAR
+                        {(w.total_cost || 0).toLocaleString()} SAR
                       </td>
                       <td className="p-2.5 text-right">
                         <button

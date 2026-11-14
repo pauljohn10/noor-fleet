@@ -481,7 +481,7 @@ export const DocumentList: React.FC = () => {
                               </span>
                             </div>
                             <span className="text-[10px] text-slate-500 font-mono">
-                              Cap: {trl.tank_capacity_liters.toLocaleString()} L
+                              Cap: {(trl.tank_capacity_liters || 0).toLocaleString()} L
                             </span>
                           </div>
                         ) : (

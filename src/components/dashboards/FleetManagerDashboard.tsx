@@ -388,7 +388,7 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
                     <td className="p-3 font-mono text-slate-700">{v.plate_number}</td>
                     <td className="p-3 font-semibold text-slate-600">{v.assigned_trailer_id || t('none_coupled', 'Uncoupled')}</td>
                     <td className="p-3 font-semibold text-slate-800">{driver ? driver.full_name : t('unassigned_driver', 'Unassigned')}</td>
-                    <td className="p-3 font-mono text-slate-600">{v.current_mileage.toLocaleString()} KM</td>
+                    <td className="p-3 font-mono text-slate-600">{(v.current_mileage || 0).toLocaleString()} KM</td>
                     <td className="p-3">
                       <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
                         v.status === 'AVAILABLE' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' :
@@ -452,7 +452,7 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
                     <td className="p-3 font-semibold text-slate-800">
                       {veh ? veh.vehicle_id : trl ? trl.trailer_id : (isRTL ? 'عام للأسطول' : 'Fleet General')}
                     </td>
-                    <td className="p-3 font-mono text-slate-600">{s.interval_value.toLocaleString()} {s.frequency_type === 'MILEAGE' ? (isRTL ? 'كم' : 'KM') : (isRTL ? 'يوم' : 'Days')}</td>
+                    <td className="p-3 font-mono text-slate-600">{(s.interval_value || 0).toLocaleString()} {s.frequency_type === 'MILEAGE' ? (isRTL ? 'كم' : 'KM') : (isRTL ? 'يوم' : 'Days')}</td>
                     <td className="p-3 font-mono text-slate-600">{s.next_due_date || (isRTL ? 'شرط المسافة' : 'KM Trigger')}</td>
                     <td className="p-3">
                       <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${

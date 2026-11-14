@@ -54,7 +54,7 @@ export const TrailerList: React.FC = () => {
         t.trailer_id,
         t.plate_number,
         t.tank_type || 'Fuel Tanker',
-        `${t.tank_capacity_liters.toLocaleString()} L`,
+        `${(t.tank_capacity_liters || 0).toLocaleString()} L`,
         `${t.number_of_compartments} Compartments`,
         tractor ? `${tractor.vehicle_id} (${tractor.plate_number})` : 'Uncoupled',
         t.current_location || 'Dammam',
@@ -75,7 +75,7 @@ export const TrailerList: React.FC = () => {
         subtitle: 'Heavy Commercial Fuel Tanker Trailers, Shell Specifications, Coupling Matrix & Depots',
         summaryKPIs: [
           { label: 'Total Tankers', value: trailers.length, color: 'slate' },
-          { label: 'Total Fleet Capacity', value: `${(totalCap / 1000).toLocaleString()}K Liters`, color: 'sky' },
+          { label: 'Total Fleet Capacity', value: `${(((totalCap || 0) / 1000)).toLocaleString()}K Liters`, color: 'sky' },
           { label: 'Coupled to Tractor', value: assignedCount, color: 'emerald' }
         ],
         metadata: [
@@ -198,7 +198,7 @@ export const TrailerList: React.FC = () => {
                         <div className="font-mono text-slate-600 text-[11px] font-semibold">{t.plate_number}</div>
                       </td>
                       <td className="p-2.5 font-mono font-bold text-slate-900">
-                        {t.tank_capacity_liters.toLocaleString()} L
+                        {(t.tank_capacity_liters || 0).toLocaleString()} L
                       </td>
                       <td className="p-2.5">
                         <span className="px-2 py-0.5 rounded bg-slate-100 font-bold text-slate-700 border border-slate-200">

@@ -102,7 +102,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
                 {isRTL ? 'اكتب للبحث الفوري في سجلات الشاحنات، الصهاريج، أوامر الصيانة، قطع الغيار، وطاقم العمل' : 'Type to search across Trucks, Trailers, Work Orders, Parts & Staff'}
               </p>
               <p className="text-xs text-slate-600 mt-1">
-                {isRTL ? 'جرب البحث بـ "TRK-0101" أو "أمر عمل" أو "فرامل" أو اسم السائق' : 'Try "TRK-0101", "WO-2026", "LBR-4921", or "Brake Pad"'}
+                {isRTL ? 'جرب البحث برقم الشاحنة أو "أمر عمل" أو "فرامل" أو اسم السائق' : 'Try searching by Truck ID, "WO-2026", "Brake Pad", or Driver name'}
               </p>
             </div>
           )}
@@ -158,7 +158,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
                   >
                     <div>
                       <span className="font-bold text-slate-200 text-sm">{t.trailer_id} ({t.plate_number})</span>
-                      <span className="ml-2 text-xs text-slate-400">{t.tank_capacity_liters.toLocaleString()} L - {t.number_of_compartments} Compartments</span>
+                      <span className="ml-2 text-xs text-slate-400">{(t.tank_capacity_liters || 0).toLocaleString()} L - {t.number_of_compartments || 0} Compartments</span>
                     </div>
                     <span className="text-xs px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 font-semibold">{t.status}</span>
                   </div>

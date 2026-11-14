@@ -363,7 +363,7 @@ export const GpsSyncStatusView: React.FC = () => {
                           {dev.installation_date || 'N/A'}
                         </div>
                         <div className="text-[10px] text-slate-500 font-mono">
-                          Odo: {dev.installation_odometer.toLocaleString()} KM
+                          Odo: {(dev.installation_odometer || 0).toLocaleString()} KM
                         </div>
                       </td>
 

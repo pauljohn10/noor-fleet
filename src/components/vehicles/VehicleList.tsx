@@ -63,7 +63,7 @@ export const VehicleList: React.FC = () => {
         `${v.make} ${v.model}`,
         trl ? `${trl.trailer_id} (${trl.plate_number})` : 'Uncoupled',
         drv ? drv.full_name : 'Standby / Unassigned',
-        `${v.current_mileage.toLocaleString()} KM`,
+        `${(v.current_mileage || 0).toLocaleString()} KM`,
         v.station_location || 'Dammam',
         v.status
       ];
@@ -213,7 +213,7 @@ export const VehicleList: React.FC = () => {
                         <div className="text-slate-500 text-[10px]">{v.model} ({v.year})</div>
                       </td>
                       <td className="p-3.5 font-mono">
-                        <div className="font-bold text-slate-900">{v.current_mileage.toLocaleString()} KM</div>
+                        <div className="font-bold text-slate-900">{(v.current_mileage || 0).toLocaleString()} KM</div>
                         <div className="text-slate-500 text-[10px]">{v.current_engine_hours} Hours</div>
                       </td>
                       <td className="p-3.5">

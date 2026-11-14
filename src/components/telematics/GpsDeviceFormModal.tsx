@@ -330,7 +330,7 @@ export const GpsDeviceFormModal: React.FC<GpsDeviceFormModalProps> = ({
                   </span>
                 </div>
                 <span className="text-[10px] uppercase font-bold text-amber-900 bg-white px-2 py-0.5 rounded border border-amber-200">
-                  {selectedVehicle.current_mileage.toLocaleString()} KM • {selectedVehicle.station_location}
+                  {(selectedVehicle.current_mileage || 0).toLocaleString()} KM • {selectedVehicle.station_location}
                 </span>
               </div>
 

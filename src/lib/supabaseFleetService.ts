@@ -26,7 +26,12 @@ export async function fetchVehicles(): Promise<Vehicle[]> {
     console.error('[SupabaseFleet] Error fetching vehicles:', error.message);
     throw error;
   }
-  return (data || []) as Vehicle[];
+  return (data || []).map((v: any) => ({
+    ...v,
+    current_mileage: Number(v.current_mileage) || 0,
+    current_engine_hours: Number(v.current_engine_hours) || 0,
+    purchase_cost: Number(v.purchase_cost) || 0
+  })) as Vehicle[];
 }
 
 export async function insertVehicle(vehicle: Omit<Vehicle, 'id' | 'created_at' | 'updated_at'>): Promise<Vehicle> {
@@ -93,7 +98,12 @@ export async function fetchTrailers(): Promise<Trailer[]> {
     console.error('[SupabaseFleet] Error fetching trailers:', error.message);
     throw error;
   }
-  return (data || []) as Trailer[];
+  return (data || []).map((t: any) => ({
+    ...t,
+    tank_capacity_liters: Number(t.tank_capacity_liters) || 0,
+    number_of_compartments: Number(t.number_of_compartments) || 1,
+    year: Number(t.year) || new Date().getFullYear()
+  })) as Trailer[];
 }
 
 export async function insertTrailer(trailer: Omit<Trailer, 'id' | 'created_at' | 'updated_at'>): Promise<Trailer> {
@@ -778,7 +788,14 @@ export async function fetchTrips(): Promise<Trip[]> {
     .select('*')
     .order('created_at', { ascending: false });
   if (error) return [];
-  return (data || []) as Trip[];
+  return (data || []).map((tr: any) => ({
+    ...tr,
+    cargo_volume_liters: Number(tr.cargo_volume_liters) || 0,
+    start_odometer_km: Number(tr.start_odometer_km) || 0,
+    final_odometer_km: Number(tr.final_odometer_km) || 0,
+    gps_calculated_distance_km: Number(tr.gps_calculated_distance_km) || 0,
+    manual_distance_km: Number(tr.manual_distance_km) || 0
+  })) as Trip[];
 }
 
 export async function insertTrip(trip: Omit<Trip, 'id' | 'trip_number' | 'created_at'>): Promise<Trip> {
@@ -799,7 +816,10 @@ export async function fetchGpsDevices(): Promise<GpsDevice[]> {
     .select('*')
     .order('created_at', { ascending: false });
   if (error) return [];
-  return (data || []) as GpsDevice[];
+  return (data || []).map((g: any) => ({
+    ...g,
+    installation_odometer: Number(g.installation_odometer) || 0
+  })) as GpsDevice[];
 }
 
 export async function fetchFuelTransactions(): Promise<FuelTransaction[]> {
@@ -809,7 +829,13 @@ export async function fetchFuelTransactions(): Promise<FuelTransaction[]> {
     .select('*')
     .order('created_at', { ascending: false });
   if (error) return [];
-  return (data || []) as FuelTransaction[];
+  return (data || []).map((f: any) => ({
+    ...f,
+    liters_dispensed: Number(f.liters_dispensed) || 0,
+    unit_cost: Number(f.unit_cost) || 0,
+    total_cost: Number(f.total_cost) || 0,
+    odometer_at_fueling: Number(f.odometer_at_fueling) || 0
+  })) as FuelTransaction[];
 }
 
 // ============================================================================

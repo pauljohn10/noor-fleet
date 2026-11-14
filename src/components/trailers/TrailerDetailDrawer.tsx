@@ -60,7 +60,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={`Trailer: ${trailer.trailer_id} (${trailer.plate_number})`}
-      subtitle={`${trailer.tank_capacity_liters.toLocaleString()} Liters - ${trailer.number_of_compartments} Compartments`}
+      subtitle={`${(trailer.tank_capacity_liters || 0).toLocaleString()} Liters - ${trailer.number_of_compartments || 0} Compartments`}
       width="3xl"
     >
       <div className="space-y-6 text-xs font-sans">
@@ -80,7 +80,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
           </div>
           <div className="text-right">
             <p className="text-[10px] text-slate-500 uppercase font-bold">Total Capacity</p>
-            <p className="text-base font-mono font-black text-amber-700">{trailer.tank_capacity_liters.toLocaleString()} L</p>
+            <p className="text-base font-mono font-black text-amber-700">{(trailer.tank_capacity_liters || 0).toLocaleString()} L</p>
           </div>
         </div>
 

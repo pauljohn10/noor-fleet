@@ -14,7 +14,7 @@ interface DriverDashboardProps {
 }
 
 export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab }) => {
-  const { vehicles, trailers, defectReports, submitDefectReport } = useFleet();
+  const { vehicles, trailers, drivers, defectReports, submitDefectReport } = useFleet();
   const { currentProfile } = useAuth();
 
   const [isInspectionOpen, setIsInspectionOpen] = useState(false);
@@ -26,20 +26,24 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
   const [severity, setSeverity] = useState<SeverityLevel>('MEDIUM');
   const [description, setDescription] = useState('');
 
-  // 1:1 Vehicle resolution based on active driver profile
-  const isDriverA = currentProfile.email.includes('driver001');
-  const driverId = isDriverA ? 'd1111111-1111-1111-1111-111111111111' : 'd2222222-2222-2222-2222-222222222222';
+  // Real vehicle resolution based on authenticated profile
+  const matchedDriver = drivers.find(d => 
+    (currentProfile?.id && d.profile_id === currentProfile.id) ||
+    (currentProfile?.full_name && d.full_name.toLowerCase() === currentProfile.full_name.toLowerCase())
+  );
   
-  const myAssignedTractor = vehicles.find(v => v.assigned_driver_id === driverId) 
-    || vehicles.find(v => isDriverA ? v.vehicle_id === 'TRK-0101' : v.vehicle_id === 'TRK-0102') 
+  const myAssignedTractor = vehicles.find(v => matchedDriver ? v.assigned_driver_id === matchedDriver.id : false) 
     || vehicles[0];
 
-  const myAssignedTrailer = trailers.find(t => t.id === myAssignedTractor?.assigned_trailer_id)
-    || trailers.find(t => isDriverA ? t.trailer_id === 'TRL-101' : t.trailer_id === 'TRL-102')
-    || trailers[0];
+  const myAssignedTrailer = trailers.find(t => 
+    myAssignedTractor ? (t.id === myAssignedTractor.assigned_trailer_id || t.assigned_tractor_id === myAssignedTractor.id) : false
+  ) || trailers[0];
 
-  // Isolated Defect Reports for active driver ONLY
-  const myReports = defectReports.filter(r => r.driver_id === driverId || r.driver_name.includes(isDriverA ? 'Mohammed' : 'Salem'));
+  // Isolated Defect Reports for active driver
+  const myReports = defectReports.filter(r => 
+    (matchedDriver && r.driver_id === matchedDriver.id) ||
+    (currentProfile?.full_name && r.driver_name.toLowerCase() === currentProfile.full_name.toLowerCase())
+  );
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +60,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
     if (!myAssignedTractor) return;
 
     submitDefectReport({
-      driver_id: driverId,
+      driver_id: matchedDriver?.id || undefined,
       driver_name: currentProfile.full_name,
       vehicle_id: myAssignedTractor.vehicle_id,
       trailer_id: myAssignedTrailer?.trailer_id,
@@ -137,7 +141,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
             <p className="text-slate-600">{myAssignedTractor?.make} {myAssignedTractor?.model} ({myAssignedTractor?.year})</p>
             <div className="pt-2 flex items-center justify-between text-[11px] border-t border-slate-200 mt-2">
               <span className="text-slate-500">Odometer:</span>
-              <span className="text-slate-900 font-mono font-bold">{myAssignedTractor?.current_mileage.toLocaleString()} KM</span>
+              <span className="text-slate-900 font-mono font-bold">{(myAssignedTractor?.current_mileage || 0).toLocaleString()} KM</span>
             </div>
           </div>
 
@@ -148,7 +152,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
             </div>
             <p className="text-[10px] text-slate-500 uppercase font-bold">Tanker Trailer</p>
             <p className="font-extrabold text-sky-700 text-base">{myAssignedTrailer?.trailer_id} <span className="text-slate-600 text-xs font-semibold">({myAssignedTrailer?.plate_number})</span></p>
-            <p className="text-slate-600">{myAssignedTrailer?.tank_capacity_liters.toLocaleString()} Liters ({myAssignedTrailer?.number_of_compartments} Compartments)</p>
+            <p className="text-slate-600">{(myAssignedTrailer?.tank_capacity_liters || 0).toLocaleString()} Liters ({myAssignedTrailer?.number_of_compartments || 0} Compartments)</p>
             <div className="pt-2 flex items-center justify-between text-[11px] border-t border-slate-200 mt-2">
               <span className="text-slate-500">Specification:</span>
               <span className="text-sky-800 font-semibold">{myAssignedTrailer?.tank_type}</span>

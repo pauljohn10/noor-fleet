@@ -387,7 +387,7 @@ export const TripManager: React.FC = () => {
                           </span>
                         </div>
                         <div className="text-[11px] text-slate-500 mt-0.5 font-mono">
-                          {trip.cargo_volume_liters?.toLocaleString()} L
+                          {(trip.cargo_volume_liters || 0).toLocaleString()} L
                         </div>
                       </td>
 
@@ -399,7 +399,7 @@ export const TripManager: React.FC = () => {
                           )}
                         </div>
                         <div className="text-[10px] text-slate-400 font-mono">
-                          Start Odo: {trip.start_odometer_km?.toLocaleString()} KM
+                          Start Odo: {(trip.start_odometer_km || 0).toLocaleString()} KM
                         </div>
                       </td>
 
@@ -491,7 +491,7 @@ export const TripManager: React.FC = () => {
                     <option value="">-- No Trailer Coupled --</option>
                     {trailers.map(t => (
                       <option key={t.id} value={t.id}>
-                        {t.trailer_id} ({t.tank_capacity_liters.toLocaleString()} L)
+                        {t.trailer_id} ({(t.tank_capacity_liters || 0).toLocaleString()} L)
                       </option>
                     ))}
                   </select>

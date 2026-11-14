@@ -404,7 +404,7 @@ export const InspectionList: React.FC = () => {
           veh ? veh.vehicle_id : 'N/A',
           veh ? veh.plate_number : 'N/A',
           i.inspector_id || 'Authorized Safety Inspector',
-          `${i.odometer_reading.toLocaleString()} KM`,
+          `${(i.odometer_reading || 0).toLocaleString()} KM`,
           i.overall_status,
           i.has_critical_failure ? 'CRITICAL FAIL' : 'PASS',
           new Date(i.inspection_date).toLocaleDateString(),
@@ -846,7 +846,7 @@ export const InspectionList: React.FC = () => {
                           {veh?.vehicle_id} ({veh?.plate_number})
                         </td>
                         <td className="p-3 font-mono text-slate-700">
-                          {i.odometer_reading.toLocaleString()} KM
+                          {(i.odometer_reading || 0).toLocaleString()} KM
                         </td>
                         <td className="p-3">
                           <Badge variant={i.overall_status === 'PASS' ? 'success' : 'danger'}>
@@ -1130,7 +1130,7 @@ export const InspectionList: React.FC = () => {
                           </div>
                           <div>
                             <span className="text-slate-400 block">Current Odometer</span>
-                            <span className="font-mono font-bold text-slate-900">{veh.current_mileage.toLocaleString()} KM</span>
+                            <span className="font-mono font-bold text-slate-900">{((veh && veh.current_mileage) || 0).toLocaleString()} KM</span>
                           </div>
                           <div>
                             <span className="text-slate-400 block">Coupled Trailer</span>

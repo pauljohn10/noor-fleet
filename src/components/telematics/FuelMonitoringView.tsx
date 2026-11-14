@@ -106,9 +106,9 @@ export const FuelMonitoringView: React.FC = () => {
         veh ? `${veh.vehicle_id} (${veh.plate_number})` : 'N/A',
         drv ? drv.full_name : 'Unassigned',
         `${f.fuel_station_name} (${f.station_city})`,
-        `${f.liters_dispensed.toLocaleString()} L`,
-        `${f.unit_cost.toFixed(2)} SAR`,
-        `${f.total_cost.toLocaleString()} SAR`,
+        `${(f.liters_dispensed || 0).toLocaleString()} L`,
+        `${(f.unit_cost || 0).toFixed(2)} SAR`,
+        `${(f.total_cost || 0).toLocaleString()} SAR`,
         f.payment_method.replace(/_/g, ' ')
       ];
     });
@@ -126,8 +126,8 @@ export const FuelMonitoringView: React.FC = () => {
         subtitle: 'Fleet Diesel Dispense Receipts, Odometer Readings & Commercial Fuel Station Billing',
         summaryKPIs: [
           { label: 'Total Invoices', value: filteredTransactions.length, color: 'slate' },
-          { label: 'Total Volume', value: `${sumLiters.toLocaleString()} L`, color: 'sky' },
-          { label: 'Total Fuel Expense', value: `${sumCost.toLocaleString()} SAR`, color: 'emerald' }
+          { label: 'Total Volume', value: `${(sumLiters || 0).toLocaleString()} L`, color: 'sky' },
+          { label: 'Total Fuel Expense', value: `${(sumCost || 0).toLocaleString()} SAR`, color: 'emerald' }
         ],
         metadata: [
           { label: 'Active Tab', value: activeTab },
@@ -186,7 +186,7 @@ export const FuelMonitoringView: React.FC = () => {
             <Flame className="w-4 h-4 text-amber-600" />
           </div>
           <div className="text-xl font-bold text-slate-900 mt-1">
-            {totalLiters.toLocaleString()} <span className="text-xs font-normal text-slate-500">Liters</span>
+            {(totalLiters || 0).toLocaleString()} <span className="text-xs font-normal text-slate-500">Liters</span>
           </div>
           <div className="text-[11px] text-slate-500 mt-0.5">Commercial Diesel Euro 5</div>
         </div>
@@ -197,7 +197,7 @@ export const FuelMonitoringView: React.FC = () => {
             <DollarSign className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="text-xl font-bold text-slate-900 mt-1">
-            {totalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-xs font-normal text-slate-500">SAR</span>
+            {(totalCost || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-xs font-normal text-slate-500">SAR</span>
           </div>
           <div className="text-[11px] text-slate-500 mt-0.5">Petromin Fleet & Aramco Dispenser</div>
         </div>
@@ -339,7 +339,7 @@ export const FuelMonitoringView: React.FC = () => {
                       </td>
 
                       <td className="py-3 px-3.5 font-mono text-slate-800">
-                        {tx.odometer_at_fueling.toLocaleString()} KM
+                        {(tx.odometer_at_fueling || 0).toLocaleString()} KM
                       </td>
 
                       <td className="py-3 px-3.5">
