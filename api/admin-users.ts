@@ -158,6 +158,31 @@ export default async function handler(req: any, res: any) {
     });
   }
 
+  // Public unauthenticated setup check (uses service-role adminClient to bypass RLS safely)
+  const url = new URL(req.url || '/', `http://${req.headers?.host || 'localhost'}`);
+  const queryAction = url.searchParams.get('action');
+
+  if (req.method === 'GET' && queryAction === 'check-setup') {
+    const { data, error } = await adminClient
+      .from('profiles')
+      .select('id')
+      .eq('role', 'SUPER_ADMIN')
+      .limit(1);
+
+    let count = data ? data.length : 0;
+    if (error || count === 0) {
+      const { data: authData } = await adminClient.auth.admin.listUsers({ page: 1, perPage: 100 });
+      count = (authData?.users || []).filter(
+        (u: any) => u.user_metadata?.role === 'SUPER_ADMIN'
+      ).length;
+    }
+
+    return res.status(200).json({
+      setupRequired: count === 0,
+      superAdminCount: count,
+    });
+  }
+
   let actor: { actorId: string; actorEmail: string; actorName: string };
   try {
     actor = await verifySuperAdmin(req, adminClient);

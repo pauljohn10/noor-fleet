@@ -37,16 +37,20 @@ export interface UpdateUserPayload {
 
 export async function checkSetupStatus(): Promise<{ setupRequired: boolean }> {
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, role')
-      .eq('role', 'SUPER_ADMIN')
-      .limit(1);
-
-    if (error) {
+    const res = await fetch('/api/admin-users?action=check-setup', {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+    });
+    if (!res.ok) {
+      // Never falsely show Initial Setup banner when unauthenticated RLS blocks direct profile reads
       return { setupRequired: false };
     }
-    return { setupRequired: !data || data.length === 0 };
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      return { setupRequired: false };
+    }
+    const data = await res.json();
+    return { setupRequired: Boolean(data.setupRequired) };
   } catch {
     return { setupRequired: false };
   }
