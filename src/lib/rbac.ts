@@ -31,7 +31,6 @@ export const WORKSHOP_WRITE_ROLES: UserRole[] = [
   'SUPER_ADMIN',
   'WORKSHOP_MANAGER',
   'WORKSHOP_STAFF',
-  'FLEET_MANAGER',
 ];
 
 export const WORKSHOP_DELETE_ROLES: UserRole[] = [
@@ -43,6 +42,12 @@ export const INVENTORY_WRITE_ROLES: UserRole[] = [
   'SUPER_ADMIN',
   'WORKSHOP_MANAGER',
   'WORKSHOP_STAFF',
+];
+
+export const TANK_TESTING_WRITE_ROLES: UserRole[] = [
+  'SUPER_ADMIN',
+  'FLEET_MANAGER',
+  'FLEET_STAFF',
 ];
 
 export const SHARED_INSPECTION_WRITE_ROLES: UserRole[] = [
@@ -171,6 +176,7 @@ export const ROLE_NAV_ACCESS: Record<SystemRole, NavItemKey[]> = {
     'inspections',
     'statusMatrix',
     'documents',
+    'reports',
   ],
   WORKSHOP_STAFF: [
     'dashboard',
@@ -183,6 +189,7 @@ export const ROLE_NAV_ACCESS: Record<SystemRole, NavItemKey[]> = {
     'preventive',
     'inventory',
     'technicians',
+    'reports',
   ],
   VIEWER: [
     'dashboard',

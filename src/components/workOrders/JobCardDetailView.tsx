@@ -199,7 +199,7 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
               return (
                 <button
                   key={st}
-                  disabled={!hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER', 'WORKSHOP_MANAGER', 'WORKSHOP_STAFF'])}
+                  disabled={!hasPermission(['SUPER_ADMIN', 'WORKSHOP_MANAGER', 'WORKSHOP_STAFF'])}
                   onClick={() =>
                     updateWorkOrderStatus(
                       workOrder.id,
@@ -208,7 +208,7 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
                       currentProfile.full_name
                     )
                   }
-                  className={`flex flex-col items-center shrink-0 px-1.5 transition ${hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER', 'WORKSHOP_MANAGER', 'WORKSHOP_STAFF'])
+                  className={`flex flex-col items-center shrink-0 px-1.5 transition ${hasPermission(['SUPER_ADMIN', 'WORKSHOP_MANAGER', 'WORKSHOP_STAFF'])
                     ? 'cursor-pointer'
                     : 'cursor-default opacity-80'
                     }`}
@@ -462,7 +462,7 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
         {/* Tab 4: Parts Used */}
         {activeTab === 'parts' && (
           <div className="space-y-4 text-xs">
-            {hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER', 'WORKSHOP_MANAGER', 'WORKSHOP_STAFF']) && (
+            {hasPermission(['SUPER_ADMIN', 'WORKSHOP_MANAGER', 'WORKSHOP_STAFF']) && (
               <form
                 onSubmit={handleIssuePart}
                 className="p-4 flex flex-wrap sm:flex-nowrap items-end gap-3"
@@ -543,7 +543,7 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
         {/* Tab 5: Labor Hours */}
         {activeTab === 'labor' && (
           <div className="space-y-4 text-xs">
-            {hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER', 'WORKSHOP_MANAGER', 'WORKSHOP_STAFF']) && (
+            {hasPermission(['SUPER_ADMIN', 'WORKSHOP_MANAGER', 'WORKSHOP_STAFF']) && (
               <form
                 onSubmit={handleAddLabor}
                 className="p-4 flex flex-wrap sm:flex-nowrap items-end gap-3"

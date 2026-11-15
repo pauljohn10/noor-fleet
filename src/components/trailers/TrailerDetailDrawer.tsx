@@ -71,7 +71,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
   } = useFleet();
   const { hasPermission } = useAuth();
   const { t, isRTL } = useI18n();
-  const canManage = hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER', 'WORKSHOP_MANAGER', 'FLEET_STAFF', 'WORKSHOP_STAFF']);
+  const canManage = hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER', 'FLEET_STAFF']);
 
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);

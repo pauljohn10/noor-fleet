@@ -149,8 +149,7 @@ RETURNS BOOLEAN AS $$
   SELECT public.get_current_user_role() IN (
     'SUPER_ADMIN',
     'WORKSHOP_MANAGER',
-    'WORKSHOP_STAFF',
-    'FLEET_MANAGER'
+    'WORKSHOP_STAFF'
   );
 $$ LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public;
 
@@ -625,17 +624,42 @@ END $$;
 
 -- ---------------------------------------------------------------------
 -- 7C. TANK TESTING & SHARED INSPECTION TABLES
--- (`tanker_test_records`, `vehicle_inspections`, `defect_reports`)
--- - SELECT: All 6 active roles
--- - INSERT / UPDATE: SUPER_ADMIN, FLEET_MANAGER, WORKSHOP_MANAGER, FLEET_STAFF, WORKSHOP_STAFF
---   (VIEWER is strictly blocked from creating or modifying records)
--- - DELETE: SUPER_ADMIN, FLEET_MANAGER, WORKSHOP_MANAGER
+-- (`tanker_test_records` -> Fleetwrite: SUPER_ADMIN, FLEET_MANAGER, FLEET_STAFF)
+-- (`vehicle_inspections`, `defect_reports` -> Shared inspection write)
 -- ---------------------------------------------------------------------
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'tanker_test_records'
+  ) THEN
+    CREATE POLICY "rbac_tanker_test_records_select"
+      ON public.tanker_test_records FOR SELECT
+      TO authenticated
+      USING (public.can_read_authenticated());
+
+    CREATE POLICY "rbac_tanker_test_records_insert"
+      ON public.tanker_test_records FOR INSERT
+      TO authenticated
+      WITH CHECK (public.can_write_fleet());
+
+    CREATE POLICY "rbac_tanker_test_records_update"
+      ON public.tanker_test_records FOR UPDATE
+      TO authenticated
+      USING (public.can_write_fleet())
+      WITH CHECK (public.can_write_fleet());
+
+    CREATE POLICY "rbac_tanker_test_records_delete"
+      ON public.tanker_test_records FOR DELETE
+      TO authenticated
+      USING (public.can_delete_fleet());
+  END IF;
+END $$;
+
 DO $$
 DECLARE
   t TEXT;
   inspection_tables TEXT[] := ARRAY[
-    'tanker_test_records',
     'vehicle_inspections'
   ];
 BEGIN
