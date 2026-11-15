@@ -22,6 +22,7 @@ import {
   RowAction,
   EditorialSelect,
   EDITORIAL_STATUS,
+  EmptyDash,
 } from '../common/EditorialUI';
 
 const STATUS_META: Record<
@@ -352,9 +353,7 @@ export const VehicleStatusMatrix: React.FC = () => {
                     {driver.full_name}
                   </span>
                 ) : (
-                  <span style={{ fontSize: 13, color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
-                    {isRTL ? 'غير معين' : 'Unassigned'}
-                  </span>
+                  <EmptyDash label={isRTL ? 'غير معين' : 'Unassigned'} />
                 )}
               </td>
 

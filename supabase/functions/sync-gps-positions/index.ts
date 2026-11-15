@@ -1,86 +1,247 @@
 // Supabase Edge Function: sync-gps-positions
 // Follows Deno 2 / Supabase standard runtime.
-// Provider-agnostic telematics synchronization engine.
+// Security-hardened telematics synchronization engine.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { IGpsProviderAdapter, NormalizedGpsPing, SyncResult } from './adapters/types.ts';
 import { MockGpsProviderAdapter } from './adapters/mockAdapter.ts';
 import { GenericRestAdapter } from './adapters/genericRestAdapter.ts';
+import { SniperGpsAdapter } from './adapters/sniperAdapter.ts';
 import { validateGpsPing } from './filters/anomalyFilter.ts';
 
+const allowedOrigin = Deno.env.get('ALLOWED_ORIGIN') || '*';
+
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Origin': allowedOrigin,
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-triggered-by, x-cron-secret',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
+
+const SYNC_ALLOWED_ROLES = new Set(['SUPER_ADMIN', 'FLEET_MANAGER']);
+const MANUAL_SYNC_COOLDOWN_MS = 30_000;
+
+function sanitizeErrorMessage(raw: string): string {
+  return raw
+    .replace(/Bearer\s+[A-Za-z0-9\-._~+/]+=*/gi, 'Bearer [REDACTED]')
+    .replace(/(api[_-]?key|token|password|secret)=[^&\s]+/gi, '$1=[REDACTED]')
+    .slice(0, 300);
+}
+
+function constantTimeEqual(a: string, b: string): boolean {
+  if (!a || !b || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 405,
+    });
+  }
+
   const startTime = performance.now();
   const syncBatchId = crypto.randomUUID();
 
   try {
-    // 1. Initialize Supabase Admin client using internal server environment
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
 
     if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Supabase environment variables (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY) are not set.');
+      throw new Error('Server configuration incomplete.');
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // 1. Authenticate caller: either valid cron secret OR authorized Supabase user JWT
+    const cronSecret = Deno.env.get('GPS_SYNC_CRON_SECRET') || '';
+    const providedCronSecret = req.headers.get('x-cron-secret') || '';
+    const isCronAuthorized = Boolean(cronSecret && constantTimeEqual(cronSecret, providedCronSecret));
 
-    // 2. Select Adapter via Environment Setting (Defaults safely to Mock while provider is unconfirmed)
-    const providerType = Deno.env.get('GPS_PROVIDER_TYPE') || 'MOCK';
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    let triggeredBy = isCronAuthorized ? 'SCHEDULED_CRON' : 'MANUAL_REFRESH';
+
+    if (!isCronAuthorized) {
+      const authHeader = req.headers.get('Authorization') || '';
+      const jwt = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+
+      if (!jwt || !supabaseAnonKey) {
+        return new Response(JSON.stringify({ error: 'Authentication required.' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
+        });
+      }
+
+      const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: `Bearer ${jwt}` } },
+      });
+
+      const { data: userData, error: authErr } = await supabaseUser.auth.getUser(jwt);
+      if (authErr || !userData?.user) {
+        return new Response(JSON.stringify({ error: 'Invalid or expired session.' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
+        });
+      }
+
+      const { data: profile, error: profErr } = await supabaseAdmin
+        .from('profiles')
+        .select('role, is_active')
+        .eq('id', userData.user.id)
+        .single();
+
+      if (profErr || !profile || profile.is_active === false) {
+        return new Response(JSON.stringify({ error: 'Account inactive or unauthorized.' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 403,
+        });
+      }
+
+      const role = String(profile.role || '').toUpperCase();
+      if (!SYNC_ALLOWED_ROLES.has(role)) {
+        return new Response(
+          JSON.stringify({ error: 'Forbidden: Only Super Admin or Fleet Manager can trigger GPS sync.' }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 403,
+          },
+        );
+      }
+
+      triggeredBy = req.headers.get('x-triggered-by') === 'TEST_CONNECTION' ? 'TEST_CONNECTION' : 'MANUAL_REFRESH';
+    }
+
+    // Parse optional action body
+    let action = 'sync';
+    try {
+      const body = await req.json();
+      if (body && typeof body.action === 'string') {
+        action = body.action;
+      }
+    } catch {
+      // Empty body defaults to 'sync'
+    }
+
+    // 2. Select Adapter (NEVER fall back to mock GPS data in production)
+    const providerType = (Deno.env.get('GPS_PROVIDER_TYPE') || '').trim().toUpperCase();
+    const allowDevMock = Deno.env.get('ALLOW_DEV_MOCK_GPS') === 'true';
+
     let adapter: IGpsProviderAdapter;
-
-    if (providerType === 'GENERIC_REST') {
+    if (providerType === 'SNIPER') {
+      adapter = new SniperGpsAdapter();
+    } else if (providerType === 'GENERIC_REST') {
       adapter = new GenericRestAdapter();
-    } else {
+    } else if (providerType === 'MOCK' && allowDevMock) {
       adapter = new MockGpsProviderAdapter();
+    } else {
+      return new Response(
+        JSON.stringify({
+          error: 'GPS provider is not configured. Set GPS_PROVIDER_TYPE=SNIPER and provider secrets in Supabase Secrets.',
+          sync_status: 'FAILED',
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 503,
+        },
+      );
     }
 
-    console.log(`[sync-gps-positions] Starting synchronization using adapter: ${adapter.providerName}`);
+    // If action === 'test', perform connection test without inserting pings
+    if (action === 'test') {
+      const testRes = await adapter.testConnection();
+      return new Response(JSON.stringify(testRes), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: testRes.success ? 200 : 502,
+      });
+    }
 
-    // 3. Fetch Registered GPS Devices from DB to map IMEI -> vehicle_id
-    const { data: registeredDevices, error: devicesError } = await supabase
+    // 3. Rate limit manual sync calls
+    if (!isCronAuthorized) {
+      const { data: recentLogs } = await supabaseAdmin
+        .from('gps_sync_logs')
+        .select('sync_started_at')
+        .order('sync_started_at', { ascending: false })
+        .limit(1);
+
+      const lastStarted = recentLogs?.[0]?.sync_started_at
+        ? new Date(recentLogs[0].sync_started_at).getTime()
+        : 0;
+
+      const elapsed = Date.now() - lastStarted;
+      if (elapsed < MANUAL_SYNC_COOLDOWN_MS) {
+        const retryAfterSec = Math.ceil((MANUAL_SYNC_COOLDOWN_MS - elapsed) / 1000);
+        return new Response(
+          JSON.stringify({
+            error: `Sync cooldown active. Please wait ${retryAfterSec}s before syncing again.`,
+            retry_after_seconds: retryAfterSec,
+            sync_status: 'SKIPPED',
+          }),
+          {
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'application/json',
+              'Retry-After': String(retryAfterSec),
+            },
+            status: 429,
+          },
+        );
+      }
+    }
+
+    // 4. Fetch Registered Active GPS Devices from DB to map IMEI -> vehicle_id
+    const { data: registeredDevices, error: devicesError } = await supabaseAdmin
       .from('gps_devices')
       .select('id, device_imei, installed_vehicle_id, is_active')
       .eq('is_active', true);
 
     if (devicesError) {
-      console.warn('[sync-gps-positions] Notice: gps_devices query note:', devicesError.message);
+      throw new Error('Failed to load registered GPS devices.');
     }
 
     const imeiToDeviceMap = new Map<string, { id: string; vehicle_id: string }>();
+    const activeImeis: string[] = [];
     if (registeredDevices) {
       for (const d of registeredDevices) {
+        activeImeis.push(d.device_imei);
         if (d.installed_vehicle_id) {
           imeiToDeviceMap.set(d.device_imei, { id: d.id, vehicle_id: d.installed_vehicle_id });
         }
       }
     }
 
-    // 4. Ingest Telematics from Adapter
-    const latestPings: NormalizedGpsPing[] = await adapter.fetchLatestPositions();
+    // Determine incremental sinceTimestamp from last successful sync
+    const { data: lastSuccessSync } = await supabaseAdmin
+      .from('gps_sync_logs')
+      .select('sync_completed_at')
+      .eq('sync_status', 'SUCCESS')
+      .order('sync_completed_at', { ascending: false })
+      .limit(1);
+
+    const sinceTimestamp = lastSuccessSync?.[0]?.sync_completed_at || undefined;
+
+    // 5. Ingest Telematics from Adapter
+    const latestPings: NormalizedGpsPing[] = await adapter.fetchLatestPositions(activeImeis, sinceTimestamp);
     let insertedCount = 0;
     let duplicateSkippedCount = 0;
     let anomalyRejectedCount = 0;
 
-    // 5. Process & Validate Each Ping
+    // 6. Process & Validate Each Ping
     for (const ping of latestPings) {
       const deviceLink = imeiToDeviceMap.get(ping.device_imei);
       const vehicleId = ping.vehicle_id || deviceLink?.vehicle_id;
       const deviceId = deviceLink?.id;
 
       if (!vehicleId) {
-        // Skip pings for devices not mapped to a fleet vehicle
         continue;
       }
 
-      // Validate against basic constraints and jitter
       const validation = validateGpsPing(ping);
       if (validation.isJitterDuplicate) {
         duplicateSkippedCount++;
@@ -88,12 +249,10 @@ Deno.serve(async (req: Request) => {
       }
       if (!validation.isValid) {
         anomalyRejectedCount++;
-        console.warn(`[sync-gps-positions] Ping rejected for ${ping.device_imei}: ${validation.reason}`);
         continue;
       }
 
-      // Upsert into vehicle_gps_pings
-      const { error: insertError } = await supabase
+      const { error: insertError } = await supabaseAdmin
         .from('vehicle_gps_pings')
         .insert({
           device_id: deviceId,
@@ -111,27 +270,33 @@ Deno.serve(async (req: Request) => {
           is_valid_point: true,
           data_source: ping.data_source,
           sync_batch_id: syncBatchId,
-          raw_telematics: ping.raw_payload
+          raw_telematics: ping.raw_payload,
         });
 
       if (insertError) {
-        // Unique constraint violation indicates duplicate timestamp
         if (insertError.code === '23505') {
           duplicateSkippedCount++;
-        } else {
-          console.error(`[sync-gps-positions] Insert error for vehicle ${vehicleId}:`, insertError.message);
         }
       } else {
         insertedCount++;
 
-        // Update vehicle's latest odometer and status if on trip
+        if (deviceId) {
+          await supabaseAdmin
+            .from('gps_devices')
+            .update({
+              last_heartbeat: ping.gps_timestamp,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', deviceId);
+        }
+
         if (ping.odometer_km) {
-          await supabase
+          await supabaseAdmin
             .from('vehicles')
             .update({
               current_mileage: ping.odometer_km,
               status: ping.speed_kmh > 0 ? 'ON_TRIP' : undefined,
-              updated_at: new Date().toISOString()
+              updated_at: new Date().toISOString(),
             })
             .eq('id', vehicleId);
         }
@@ -147,11 +312,10 @@ Deno.serve(async (req: Request) => {
       pings_skipped_duplicate: duplicateSkippedCount,
       pings_rejected_anomaly: anomalyRejectedCount,
       sync_status: insertedCount > 0 || latestPings.length === 0 ? 'SUCCESS' : 'PARTIAL_SUCCESS',
-      api_latency_ms: latencyMs
+      api_latency_ms: latencyMs,
     };
 
-    // 6. Record Diagnostics in gps_sync_logs
-    await supabase.from('gps_sync_logs').insert({
+    await supabaseAdmin.from('gps_sync_logs').insert({
       id: syncBatchId,
       provider_name: result.provider_name,
       sync_status: result.sync_status,
@@ -160,31 +324,32 @@ Deno.serve(async (req: Request) => {
       pings_skipped_duplicate: result.pings_skipped_duplicate,
       pings_rejected_anomaly: result.pings_rejected_anomaly,
       api_latency_ms: latencyMs,
-      triggered_by: req.headers.get('x-triggered-by') || 'HTTP_CALL',
-      sync_completed_at: new Date().toISOString()
+      triggered_by: triggeredBy,
+      sync_completed_at: new Date().toISOString(),
     });
 
-    return new Response(JSON.stringify(result, null, 2), {
+    return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
   } catch (error: unknown) {
-    const errorMsg = error instanceof Error ? error.message : 'Unknown error during GPS sync';
+    const rawMsg = error instanceof Error ? error.message : 'Unknown error during GPS sync';
+    const safeMsg = sanitizeErrorMessage(rawMsg);
     const latencyMs = Math.round(performance.now() - startTime);
 
-    console.error('[sync-gps-positions] Fatal error:', errorMsg);
+    console.error('[sync-gps-positions] Error:', safeMsg);
 
     return new Response(
       JSON.stringify({
-        error: errorMsg,
+        error: safeMsg,
         sync_status: 'FAILED',
         latency_ms: latencyMs,
-        sync_batch_id: syncBatchId
+        sync_batch_id: syncBatchId,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
-      }
+      },
     );
   }
 });

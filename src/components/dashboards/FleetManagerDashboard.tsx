@@ -279,9 +279,9 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
       <PageHeader
         title={
           <>
-            {isRTL ? 'مساحة عمل' : 'Fleet Operations'}
+            {isRTL ? 'ظ…ط³ط§ط­ط© ط¹ظ…ظ„' : 'Fleet Operations'}
             <br />
-            {isRTL ? 'عمليات الأسطول' : 'Control Workspace'}
+            {isRTL ? 'ط¹ظ…ظ„ظٹط§طھ ط§ظ„ط£ط³ط·ظˆظ„' : 'Control Workspace'}
           </>
         }
         subtitle={t(
@@ -310,11 +310,11 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
           <span
             style={{
               fontFamily: 'var(--font-mono)',
-              fontSize: 11,
+              fontSize: 12,
               color: 'var(--color-text-muted)',
             }}
           >
-            {isRTL ? 'مراقبة مباشرة' : 'Live Telemetry'}
+            {isRTL ? 'ظ…ط±ط§ظ‚ط¨ط© ظ…ط¨ط§ط´ط±ط©' : 'Live Telemetry'}
           </span>
         }
         marginTop={0}
@@ -322,35 +322,35 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
         <MetricStrip
           items={[
             {
-              label: isRTL ? 'متاح' : 'Available',
+              label: isRTL ? 'ظ…طھط§ط­' : 'Available',
               value: availableCount,
               mono: true,
               stripe: EDITORIAL_STATUS.green.stripe,
               onClick: () => onNavigateTab('vehicles'),
             },
             {
-              label: isRTL ? 'في رحلة' : 'On trip',
+              label: isRTL ? 'ظپظٹ ط±ط­ظ„ط©' : 'On trip',
               value: onTripCount,
               mono: true,
               stripe: EDITORIAL_STATUS.blue.stripe,
               onClick: () => onNavigateTab('vehicles'),
             },
             {
-              label: isRTL ? 'في الورشة' : 'In workshop',
+              label: isRTL ? 'ظپظٹ ط§ظ„ظˆط±ط´ط©' : 'In workshop',
               value: inWorkshopCount,
               mono: true,
               stripe: EDITORIAL_STATUS.amber.stripe,
               onClick: () => onNavigateTab('workOrders'),
             },
             {
-              label: isRTL ? 'يتطلب فحص' : 'Requires inspection',
+              label: isRTL ? 'ظٹطھط·ظ„ط¨ ظپط­طµ' : 'Requires inspection',
               value: requiresInspectionCount,
               mono: true,
               stripe: EDITORIAL_STATUS.amber.stripe,
               onClick: () => onNavigateTab('vehicles'),
             },
             {
-              label: isRTL ? 'خارج الخدمة' : 'Out of service',
+              label: isRTL ? 'ط®ط§ط±ط¬ ط§ظ„ط®ط¯ظ…ط©' : 'Out of service',
               value: outOfServiceCount,
               mono: true,
               stripe: EDITORIAL_STATUS.red.stripe,
@@ -366,13 +366,13 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
           <span className="inline-flex items-center gap-2">
             <FlaskConical className="w-4 h-4" style={{ color: 'var(--color-brand-accent)' }} />
             {isRTL
-              ? 'حالة اختبارات وفحوصات الصهاريج (الهيدروستاتيكي / الهوائي / التفريغ)'
+              ? 'ط­ط§ظ„ط© ط§ط®طھط¨ط§ط±ط§طھ ظˆظپط­ظˆطµط§طھ ط§ظ„طµظ‡ط§ط±ظٹط¬ (ط§ظ„ظ‡ظٹط¯ط±ظˆط³طھط§طھظٹظƒظٹ / ط§ظ„ظ‡ظˆط§ط¦ظٹ / ط§ظ„طھظپط±ظٹط؛)'
               : 'Tanker testing & inspection compliance (Hydrostatic / Pneumatic / Vacuum)'}
           </span>
         }
         action={
           <GhostButton onClick={() => onNavigateTab('trailers')}>
-            {isRTL ? 'إدارة فحوصات الصهاريج ←' : 'Manage Tanker Tests →'}
+            {isRTL ? 'ط¥ط¯ط§ط±ط© ظپط­ظˆطµط§طھ ط§ظ„طµظ‡ط§ط±ظٹط¬ â†گ' : 'Manage Tanker Tests â†’'}
           </GhostButton>
         }
         marginTop={8}
@@ -380,35 +380,35 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
         <MetricStrip
           items={[
             {
-              label: isRTL ? 'الاختبارات الناجحة' : 'Passed tests',
+              label: isRTL ? 'ط§ظ„ط§ط®طھط¨ط§ط±ط§طھ ط§ظ„ظ†ط§ط¬ط­ط©' : 'Passed tests',
               value: tankTestMetrics.passedCount,
               mono: true,
               stripe: EDITORIAL_STATUS.green.stripe,
               onClick: () => onNavigateTab('trailers'),
             },
             {
-              label: isRTL ? 'الاختبارات الراسبة' : 'Failed tests',
+              label: isRTL ? 'ط§ظ„ط§ط®طھط¨ط§ط±ط§طھ ط§ظ„ط±ط§ط³ط¨ط©' : 'Failed tests',
               value: tankTestMetrics.failedCount,
               mono: true,
               stripe: EDITORIAL_STATUS.red.stripe,
               onClick: () => onNavigateTab('trailers'),
             },
             {
-              label: isRTL ? 'الاختبارات قيد الانتظار' : 'Pending tests',
+              label: isRTL ? 'ط§ظ„ط§ط®طھط¨ط§ط±ط§طھ ظ‚ظٹط¯ ط§ظ„ط§ظ†طھط¸ط§ط±' : 'Pending tests',
               value: tankTestMetrics.pendingCount,
               mono: true,
               stripe: EDITORIAL_STATUS.amber.stripe,
               onClick: () => onNavigateTab('trailers'),
             },
             {
-              label: isRTL ? 'انتهاء قريب (خلال 30 يوم)' : 'Upcoming test expirations',
+              label: isRTL ? 'ط§ظ†طھظ‡ط§ط، ظ‚ط±ظٹط¨ (ط®ظ„ط§ظ„ 30 ظٹظˆظ…)' : 'Upcoming test expirations',
               value: tankTestMetrics.upcomingExpirationsCount,
               mono: true,
               stripe: EDITORIAL_STATUS.amber.stripe,
               onClick: () => onNavigateTab('trailers'),
             },
             {
-              label: isRTL ? 'الفحوصات المتأخرة' : 'Overdue inspections',
+              label: isRTL ? 'ط§ظ„ظپط­ظˆطµط§طھ ط§ظ„ظ…طھط£ط®ط±ط©' : 'Overdue inspections',
               value: tankTestMetrics.overdueInspectionsCount,
               mono: true,
               stripe: EDITORIAL_STATUS.red.stripe,
@@ -428,7 +428,7 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
         }
         action={
           <GhostButton onClick={() => onNavigateTab('inspections')}>
-            {t('view_all_reports', 'View All Reports')} {isRTL ? '←' : '→'}
+            {t('view_all_reports', 'View All Reports')} {isRTL ? 'â†گ' : 'â†’'}
           </GhostButton>
         }
         marginTop={8}
@@ -496,7 +496,7 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
               <td className="py-3 pe-3 whitespace-nowrap">
                 <span style={{ fontWeight: 600, color: 'var(--color-ink)', fontSize: 12 }}>
                   {rep.plate_number ? `${rep.plate_number} (${rep.vehicle_id})` : rep.vehicle_id}
-                  {rep.trailer_id ? ` • ${rep.trailer_id}` : ''}
+                  {rep.trailer_id ? ` â€¢ ${rep.trailer_id}` : ''}
                 </span>
               </td>
               <td className="py-3 pe-3">
@@ -512,7 +512,7 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
                   style={{
                     fontFamily: 'var(--font-mono)',
                     color: 'var(--color-text-muted)',
-                    fontSize: 11,
+                    fontSize: 12,
                   }}
                 >
                   {new Date(rep.created_at).toLocaleDateString()}
@@ -555,7 +555,7 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
         }
         action={
           <GhostButton onClick={() => onNavigateTab('vehicles')}>
-            {t('manage_fleet', 'Manage Fleet')} {isRTL ? '←' : '→'}
+            {t('manage_fleet', 'Manage Fleet')} {isRTL ? 'â†گ' : 'â†’'}
           </GhostButton>
         }
         marginTop={28}
@@ -651,7 +651,7 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
         }
         action={
           <GhostButton onClick={() => onNavigateTab('preventive')}>
-            {t('view_all', 'View PM Rules')} {isRTL ? '←' : '→'}
+            {t('view_all', 'View PM Rules')} {isRTL ? 'â†گ' : 'â†’'}
           </GhostButton>
         }
         marginTop={28}
@@ -659,16 +659,16 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
         <DataTable
           showPagination
           columns={[
-            { label: isRTL ? 'عنوان الخدمة المجدولة' : 'Schedule Service Title' },
-            { label: isRTL ? 'الشاحنة المستهدفة' : 'Target Unit' },
-            { label: isRTL ? 'الفترة' : 'Interval' },
-            { label: isRTL ? 'تاريخ الاستحقاق' : 'Due Date Target' },
+            { label: isRTL ? 'ط¹ظ†ظˆط§ظ† ط§ظ„ط®ط¯ظ…ط© ط§ظ„ظ…ط¬ط¯ظˆظ„ط©' : 'Schedule Service Title' },
+            { label: isRTL ? 'ط§ظ„ط´ط§ط­ظ†ط© ط§ظ„ظ…ط³طھظ‡ط¯ظپط©' : 'Target Unit' },
+            { label: isRTL ? 'ط§ظ„ظپطھط±ط©' : 'Interval' },
+            { label: isRTL ? 'طھط§ط±ظٹط® ط§ظ„ط§ط³طھط­ظ‚ط§ظ‚' : 'Due Date Target' },
             { label: t('status', 'Status') },
             { label: t('action', 'Change Status'), align: 'end' },
           ]}
           hasActionsColumn={false}
           isEmpty={schedules.length === 0}
-          emptyMessage={isRTL ? 'لا توجد خطط صيانة وقائية.' : 'No preventive maintenance schedules.'}
+          emptyMessage={isRTL ? 'ظ„ط§ طھظˆط¬ط¯ ط®ط·ط· طµظٹط§ظ†ط© ظˆظ‚ط§ط¦ظٹط©.' : 'No preventive maintenance schedules.'}
         >
           {schedules.map((s) => {
             const veh = vehicles.find((v) => v.id === s.vehicle_id);
@@ -695,7 +695,7 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
                       : trl
                       ? trl.trailer_id
                       : isRTL
-                      ? 'عام للأسطول'
+                      ? 'ط¹ط§ظ… ظ„ظ„ط£ط³ط·ظˆظ„'
                       : 'Fleet General'}
                   </span>
                 </td>
@@ -710,10 +710,10 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
                     {(s.interval_value || 0).toLocaleString()}{' '}
                     {s.frequency_type === 'MILEAGE'
                       ? isRTL
-                        ? 'كم'
+                        ? 'ظƒظ…'
                         : 'KM'
                       : isRTL
-                      ? 'يوم'
+                      ? 'ظٹظˆظ…'
                       : 'Days'}
                   </span>
                 </td>
@@ -725,7 +725,7 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
                       color: 'var(--color-text-secondary)',
                     }}
                   >
-                    {s.next_due_date || (isRTL ? 'شرط المسافة' : 'KM Trigger')}
+                    {s.next_due_date || (isRTL ? 'ط´ط±ط· ط§ظ„ظ…ط³ط§ظپط©' : 'KM Trigger')}
                   </span>
                 </td>
                 <td className="py-3 pe-3 whitespace-nowrap">
@@ -743,29 +743,29 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
                   >
                     {s.status === 'OVERDUE'
                       ? isRTL
-                        ? 'متأخر'
+                        ? 'ظ…طھط£ط®ط±'
                         : 'Overdue'
                       : s.status === 'DUE'
                       ? isRTL
-                        ? 'يستحق الآن'
+                        ? 'ظٹط³طھط­ظ‚ ط§ظ„ط¢ظ†'
                         : 'Due now'
                       : s.status === 'DUE_SOON'
                       ? isRTL
-                        ? 'يستحق قريباً'
+                        ? 'ظٹط³طھط­ظ‚ ظ‚ط±ظٹط¨ط§ظ‹'
                         : 'Due soon'
                       : s.status === 'COMPLETED'
                       ? isRTL
-                        ? 'مكتمل'
+                        ? 'ظ…ظƒطھظ…ظ„'
                         : 'Completed'
                       : isRTL
-                      ? 'مجدول'
+                      ? 'ظ…ط¬ط¯ظˆظ„'
                       : 'Upcoming'}
                   </Badge>
                 </td>
                 <td className="py-3 text-end whitespace-nowrap">
                   <EditorialSelect
                     aria-label={
-                      isRTL ? `تغيير حالة ${s.title}` : `Change status for ${s.title}`
+                      isRTL ? `طھط؛ظٹظٹط± ط­ط§ظ„ط© ${s.title}` : `Change status for ${s.title}`
                     }
                     value={s.status}
                     onChange={(e) =>
@@ -773,11 +773,11 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
                     }
                     width={140}
                   >
-                    <option value="UPCOMING">{isRTL ? 'قادم (مجدول)' : 'UPCOMING'}</option>
-                    <option value="DUE_SOON">{isRTL ? 'يستحق قريباً' : 'DUE SOON'}</option>
-                    <option value="DUE">{isRTL ? 'يستحق الآن' : 'DUE NOW'}</option>
-                    <option value="OVERDUE">{isRTL ? 'متأخر' : 'OVERDUE'}</option>
-                    <option value="COMPLETED">{isRTL ? 'مكتمل' : 'COMPLETED'}</option>
+                    <option value="UPCOMING">{isRTL ? 'ظ‚ط§ط¯ظ… (ظ…ط¬ط¯ظˆظ„)' : 'UPCOMING'}</option>
+                    <option value="DUE_SOON">{isRTL ? 'ظٹط³طھط­ظ‚ ظ‚ط±ظٹط¨ط§ظ‹' : 'DUE SOON'}</option>
+                    <option value="DUE">{isRTL ? 'ظٹط³طھط­ظ‚ ط§ظ„ط¢ظ†' : 'DUE NOW'}</option>
+                    <option value="OVERDUE">{isRTL ? 'ظ…طھط£ط®ط±' : 'OVERDUE'}</option>
+                    <option value="COMPLETED">{isRTL ? 'ظ…ظƒطھظ…ظ„' : 'COMPLETED'}</option>
                   </EditorialSelect>
                 </td>
               </DataRow>
@@ -794,12 +794,12 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
           onClose={() => setSelectedReport(null)}
           title={
             isRTL
-              ? `سجل تدقيق البلاغ: ${selectedReport.report_number}`
+              ? `ط³ط¬ظ„ طھط¯ظ‚ظٹظ‚ ط§ظ„ط¨ظ„ط§ط؛: ${selectedReport.report_number}`
               : `Defect Audit Record: ${selectedReport.report_number}`
           }
           subtitle={
             isRTL
-              ? `السائق: ${selectedReport.driver_name} | الوحدة: ${selectedReport.vehicle_id}`
+              ? `ط§ظ„ط³ط§ط¦ظ‚: ${selectedReport.driver_name} | ط§ظ„ظˆط­ط¯ط©: ${selectedReport.vehicle_id}`
               : `Driver: ${selectedReport.driver_name} | Unit: ${selectedReport.vehicle_id}`
           }
           maxWidth="2xl"
@@ -817,11 +817,11 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-sm" style={{ color: 'var(--color-ink)' }}>
                     {isRTL
-                      ? `عطل: ${selectedReport.category}`
+                      ? `ط¹ط·ظ„: ${selectedReport.category}`
                       : `${selectedReport.category} Defect`}
                   </span>
                   <span
-                    className="text-[11px]"
+                    className="text-[12px]"
                     style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)' }}
                   >
                     ({new Date(selectedReport.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')})
@@ -844,10 +844,10 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
                 <div className="pt-2 space-y-2">
                   <div className="flex items-center justify-between">
                     <span
-                      className="text-[11px] font-semibold block"
+                      className="text-[12px] font-semibold block"
                       style={{ color: 'var(--color-text-muted)' }}
                     >
-                      {isRTL ? 'صورة العطل المرفقة:' : 'Attached Issue Photo:'}
+                      {isRTL ? 'طµظˆط±ط© ط§ظ„ط¹ط·ظ„ ط§ظ„ظ…ط±ظپظ‚ط©:' : 'Attached Issue Photo:'}
                     </span>
                     <SecondaryButton
                       type="button"
@@ -855,20 +855,20 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
                         openLightbox(
                           selectedReport.photo_url!,
                           isRTL
-                            ? `صورة البلاغ: ${selectedReport.report_number}`
+                            ? `طµظˆط±ط© ط§ظ„ط¨ظ„ط§ط؛: ${selectedReport.report_number}`
                             : `Issue Photo: ${selectedReport.report_number}`,
                           isRTL
-                            ? `السائق: ${selectedReport.driver_name} • الوحدة: ${selectedReport.vehicle_id}`
-                            : `Driver: ${selectedReport.driver_name} • Unit: ${selectedReport.vehicle_id}`,
+                            ? `ط§ظ„ط³ط§ط¦ظ‚: ${selectedReport.driver_name} â€¢ ط§ظ„ظˆط­ط¯ط©: ${selectedReport.vehicle_id}`
+                            : `Driver: ${selectedReport.driver_name} â€¢ Unit: ${selectedReport.vehicle_id}`,
                           selectedReport.report_number,
                           selectedReport.created_at
                         )
                       }
-                      style={{ height: 28, padding: '2px 10px', fontSize: 11 }}
+                      style={{ height: 28, padding: '2px 10px', fontSize: 12 }}
                     >
                       <Maximize2 className="w-3 h-3" />
                       <span>
-                        {isRTL ? 'اضغط للتكبير والعرض الكامل' : 'Click to Open Full Size & Zoom'}
+                        {isRTL ? 'ط§ط¶ط؛ط· ظ„ظ„طھظƒط¨ظٹط± ظˆط§ظ„ط¹ط±ط¶ ط§ظ„ظƒط§ظ…ظ„' : 'Click to Open Full Size & Zoom'}
                       </span>
                     </SecondaryButton>
                   </div>
@@ -877,11 +877,11 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
                       openLightbox(
                         selectedReport.photo_url!,
                         isRTL
-                          ? `صورة البلاغ: ${selectedReport.report_number}`
+                          ? `طµظˆط±ط© ط§ظ„ط¨ظ„ط§ط؛: ${selectedReport.report_number}`
                           : `Issue Photo: ${selectedReport.report_number}`,
                         isRTL
-                          ? `السائق: ${selectedReport.driver_name} • الوحدة: ${selectedReport.vehicle_id}`
-                          : `Driver: ${selectedReport.driver_name} • Unit: ${selectedReport.vehicle_id}`,
+                          ? `ط§ظ„ط³ط§ط¦ظ‚: ${selectedReport.driver_name} â€¢ ط§ظ„ظˆط­ط¯ط©: ${selectedReport.vehicle_id}`
+                          : `Driver: ${selectedReport.driver_name} â€¢ Unit: ${selectedReport.vehicle_id}`,
                         selectedReport.report_number,
                         selectedReport.created_at
                       )
@@ -894,13 +894,13 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
                     className="group relative cursor-pointer overflow-hidden max-w-sm"
                     title={
                       isRTL
-                        ? 'اضغط لعرض الصورة بالحجم الكامل'
+                        ? 'ط§ط¶ط؛ط· ظ„ط¹ط±ط¶ ط§ظ„طµظˆط±ط© ط¨ط§ظ„ط­ط¬ظ… ط§ظ„ظƒط§ظ…ظ„'
                         : 'Click to open full-screen viewer with zoom'
                     }
                   >
                     <img
                       src={selectedReport.photo_url}
-                      alt={isRTL ? 'صورة العطل المبلغ عنه' : 'Driver reported issue'}
+                      alt={isRTL ? 'طµظˆط±ط© ط§ظ„ط¹ط·ظ„ ط§ظ„ظ…ط¨ظ„ط؛ ط¹ظ†ظ‡' : 'Driver reported issue'}
                       className="max-h-48 w-auto object-contain mx-auto"
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
@@ -913,7 +913,7 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
                         }}
                       >
                         <ZoomIn className="w-3.5 h-3.5" />
-                        {isRTL ? 'عرض في عارض الصور' : 'View Full-Screen Lightbox'}
+                        {isRTL ? 'ط¹ط±ط¶ ظپظٹ ط¹ط§ط±ط¶ ط§ظ„طµظˆط±' : 'View Full-Screen Lightbox'}
                       </span>
                     </div>
                   </div>
@@ -930,10 +930,10 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
               }}
             >
               <span
-                className="text-[11px] font-semibold block"
+                className="text-[12px] font-semibold block"
                 style={{ color: 'var(--color-text-muted)' }}
               >
-                {isRTL ? 'تحديث الحالة التشغيلية للمركبة:' : 'Update Vehicle Operational Status:'}
+                {isRTL ? 'طھط­ط¯ظٹط« ط§ظ„ط­ط§ظ„ط© ط§ظ„طھط´ط؛ظٹظ„ظٹط© ظ„ظ„ظ…ط±ظƒط¨ط©:' : 'Update Vehicle Operational Status:'}
               </span>
               <div className="flex flex-wrap gap-2">
                 <SecondaryButton
@@ -941,7 +941,7 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
                   onClick={() => handleUpdateVehicleStatus(selectedReport, 'REQUIRES INSPECTION')}
                   style={{ height: 30, fontSize: 12 }}
                 >
-                  {isRTL ? 'تعيين: يتطلب فحص' : 'Set Requires Inspection'}
+                  {isRTL ? 'طھط¹ظٹظٹظ†: ظٹطھط·ظ„ط¨ ظپط­طµ' : 'Set Requires Inspection'}
                 </SecondaryButton>
                 <SecondaryButton
                   type="button"
@@ -952,7 +952,7 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
                     color: EDITORIAL_STATUS.red.text,
                   }}
                 >
-                  {isRTL ? 'تعيين: خارج الخدمة' : 'Set Out of Service'}
+                  {isRTL ? 'طھط¹ظٹظٹظ†: ط®ط§ط±ط¬ ط§ظ„ط®ط¯ظ…ط©' : 'Set Out of Service'}
                 </SecondaryButton>
                 <SecondaryButton
                   type="button"
@@ -963,20 +963,20 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
                     color: EDITORIAL_STATUS.green.text,
                   }}
                 >
-                  {isRTL ? 'تعيين: متاح للخدمة' : 'Set Available'}
+                  {isRTL ? 'طھط¹ظٹظٹظ†: ظ…طھط§ط­ ظ„ظ„ط®ط¯ظ…ط©' : 'Set Available'}
                 </SecondaryButton>
               </div>
             </div>
 
             <div>
               <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--color-ink)' }}>
-                {isRTL ? 'ملاحظات المعالجة ورد المشرف' : 'Resolution & Supervisor Response Notes'}
+                {isRTL ? 'ظ…ظ„ط§ط­ط¸ط§طھ ط§ظ„ظ…ط¹ط§ظ„ط¬ط© ظˆط±ط¯ ط§ظ„ظ…ط´ط±ظپ' : 'Resolution & Supervisor Response Notes'}
               </label>
               <textarea
                 rows={3}
                 placeholder={
                   isRTL
-                    ? 'أدخل الإجراءات المتخذة أو توجيهات الورشة أو نتائج الفحص...'
+                    ? 'ط£ط¯ط®ظ„ ط§ظ„ط¥ط¬ط±ط§ط،ط§طھ ط§ظ„ظ…طھط®ط°ط© ط£ظˆ طھظˆط¬ظٹظ‡ط§طھ ط§ظ„ظˆط±ط´ط© ط£ظˆ ظ†طھط§ط¦ط¬ ط§ظ„ظپط­طµ...'
                     : 'Enter actions taken, workshop instructions, or inspection results...'
                 }
                 value={actionNotes}
@@ -997,13 +997,13 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
                 {t('Close', 'Close')}
               </SecondaryButton>
               <SecondaryButton type="button" onClick={() => handleSchedulePM(selectedReport)}>
-                {isRTL ? 'جدولة صيانة وقائية' : 'Schedule PM Repair'}
+                {isRTL ? 'ط¬ط¯ظˆظ„ط© طµظٹط§ظ†ط© ظˆظ‚ط§ط¦ظٹط©' : 'Schedule PM Repair'}
               </SecondaryButton>
               <SecondaryButton type="button" onClick={() => handleCreateWorkOrder(selectedReport)}>
-                {isRTL ? 'إنشاء أمر عمل' : 'Create Work Order'}
+                {isRTL ? 'ط¥ظ†ط´ط§ط، ط£ظ…ط± ط¹ظ…ظ„' : 'Create Work Order'}
               </SecondaryButton>
               <PrimaryButton type="button" onClick={() => handleMarkResolved(selectedReport)}>
-                {isRTL ? 'اعتماد الحل' : 'Mark Resolved'}
+                {isRTL ? 'ط§ط¹طھظ…ط§ط¯ ط§ظ„ط­ظ„' : 'Mark Resolved'}
               </PrimaryButton>
             </div>
           </div>

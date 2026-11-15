@@ -378,7 +378,7 @@ export const PartsList: React.FC = () => {
                   dir="ltr"
                   style={{
                     fontFamily: 'var(--font-mono)',
-                    fontSize: 11.5,
+                    fontSize: 12.5,
                     color: 'var(--color-text-muted)',
                     marginTop: 2,
                   }}

@@ -212,7 +212,7 @@ export const DocumentList: React.FC = () => {
         summaryKPIs: [
           { label: t('Total Documents'), value: totalCount, color: 'slate' },
           { label: t('Compliant & Valid'), value: compliantCount, color: 'emerald' },
-          { label: t('Expiring Soon (≤30d)'), value: expiringSoonCount, color: 'amber' },
+          { label: t('Expiring Soon (â‰¤30d)'), value: expiringSoonCount, color: 'amber' },
           { label: t('Expired (Urgent)'), value: expiredCount, color: 'rose' },
         ],
         metadata: [
@@ -229,9 +229,9 @@ export const DocumentList: React.FC = () => {
       <PageHeader
         title={
           <>
-            {isRTL ? 'تصاريح المركبات' : 'Vehicle Permits &'}
+            {isRTL ? 'طھطµط§ط±ظٹط­ ط§ظ„ظ…ط±ظƒط¨ط§طھ' : 'Vehicle Permits &'}
             <br />
-            {isRTL ? 'وانتهاء الوثائق' : 'Document Expiries'}
+            {isRTL ? 'ظˆط§ظ†طھظ‡ط§ط، ط§ظ„ظˆط«ط§ط¦ظ‚' : 'Document Expiries'}
           </>
         }
         subtitle={t('Saudi Istimara registration renewals, Comprehensive Insurance, Hydrostatic certificates, and Aramco loading permits.')}
@@ -241,7 +241,7 @@ export const DocumentList: React.FC = () => {
               {t('Excel')}
             </GhostButton>
             <GhostButton onClick={handleExportPDF}>
-              {isRTL ? 'تقرير PDF' : 'PDF report'}
+              {isRTL ? 'طھظ‚ط±ظٹط± PDF' : 'PDF report'}
             </GhostButton>
             {canManage && (
               <PrimaryButton onClick={handleOpenAdd}>
@@ -291,22 +291,22 @@ export const DocumentList: React.FC = () => {
 
       <StatusTabs
         tabs={[
-          { key: 'ALL', label: isRTL ? 'الكل' : 'All', count: totalCount },
+          { key: 'ALL', label: isRTL ? 'ط§ظ„ظƒظ„' : 'All', count: totalCount },
           {
             key: 'VALID',
-            label: isRTL ? 'ساري' : 'Valid',
+            label: isRTL ? 'ط³ط§ط±ظٹ' : 'Valid',
             count: compliantCount,
             stripe: DESIGN_TOKENS.colors.status.availableStripe,
           },
           {
             key: 'EXPIRING_SOON',
-            label: isRTL ? 'ينتهي قريباً' : 'Expiring soon',
+            label: isRTL ? 'ظٹظ†طھظ‡ظٹ ظ‚ط±ظٹط¨ط§ظ‹' : 'Expiring soon',
             count: expiringSoonCount,
             stripe: DESIGN_TOKENS.colors.status.workshopStripe,
           },
           {
             key: 'EXPIRED',
-            label: isRTL ? 'منتهي' : 'Expired',
+            label: isRTL ? 'ظ…ظ†طھظ‡ظٹ' : 'Expired',
             count: expiredCount,
             stripe: DESIGN_TOKENS.colors.status.outOfServiceStripe,
           },
@@ -356,13 +356,13 @@ export const DocumentList: React.FC = () => {
 
       <DataTable
         columns={[
-          { label: isRTL ? 'الوثيقة' : 'Document', align: 'start' },
-          { label: isRTL ? 'المركبة / المقطورة' : 'Linked asset', align: 'start' },
-          { label: isRTL ? 'رقم الوثيقة' : 'Document #', align: 'start' },
-          { label: isRTL ? 'جهة الإصدار' : 'Authority', align: 'start' },
-          { label: isRTL ? 'تاريخ الانتهاء' : 'Expiry date', align: 'start' },
-          { label: isRTL ? 'المرفق' : 'Attachment', align: 'start' },
-          { label: isRTL ? 'الحالة' : 'Status', align: 'start' },
+          { label: isRTL ? 'ط§ظ„ظˆط«ظٹظ‚ط©' : 'Document', align: 'start' },
+          { label: isRTL ? 'ط§ظ„ظ…ط±ظƒط¨ط© / ط§ظ„ظ…ظ‚ط·ظˆط±ط©' : 'Linked asset', align: 'start' },
+          { label: isRTL ? 'ط±ظ‚ظ… ط§ظ„ظˆط«ظٹظ‚ط©' : 'Document #', align: 'start' },
+          { label: isRTL ? 'ط¬ظ‡ط© ط§ظ„ط¥طµط¯ط§ط±' : 'Authority', align: 'start' },
+          { label: isRTL ? 'طھط§ط±ظٹط® ط§ظ„ط§ظ†طھظ‡ط§ط،' : 'Expiry date', align: 'start' },
+          { label: isRTL ? 'ط§ظ„ظ…ط±ظپظ‚' : 'Attachment', align: 'start' },
+          { label: isRTL ? 'ط§ظ„ط­ط§ظ„ط©' : 'Status', align: 'start' },
         ]}
         isEmpty={pagedDocuments.length === 0}
         emptyMessage={t('No vehicle permits or registration records matching the selected filters.')}
@@ -392,18 +392,18 @@ export const DocumentList: React.FC = () => {
               : DESIGN_TOKENS.colors.status.availableText;
           const statusLabel = isExpired
             ? isRTL
-              ? `منتهي (منذ ${Math.abs(daysLeft)} يوم)`
+              ? `ظ…ظ†طھظ‡ظٹ (ظ…ظ†ط° ${Math.abs(daysLeft)} ظٹظˆظ…)`
               : `Expired (${Math.abs(daysLeft)}d ago)`
             : daysLeft === 0
               ? isRTL
-                ? 'ينتهي اليوم'
+                ? 'ظٹظ†طھظ‡ظٹ ط§ظ„ظٹظˆظ…'
                 : 'Expires today'
               : isExpiringSoon
                 ? isRTL
-                  ? `ينتهي خلال ${daysLeft} يوم`
+                  ? `ظٹظ†طھظ‡ظٹ ط®ظ„ط§ظ„ ${daysLeft} ظٹظˆظ…`
                   : `Expiring in ${daysLeft}d`
                 : isRTL
-                  ? `ساري (${daysLeft} يوم)`
+                  ? `ط³ط§ط±ظٹ (${daysLeft} ظٹظˆظ…)`
                   : `Valid (${daysLeft}d left)`;
 
           return (
@@ -483,7 +483,7 @@ export const DocumentList: React.FC = () => {
                         color: 'var(--color-ink)',
                       }}
                     >
-                      {veh.vehicle_id} · {veh.plate_number}
+                      {veh.vehicle_id} آ· {veh.plate_number}
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>
                       {veh.make} {veh.model}
@@ -500,7 +500,7 @@ export const DocumentList: React.FC = () => {
                         color: 'var(--color-ink)',
                       }}
                     >
-                      {trl.trailer_id} · {trl.plate_number}
+                      {trl.trailer_id} آ· {trl.plate_number}
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>
                       {(trl.tank_capacity_liters || 0).toLocaleString()} {t('L')}
@@ -550,12 +550,12 @@ export const DocumentList: React.FC = () => {
                     dir="ltr"
                     style={{
                       fontFamily: 'var(--font-mono)',
-                      fontSize: 11.5,
+                      fontSize: 12.5,
                       color: 'var(--color-text-muted)',
                       marginTop: 2,
                     }}
                   >
-                    {isRTL ? 'صدر:' : 'Issued:'} {d.issue_date}
+                    {isRTL ? 'طµط¯ط±:' : 'Issued:'} {d.issue_date}
                   </div>
                 )}
               </td>
@@ -619,7 +619,7 @@ export const DocumentList: React.FC = () => {
                   </div>
                 ) : (
                   <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
-                    {isRTL ? 'لا يوجد مرفق' : 'No file'}
+                    {isRTL ? 'ظ„ط§ ظٹظˆط¬ط¯ ظ…ط±ظپظ‚' : 'No file'}
                   </span>
                 )}
               </td>
@@ -635,7 +635,7 @@ export const DocumentList: React.FC = () => {
       <TableFooter
         summaryText={
           isRTL
-            ? `${filteredDocuments.length} من ${documents.length} وثيقة`
+            ? `${filteredDocuments.length} ظ…ظ† ${documents.length} ظˆط«ظٹظ‚ط©`
             : `${filteredDocuments.length} of ${documents.length} documents`
         }
         page={page}
@@ -668,9 +668,9 @@ export const DocumentList: React.FC = () => {
           documentType={previewDoc.document_type}
           assetLabel={(() => {
             const veh = vehicles.find(v => v.id === previewDoc.vehicle_id);
-            if (veh) return `${veh.vehicle_id} · ${veh.plate_number}`;
+            if (veh) return `${veh.vehicle_id} آ· ${veh.plate_number}`;
             const trl = trailers.find(tr => tr.id === previewDoc.trailer_id);
-            if (trl) return `${trl.trailer_id} · ${trl.plate_number}`;
+            if (trl) return `${trl.trailer_id} آ· ${trl.plate_number}`;
             return t('Fleet Master Policy');
           })()}
           issueDate={previewDoc.issue_date}

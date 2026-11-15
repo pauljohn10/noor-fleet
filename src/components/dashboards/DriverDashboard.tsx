@@ -146,7 +146,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
       case 'WORK_ORDER_CREATED':
         return (
           <Badge variant="info" size="sm">
-            {isRTL ? 'تم إنشاء أمر عمل' : 'Work order created'}
+            {isRTL ? 'طھظ… ط¥ظ†ط´ط§ط، ط£ظ…ط± ط¹ظ…ظ„' : 'Work order created'}
           </Badge>
         );
       case 'RESOLVED':
@@ -167,22 +167,22 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
   return (
     <PageContainer>
       <PageHeader
-        title={isRTL ? `مرحباً، ${currentProfile.full_name}` : `Welcome, ${currentProfile.full_name}`}
+        title={isRTL ? `ظ…ط±ط­ط¨ط§ظ‹طŒ ${currentProfile.full_name}` : `Welcome, ${currentProfile.full_name}`}
         subtitle={
           isRTL
-            ? 'بوابة السائق الموثقة — ناقل مواد بترولية معتمد لدى أرامكو'
-            : 'Authenticated Driver Portal — Aramco Certified Hazardous Materials Transporter'
+            ? 'ط¨ظˆط§ط¨ط© ط§ظ„ط³ط§ط¦ظ‚ ط§ظ„ظ…ظˆط«ظ‚ط© â€” ظ†ط§ظ‚ظ„ ظ…ظˆط§ط¯ ط¨طھط±ظˆظ„ظٹط© ظ…ط¹طھظ…ط¯ ظ„ط¯ظ‰ ط£ط±ط§ظ…ظƒظˆ'
+            : 'Authenticated Driver Portal â€” Aramco Certified Hazardous Materials Transporter'
         }
         badge={
           <Badge variant="success" size="sm">
-            {isRTL ? 'بوابة السائق' : 'Driver portal'}
+            {isRTL ? 'ط¨ظˆط§ط¨ط© ط§ظ„ط³ط§ط¦ظ‚' : 'Driver portal'}
           </Badge>
         }
       />
 
       {/* MY ASSIGNED VEHICLE CARD (STRICT 1:1 BINDING - NO DROPDOWN - NO FINANCIAL DATA) */}
       <EditorialSection
-        title={isRTL ? 'الشاحنة والمقطورة المخصصة لي' : 'My assigned tractor & coupled trailer'}
+        title={isRTL ? 'ط§ظ„ط´ط§ط­ظ†ط© ظˆط§ظ„ظ…ظ‚ط·ظˆط±ط© ط§ظ„ظ…ط®طµطµط© ظ„ظٹ' : 'My assigned tractor & coupled trailer'}
         action={
           <Badge
             variant={
@@ -212,7 +212,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
           >
             <div className="flex items-center justify-between gap-2">
               <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)' }}>
-                {isRTL ? 'رأس الشاحنة المخصصة' : 'Assigned tractor head'}
+                {isRTL ? 'ط±ط£ط³ ط§ظ„ط´ط§ط­ظ†ط© ط§ظ„ظ…ط®طµطµط©' : 'Assigned tractor head'}
               </span>
               <Truck className="w-4 h-4" style={{ color: 'var(--color-brand-accent)' }} />
             </div>
@@ -235,10 +235,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
               {myAssignedTractor?.make} {myAssignedTractor?.model} ({myAssignedTractor?.year})
             </p>
             <div
-              className="pt-2 flex items-center justify-between text-[11px]"
+              className="pt-2 flex items-center justify-between text-[12px]"
               style={{ borderTop: '1px solid var(--color-row-divider)' }}
             >
-              <span style={{ color: 'var(--color-text-muted)' }}>{isRTL ? 'العداد:' : 'Odometer:'}</span>
+              <span style={{ color: 'var(--color-text-muted)' }}>{isRTL ? 'ط§ظ„ط¹ط¯ط§ط¯:' : 'Odometer:'}</span>
               <span
                 style={{
                   fontFamily: 'var(--font-mono)',
@@ -246,7 +246,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
                   color: 'var(--color-ink)',
                 }}
               >
-                {(myAssignedTractor?.current_mileage || 0).toLocaleString()} {isRTL ? 'كم' : 'KM'}
+                {(myAssignedTractor?.current_mileage || 0).toLocaleString()} {isRTL ? 'ظƒظ…' : 'KM'}
               </span>
             </div>
           </div>
@@ -264,7 +264,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
           >
             <div className="flex items-center justify-between gap-2">
               <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)' }}>
-                {isRTL ? 'مقطورة الصهريج المرتبطة' : 'Coupled tanker trailer'}
+                {isRTL ? 'ظ…ظ‚ط·ظˆط±ط© ط§ظ„طµظ‡ط±ظٹط¬ ط§ظ„ظ…ط±طھط¨ط·ط©' : 'Coupled tanker trailer'}
               </span>
               <Truck className="w-4 h-4" style={{ color: EDITORIAL_STATUS.blue.text }} />
             </div>
@@ -287,14 +287,14 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
               )}
             </div>
             <p style={{ color: 'var(--color-text-secondary)' }}>
-              {(myAssignedTrailer?.tank_capacity_liters || 0).toLocaleString()} {isRTL ? 'لتر' : 'Liters'} (
-              {myAssignedTrailer?.number_of_compartments || 0} {isRTL ? 'خزانات' : 'Compartments'})
+              {(myAssignedTrailer?.tank_capacity_liters || 0).toLocaleString()} {isRTL ? 'ظ„طھط±' : 'Liters'} (
+              {myAssignedTrailer?.number_of_compartments || 0} {isRTL ? 'ط®ط²ط§ظ†ط§طھ' : 'Compartments'})
             </p>
             <div
-              className="pt-2 flex items-center justify-between text-[11px]"
+              className="pt-2 flex items-center justify-between text-[12px]"
               style={{ borderTop: '1px solid var(--color-row-divider)' }}
             >
-              <span style={{ color: 'var(--color-text-muted)' }}>{isRTL ? 'المواصفات:' : 'Specification:'}</span>
+              <span style={{ color: 'var(--color-text-muted)' }}>{isRTL ? 'ط§ظ„ظ…ظˆط§طµظپط§طھ:' : 'Specification:'}</span>
               <span style={{ fontWeight: 600, color: 'var(--color-ink)' }}>
                 {myAssignedTrailer?.tank_type}
               </span>
@@ -319,15 +319,15 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
           <div className="flex items-center justify-between w-full">
             <ShieldCheck className="w-6 h-6" style={{ color: '#8FD6C4' }} />
             <Badge variant="success" size="sm">
-              {isRTL ? 'إلزامي يومياً' : 'Daily mandatory'}
+              {isRTL ? 'ط¥ظ„ط²ط§ظ…ظٹ ظٹظˆظ…ظٹط§ظ‹' : 'Daily mandatory'}
             </Badge>
           </div>
           <div>
             <p style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600 }}>
-              {isRTL ? 'بدء فحص ما قبل الرحلة' : 'Start Pre-Trip Check'}
+              {isRTL ? 'ط¨ط¯ط، ظپط­طµ ظ…ط§ ظ‚ط¨ظ„ ط§ظ„ط±ط­ظ„ط©' : 'Start Pre-Trip Check'}
             </p>
             <p style={{ fontSize: 12, opacity: 0.85, marginTop: 2 }}>
-              {isRTL ? 'تنفيذ قائمة السلامة الرقمية (15 بند)' : 'Perform 15-Point Digital Safety Checklist'}
+              {isRTL ? 'طھظ†ظپظٹط° ظ‚ط§ط¦ظ…ط© ط§ظ„ط³ظ„ط§ظ…ط© ط§ظ„ط±ظ‚ظ…ظٹط© (15 ط¨ظ†ط¯)' : 'Perform 15-Point Digital Safety Checklist'}
             </p>
           </div>
         </button>
@@ -347,16 +347,16 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
           <div className="flex items-center justify-between w-full">
             <AlertTriangle className="w-6 h-6" style={{ color: EDITORIAL_STATUS.red.text }} />
             <Badge variant="danger" size="sm">
-              {isRTL ? 'إجراء فوري' : 'Immediate action'}
+              {isRTL ? 'ط¥ط¬ط±ط§ط، ظپظˆط±ظٹ' : 'Immediate action'}
             </Badge>
           </div>
           <div>
             <p style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600 }}>
-              {isRTL ? 'الإبلاغ عن عطل أو مشكلة' : 'Report a Problem'}
+              {isRTL ? 'ط§ظ„ط¥ط¨ظ„ط§ط؛ ط¹ظ† ط¹ط·ظ„ ط£ظˆ ظ…ط´ظƒظ„ط©' : 'Report a Problem'}
             </p>
             <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}>
               {isRTL
-                ? 'تسجيل عطل أو توقف طارئ أو ملاحظة سلامة'
+                ? 'طھط³ط¬ظٹظ„ ط¹ط·ظ„ ط£ظˆ طھظˆظ‚ظپ ط·ط§ط±ط¦ ط£ظˆ ظ…ظ„ط§ط­ط¸ط© ط³ظ„ط§ظ…ط©'
                 : 'Log Defect / Breakdown / Safety Concern'}
             </p>
           </div>
@@ -378,10 +378,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
           <Truck className="w-4 h-4" style={{ color: 'var(--color-brand-accent)' }} />
           <div>
             <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}>
-              {isRTL ? 'مركبتي' : 'My Vehicle'}
+              {isRTL ? 'ظ…ط±ظƒط¨طھظٹ' : 'My Vehicle'}
             </p>
-            <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
-              {isRTL ? 'المواصفات والسجل' : 'Specs & History'}
+            <p style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+              {isRTL ? 'ط§ظ„ظ…ظˆط§طµظپط§طھ ظˆط§ظ„ط³ط¬ظ„' : 'Specs & History'}
             </p>
           </div>
         </button>
@@ -399,10 +399,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
           <ShieldCheck className="w-4 h-4" style={{ color: EDITORIAL_STATUS.blue.text }} />
           <div>
             <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}>
-              {isRTL ? 'فحوصاتي' : 'My Inspections'}
+              {isRTL ? 'ظپط­ظˆطµط§طھظٹ' : 'My Inspections'}
             </p>
-            <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
-              {isRTL ? 'سجلات الفحص' : 'Checklist Logs'}
+            <p style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+              {isRTL ? 'ط³ط¬ظ„ط§طھ ط§ظ„ظپط­طµ' : 'Checklist Logs'}
             </p>
           </div>
         </button>
@@ -420,10 +420,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
           <FileText className="w-4 h-4" style={{ color: 'var(--color-text-secondary)' }} />
           <div>
             <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}>
-              {isRTL ? 'الوثائق' : 'Documents'}
+              {isRTL ? 'ط§ظ„ظˆط«ط§ط¦ظ‚' : 'Documents'}
             </p>
-            <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
-              {isRTL ? 'الاستمارة والتصاريح' : 'Istimara & Permits'}
+            <p style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+              {isRTL ? 'ط§ظ„ط§ط³طھظ…ط§ط±ط© ظˆط§ظ„طھطµط§ط±ظٹط­' : 'Istimara & Permits'}
             </p>
           </div>
         </button>
@@ -432,7 +432,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
           onClick={() =>
             alert(
               (isRTL
-                ? 'التنبيهات: جميع تنبيهات السلامة مفعلة للسائق '
+                ? 'ط§ظ„طھظ†ط¨ظٹظ‡ط§طھ: ط¬ظ…ظٹط¹ طھظ†ط¨ظٹظ‡ط§طھ ط§ظ„ط³ظ„ط§ظ…ط© ظ…ظپط¹ظ„ط© ظ„ظ„ط³ط§ط¦ظ‚ '
                 : 'Notifications: All safety alerts active for driver ') + currentProfile.full_name
             )
           }
@@ -447,10 +447,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
           <Bell className="w-4 h-4" style={{ color: EDITORIAL_STATUS.amber.text }} />
           <div>
             <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}>
-              {isRTL ? 'التنبيهات' : 'Notifications'}
+              {isRTL ? 'ط§ظ„طھظ†ط¨ظٹظ‡ط§طھ' : 'Notifications'}
             </p>
-            <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
-              {isRTL ? 'تنبيهات النظام' : 'System Alerts'}
+            <p style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+              {isRTL ? 'طھظ†ط¨ظٹظ‡ط§طھ ط§ظ„ظ†ط¸ط§ظ…' : 'System Alerts'}
             </p>
           </div>
         </button>
@@ -458,10 +458,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
 
       {/* MY DEFECT REPORTS SECTION */}
       <EditorialSection
-        title={isRTL ? 'بلاغات الأعطال والمشاكل المرسلة مني' : 'My submitted defect & problem reports'}
+        title={isRTL ? 'ط¨ظ„ط§ط؛ط§طھ ط§ظ„ط£ط¹ط·ط§ظ„ ظˆط§ظ„ظ…ط´ط§ظƒظ„ ط§ظ„ظ…ط±ط³ظ„ط© ظ…ظ†ظٹ' : 'My submitted defect & problem reports'}
         action={
           <Badge variant="slate" size="sm">
-            {isRTL ? `${myReports.length} بلاغات مسجلة` : `${myReports.length} Reports Logged`}
+            {isRTL ? `${myReports.length} ط¨ظ„ط§ط؛ط§طھ ظ…ط³ط¬ظ„ط©` : `${myReports.length} Reports Logged`}
           </Badge>
         }
         marginTop={0}
@@ -469,17 +469,17 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
         <DataTable
           showPagination
           columns={[
-            { label: isRTL ? 'البلاغ والفئة' : 'Report & category' },
-            { label: isRTL ? 'الوصف ورد الورشة' : 'Description & response' },
-            { label: isRTL ? 'المركبة والوقت' : 'Vehicle & timestamp' },
-            { label: isRTL ? 'الخطورة والحالة' : 'Severity & status', align: 'end' },
+            { label: isRTL ? 'ط§ظ„ط¨ظ„ط§ط؛ ظˆط§ظ„ظپط¦ط©' : 'Report & category' },
+            { label: isRTL ? 'ط§ظ„ظˆطµظپ ظˆط±ط¯ ط§ظ„ظˆط±ط´ط©' : 'Description & response' },
+            { label: isRTL ? 'ط§ظ„ظ…ط±ظƒط¨ط© ظˆط§ظ„ظˆظ‚طھ' : 'Vehicle & timestamp' },
+            { label: isRTL ? 'ط§ظ„ط®ط·ظˆط±ط© ظˆط§ظ„ط­ط§ظ„ط©' : 'Severity & status', align: 'end' },
           ]}
           hasActionsColumn={false}
           isEmpty={myReports.length === 0}
           emptyMessage={
             isRTL
-              ? 'لا توجد بلاغات أعطال نشطة — مركبتك في حالة تشغيلية سليمة حالياً.'
-              : 'No active defect reports — your vehicle is currently in operational condition.'
+              ? 'ظ„ط§ طھظˆط¬ط¯ ط¨ظ„ط§ط؛ط§طھ ط£ط¹ط·ط§ظ„ ظ†ط´ط·ط© â€” ظ…ط±ظƒط¨طھظƒ ظپظٹ ط­ط§ظ„ط© طھط´ط؛ظٹظ„ظٹط© ط³ظ„ظٹظ…ط© ط­ط§ظ„ظٹط§ظ‹.'
+              : 'No active defect reports â€” your vehicle is currently in operational condition.'
           }
         >
           {myReports.map((rep) => (
@@ -518,7 +518,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
                 </p>
                 {rep.workshop_response && (
                   <div
-                    className="mt-2 p-2 flex items-start gap-2 text-[11px]"
+                    className="mt-2 p-2 flex items-start gap-2 text-[12px]"
                     style={{
                       background: 'var(--color-surface)',
                       border: '1px solid var(--color-border)',
@@ -532,7 +532,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
                     />
                     <div>
                       <span className="font-semibold block" style={{ color: 'var(--color-ink)' }}>
-                        {isRTL ? 'رد الورشة:' : 'Workshop Response:'}
+                        {isRTL ? 'ط±ط¯ ط§ظ„ظˆط±ط´ط©:' : 'Workshop Response:'}
                       </span>
                       <span>{rep.workshop_response}</span>
                     </div>
@@ -540,9 +540,9 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
                 )}
               </td>
               <td className="py-3 pe-3 whitespace-nowrap">
-                <div className="flex flex-col gap-1 text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                <div className="flex flex-col gap-1 text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                   <span style={{ color: 'var(--color-ink)', fontWeight: 500 }}>
-                    {rep.vehicle_id} / {rep.trailer_id || (isRTL ? 'بدون مقطورة' : 'No Trailer')}
+                    {rep.vehicle_id} / {rep.trailer_id || (isRTL ? 'ط¨ط¯ظˆظ† ظ…ظ‚ط·ظˆط±ط©' : 'No Trailer')}
                   </span>
                   <span className="inline-flex items-center gap-1">
                     <Clock className="w-3 h-3" />
@@ -566,7 +566,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
         <Modal
           isOpen={isInspectionOpen}
           onClose={() => setIsInspectionOpen(false)}
-          title={isRTL ? 'الفحص الرقمي للمركبة قبل الرحلة' : 'Digital Vehicle Pre-Trip Inspection'}
+          title={isRTL ? 'ط§ظ„ظپط­طµ ط§ظ„ط±ظ‚ظ…ظٹ ظ„ظ„ظ…ط±ظƒط¨ط© ظ‚ط¨ظ„ ط§ظ„ط±ط­ظ„ط©' : 'Digital Vehicle Pre-Trip Inspection'}
           maxWidth="3xl"
         >
           <InspectionFormMobile onComplete={() => setIsInspectionOpen(false)} />
@@ -578,17 +578,17 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
         <Modal
           isOpen={isReportOpen}
           onClose={() => setIsReportOpen(false)}
-          title={isRTL ? 'الإبلاغ عن عطل مركبة أو مخالفة سلامة' : 'Report Vehicle Defect or Safety Issue'}
+          title={isRTL ? 'ط§ظ„ط¥ط¨ظ„ط§ط؛ ط¹ظ† ط¹ط·ظ„ ظ…ط±ظƒط¨ط© ط£ظˆ ظ…ط®ط§ظ„ظپط© ط³ظ„ط§ظ…ط©' : 'Report Vehicle Defect or Safety Issue'}
           subtitle={
             isRTL
-              ? 'ينبه مشرف الورشة فوراً ويسجل سجل تدقيق البلاغ.'
+              ? 'ظٹظ†ط¨ظ‡ ظ…ط´ط±ظپ ط§ظ„ظˆط±ط´ط© ظپظˆط±ط§ظ‹ ظˆظٹط³ط¬ظ„ ط³ط¬ظ„ طھط¯ظ‚ظٹظ‚ ط§ظ„ط¨ظ„ط§ط؛.'
               : 'Alerts Workshop Supervisor immediately and records defect audit history.'
           }
         >
           <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
             {/* Auto-populated read-only vehicle fields */}
             <div
-              className="p-3.5 grid grid-cols-2 gap-3 text-[11px]"
+              className="p-3.5 grid grid-cols-2 gap-3 text-[12px]"
               style={{
                 background: 'var(--color-surface)',
                 border: '1px solid var(--color-border)',
@@ -597,7 +597,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
             >
               <div>
                 <span className="block font-medium" style={{ color: 'var(--color-text-muted)' }}>
-                  {isRTL ? 'الشاحنة المخصصة:' : 'Assigned Tractor:'}
+                  {isRTL ? 'ط§ظ„ط´ط§ط­ظ†ط© ط§ظ„ظ…ط®طµطµط©:' : 'Assigned Tractor:'}
                 </span>
                 <span
                   style={{
@@ -611,7 +611,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
               </div>
               <div>
                 <span className="block font-medium" style={{ color: 'var(--color-text-muted)' }}>
-                  {isRTL ? 'المقطورة المرتبطة:' : 'Coupled Trailer:'}
+                  {isRTL ? 'ط§ظ„ظ…ظ‚ط·ظˆط±ط© ط§ظ„ظ…ط±طھط¨ط·ط©:' : 'Coupled Trailer:'}
                 </span>
                 <span
                   style={{
@@ -620,7 +620,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
                     color: 'var(--color-ink)',
                   }}
                 >
-                  {myAssignedTrailer?.trailer_id || (isRTL ? 'لا يوجد' : 'N/A')}
+                  {myAssignedTrailer?.trailer_id || (isRTL ? 'ظ„ط§ ظٹظˆط¬ط¯' : 'N/A')}
                 </span>
               </div>
               <div
@@ -628,7 +628,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
                 style={{ borderTop: '1px solid var(--color-row-divider)' }}
               >
                 <span className="font-medium" style={{ color: 'var(--color-text-muted)' }}>
-                  {isRTL ? 'السائق المُبلّغ: ' : 'Reporting Driver: '}
+                  {isRTL ? 'ط§ظ„ط³ط§ط¦ظ‚ ط§ظ„ظ…ظڈط¨ظ„ظ‘ط؛: ' : 'Reporting Driver: '}
                 </span>
                 <span className="font-semibold" style={{ color: 'var(--color-ink)' }}>
                   {currentProfile.full_name}
@@ -639,7 +639,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
             {/* Category selection */}
             <div>
               <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--color-ink)' }}>
-                {isRTL ? 'تصنيف العطل' : 'Defect Category'}{' '}
+                {isRTL ? 'طھطµظ†ظٹظپ ط§ظ„ط¹ط·ظ„' : 'Defect Category'}{' '}
                 <span style={{ color: EDITORIAL_STATUS.red.text }}>*</span>
               </label>
               <select
@@ -647,27 +647,27 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
                 onChange={(e) => setCategory(e.target.value as DefectReportCategory)}
                 className="nf-field w-full"
               >
-                <option value="Brakes">{isRTL ? 'الفرامل ونظام الهواء' : 'Brakes & Pneumatics'}</option>
-                <option value="Engine">{isRTL ? 'المحرك ونقل الحركة' : 'Engine & Drivetrain'}</option>
-                <option value="Tires">{isRTL ? 'الإطارات والعجلات' : 'Tires & Wheels'}</option>
+                <option value="Brakes">{isRTL ? 'ط§ظ„ظپط±ط§ظ…ظ„ ظˆظ†ط¸ط§ظ… ط§ظ„ظ‡ظˆط§ط،' : 'Brakes & Pneumatics'}</option>
+                <option value="Engine">{isRTL ? 'ط§ظ„ظ…ط­ط±ظƒ ظˆظ†ظ‚ظ„ ط§ظ„ط­ط±ظƒط©' : 'Engine & Drivetrain'}</option>
+                <option value="Tires">{isRTL ? 'ط§ظ„ط¥ط·ط§ط±ط§طھ ظˆط§ظ„ط¹ط¬ظ„ط§طھ' : 'Tires & Wheels'}</option>
                 <option value="Valve">
-                  {isRTL ? 'صمامات التفريغ والوصلات' : 'API Discharge Valves & Manifold'}
+                  {isRTL ? 'طµظ…ط§ظ…ط§طھ ط§ظ„طھظپط±ظٹط؛ ظˆط§ظ„ظˆطµظ„ط§طھ' : 'API Discharge Valves & Manifold'}
                 </option>
-                <option value="Electrical">{isRTL ? 'الإنارة والكهرباء' : 'Lighting & Electrical'}</option>
+                <option value="Electrical">{isRTL ? 'ط§ظ„ط¥ظ†ط§ط±ط© ظˆط§ظ„ظƒظ‡ط±ط¨ط§ط،' : 'Lighting & Electrical'}</option>
                 <option value="Safety Gear">
-                  {isRTL ? 'معدات السلامة والتأريض' : 'Hazmat Safety Equipment & Grounding'}
+                  {isRTL ? 'ظ…ط¹ط¯ط§طھ ط§ظ„ط³ظ„ط§ظ…ط© ظˆط§ظ„طھط£ط±ظٹط¶' : 'Hazmat Safety Equipment & Grounding'}
                 </option>
-                <option value="Steering">{isRTL ? 'التوجيه ونظام التعليق' : 'Steering & Suspension'}</option>
-                <option value="Transmission">{isRTL ? 'ناقل الحركة والكلتش' : 'Transmission & Clutch'}</option>
-                <option value="Leaks">{isRTL ? 'تسربات الوقود أو الزيت' : 'Fuel / Oil Leaks'}</option>
-                <option value="Other">{isRTL ? 'عطل ميكانيكي آخر' : 'Other Mechanical Defect'}</option>
+                <option value="Steering">{isRTL ? 'ط§ظ„طھظˆط¬ظٹظ‡ ظˆظ†ط¸ط§ظ… ط§ظ„طھط¹ظ„ظٹظ‚' : 'Steering & Suspension'}</option>
+                <option value="Transmission">{isRTL ? 'ظ†ط§ظ‚ظ„ ط§ظ„ط­ط±ظƒط© ظˆط§ظ„ظƒظ„طھط´' : 'Transmission & Clutch'}</option>
+                <option value="Leaks">{isRTL ? 'طھط³ط±ط¨ط§طھ ط§ظ„ظˆظ‚ظˆط¯ ط£ظˆ ط§ظ„ط²ظٹطھ' : 'Fuel / Oil Leaks'}</option>
+                <option value="Other">{isRTL ? 'ط¹ط·ظ„ ظ…ظٹظƒط§ظ†ظٹظƒظٹ ط¢ط®ط±' : 'Other Mechanical Defect'}</option>
               </select>
             </div>
 
             {/* Severity selection */}
             <div>
               <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--color-ink)' }}>
-                {isRTL ? 'مستوى الخطورة' : 'Severity Level'}{' '}
+                {isRTL ? 'ظ…ط³طھظˆظ‰ ط§ظ„ط®ط·ظˆط±ط©' : 'Severity Level'}{' '}
                 <span style={{ color: EDITORIAL_STATUS.red.text }}>*</span>
               </label>
               <div className="grid grid-cols-4 gap-2">
@@ -708,7 +708,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
             {/* Problem Description */}
             <div>
               <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--color-ink)' }}>
-                {isRTL ? 'وصف العطل التفصيلي' : 'Detailed Defect Description'}{' '}
+                {isRTL ? 'ظˆطµظپ ط§ظ„ط¹ط·ظ„ ط§ظ„طھظپطµظٹظ„ظٹ' : 'Detailed Defect Description'}{' '}
                 <span style={{ color: EDITORIAL_STATUS.red.text }}>*</span>
               </label>
               <textarea
@@ -716,7 +716,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
                 rows={4}
                 placeholder={
                   isRTL
-                    ? 'اشرح المشكلة بدقة (مثال: بطء تعبئة الهواء، تسريب في صمام التفريغ رقم 2، تحذير ضغط الإطارات)...'
+                    ? 'ط§ط´ط±ط­ ط§ظ„ظ…ط´ظƒظ„ط© ط¨ط¯ظ‚ط© (ظ…ط«ط§ظ„: ط¨ط·ط، طھط¹ط¨ط¦ط© ط§ظ„ظ‡ظˆط§ط،طŒ طھط³ط±ظٹط¨ ظپظٹ طµظ…ط§ظ… ط§ظ„طھظپط±ظٹط؛ ط±ظ‚ظ… 2طŒ طھط­ط°ظٹط± ط¶ط؛ط· ط§ظ„ط¥ط·ط§ط±ط§طھ)...'
                     : 'Explain the specific issue encountered (e.g. low pressure building up slowly, leak at discharge API valve 2, tire pressure warning)...'
                 }
                 value={description}
@@ -739,7 +739,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
                   borderColor: EDITORIAL_STATUS.red.stripe,
                 }}
               >
-                {isRTL ? 'إرسال بلاغ العطل' : 'Submit Problem Report'}
+                {isRTL ? 'ط¥ط±ط³ط§ظ„ ط¨ظ„ط§ط؛ ط§ظ„ط¹ط·ظ„' : 'Submit Problem Report'}
               </PrimaryButton>
             </div>
           </form>
@@ -751,7 +751,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
         <Modal
           isOpen={showCriticalConfirm}
           onClose={() => setShowCriticalConfirm(false)}
-          title={isRTL ? 'تحذير سلامة حرج' : 'Critical safety warning'}
+          title={isRTL ? 'طھط­ط°ظٹط± ط³ظ„ط§ظ…ط© ط­ط±ط¬' : 'Critical safety warning'}
         >
           <div className="space-y-4 text-xs">
             <div
@@ -770,14 +770,14 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
                   style={{ color: EDITORIAL_STATUS.red.text }}
                 />
                 <h4 className="font-semibold text-sm">
-                  {isRTL ? 'تحذير إيقاف تشغيل المركبة' : 'Vehicle Operational Suspension Warning'}
+                  {isRTL ? 'طھط­ط°ظٹط± ط¥ظٹظ‚ط§ظپ طھط´ط؛ظٹظ„ ط§ظ„ظ…ط±ظƒط¨ط©' : 'Vehicle Operational Suspension Warning'}
                 </h4>
               </div>
               <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
                 {isRTL ? (
                   <>
-                    أنت تحدد هذا البلاغ بدرجة{' '}
-                    <strong style={{ color: EDITORIAL_STATUS.red.text }}>حرج</strong> للشاحنة{' '}
+                    ط£ظ†طھ طھط­ط¯ط¯ ظ‡ط°ط§ ط§ظ„ط¨ظ„ط§ط؛ ط¨ط¯ط±ط¬ط©{' '}
+                    <strong style={{ color: EDITORIAL_STATUS.red.text }}>ط­ط±ط¬</strong> ظ„ظ„ط´ط§ط­ظ†ط©{' '}
                     <strong style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-ink)' }}>
                       {myAssignedTractor?.vehicle_id}
                     </strong>
@@ -798,9 +798,9 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
               <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
                 {isRTL ? (
                   <>
-                    سيؤدي إرسال بلاغ حرج تلقائياً إلى تغيير حالة المركبة إلى{' '}
-                    <strong style={{ color: 'var(--color-ink)' }}>يتطلب فحص</strong> وإنشاء تنبيه
-                    عاجل لمشرف الورشة.
+                    ط³ظٹط¤ط¯ظٹ ط¥ط±ط³ط§ظ„ ط¨ظ„ط§ط؛ ط­ط±ط¬ طھظ„ظ‚ط§ط¦ظٹط§ظ‹ ط¥ظ„ظ‰ طھط؛ظٹظٹط± ط­ط§ظ„ط© ط§ظ„ظ…ط±ظƒط¨ط© ط¥ظ„ظ‰{' '}
+                    <strong style={{ color: 'var(--color-ink)' }}>ظٹطھط·ظ„ط¨ ظپط­طµ</strong> ظˆط¥ظ†ط´ط§ط، طھظ†ط¨ظٹظ‡
+                    ط¹ط§ط¬ظ„ ظ„ظ…ط´ط±ظپ ط§ظ„ظˆط±ط´ط©.
                   </>
                 ) : (
                   <>
@@ -820,8 +820,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
                 borderRadius: 'var(--radius-sm)',
               }}
             >
-              <span className="text-[11px] font-semibold" style={{ color: 'var(--color-text-muted)' }}>
-                {isRTL ? 'ملخص العطل:' : 'Defect Summary:'}
+              <span className="text-[12px] font-semibold" style={{ color: 'var(--color-text-muted)' }}>
+                {isRTL ? 'ظ…ظ„ط®طµ ط§ظ„ط¹ط·ظ„:' : 'Defect Summary:'}
               </span>
               <p className="font-semibold" style={{ color: 'var(--color-ink)' }}>
                 {category} - {description}
@@ -833,7 +833,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
               style={{ borderTop: '1px solid var(--color-row-divider)' }}
             >
               <SecondaryButton onClick={() => setShowCriticalConfirm(false)}>
-                {isRTL ? 'رجوع للتعديل' : 'Back to Edit'}
+                {isRTL ? 'ط±ط¬ظˆط¹ ظ„ظ„طھط¹ط¯ظٹظ„' : 'Back to Edit'}
               </SecondaryButton>
               <PrimaryButton
                 onClick={executeSubmit}
@@ -843,7 +843,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
                 }}
               >
                 <AlertTriangle className="w-4 h-4" />
-                {isRTL ? 'تأكيد البلاغ الحرج' : 'Confirm Critical Report'}
+                {isRTL ? 'طھط£ظƒظٹط¯ ط§ظ„ط¨ظ„ط§ط؛ ط§ظ„ط­ط±ط¬' : 'Confirm Critical Report'}
               </PrimaryButton>
             </div>
           </div>

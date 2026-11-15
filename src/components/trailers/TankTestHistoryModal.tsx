@@ -57,25 +57,25 @@ export const TankTestHistoryModal: React.FC<TankTestHistoryModalProps> = ({
   const getTestTypeLabel = (type: TankTestType) => {
     switch (type) {
       case 'Hydrostatic Test':
-        return isRTL ? 'الاختبار الهيدروستاتيكي (Hydrostatic Test)' : 'Hydrostatic Test';
+        return isRTL ? 'ط§ظ„ط§ط®طھط¨ط§ط± ط§ظ„ظ‡ظٹط¯ط±ظˆط³طھط§طھظٹظƒظٹ (Hydrostatic Test)' : 'Hydrostatic Test';
       case 'Pneumatic Test':
-        return isRTL ? 'الاختبار الهوائي (Pneumatic Test)' : 'Pneumatic Test';
+        return isRTL ? 'ط§ظ„ط§ط®طھط¨ط§ط± ط§ظ„ظ‡ظˆط§ط¦ظٹ (Pneumatic Test)' : 'Pneumatic Test';
       case 'Vacuum Test':
-        return isRTL ? 'اختبار التفريغ (Vacuum Test)' : 'Vacuum Test';
+        return isRTL ? 'ط§ط®طھط¨ط§ط± ط§ظ„طھظپط±ظٹط؛ (Vacuum Test)' : 'Vacuum Test';
     }
   };
 
   const getStatusBadge = (status: TankTestStatus) => {
     switch (status) {
       case 'PASS':
-        return <Badge variant="success">{isRTL ? 'ناجح (PASS)' : 'PASS'}</Badge>;
+        return <Badge variant="success">{isRTL ? 'ظ†ط§ط¬ط­ (PASS)' : 'PASS'}</Badge>;
       case 'FAIL':
-        return <Badge variant="danger">{isRTL ? 'راسب (FAIL)' : 'FAIL'}</Badge>;
+        return <Badge variant="danger">{isRTL ? 'ط±ط§ط³ط¨ (FAIL)' : 'FAIL'}</Badge>;
       case 'PENDING':
-        return <Badge variant="amber">{isRTL ? 'قيد الانتظار (PENDING)' : 'PENDING'}</Badge>;
+        return <Badge variant="amber">{isRTL ? 'ظ‚ظٹط¯ ط§ظ„ط§ظ†طھط¸ط§ط± (PENDING)' : 'PENDING'}</Badge>;
       case 'NOT TESTED':
       default:
-        return <Badge variant="slate">{isRTL ? 'غير مفحوص (NOT TESTED)' : 'NOT TESTED'}</Badge>;
+        return <Badge variant="slate">{isRTL ? 'ط؛ظٹط± ظ…ظپط­ظˆطµ (NOT TESTED)' : 'NOT TESTED'}</Badge>;
     }
   };
 
@@ -98,10 +98,10 @@ export const TankTestHistoryModal: React.FC<TankTestHistoryModalProps> = ({
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        title={`${t('Inspection History')} — ${getTestTypeLabel(testType)}`}
-        subtitle={`${trailer.trailer_id} (${trailer.plate_number}) · ${
+        title={`${t('Inspection History')} â€” ${getTestTypeLabel(testType)}`}
+        subtitle={`${trailer.trailer_id} (${trailer.plate_number}) آ· ${
           isRTL
-            ? `${records.length} سجلات تاريخية محفوظة`
+            ? `${records.length} ط³ط¬ظ„ط§طھ طھط§ط±ظٹط®ظٹط© ظ…ط­ظپظˆط¸ط©`
             : `${records.length} historical record(s) preserved`
         }`}
         maxWidth="2xl"
@@ -120,12 +120,12 @@ export const TankTestHistoryModal: React.FC<TankTestHistoryModalProps> = ({
               <div>
                 <p className="font-semibold" style={{ color: 'var(--color-ink)' }}>
                   {isRTL
-                    ? 'سجل الفحوصات التاريخي الكامل (غير قابل للحذف التلقائي)'
+                    ? 'ط³ط¬ظ„ ط§ظ„ظپط­ظˆطµط§طھ ط§ظ„طھط§ط±ظٹط®ظٹ ط§ظ„ظƒط§ظ…ظ„ (ط؛ظٹط± ظ‚ط§ط¨ظ„ ظ„ظ„ط­ط°ظپ ط§ظ„طھظ„ظ‚ط§ط¦ظٹ)'
                     : 'Complete Chronological Test Log (Append-Only Audit Trail)'}
                 </p>
-                <p className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                   {isRTL
-                    ? 'يتم الاحتفاظ بجميع الفحوصات السابقة (بما في ذلك الفحوصات الراسبة أو المعادة) ويُعتمد أحدث سجل كحالة حالية.'
+                    ? 'ظٹطھظ… ط§ظ„ط§ط­طھظپط§ط¸ ط¨ط¬ظ…ظٹط¹ ط§ظ„ظپط­ظˆطµط§طھ ط§ظ„ط³ط§ط¨ظ‚ط© (ط¨ظ…ط§ ظپظٹ ط°ظ„ظƒ ط§ظ„ظپط­ظˆطµط§طھ ط§ظ„ط±ط§ط³ط¨ط© ط£ظˆ ط§ظ„ظ…ط¹ط§ط¯ط©) ظˆظٹظڈط¹طھظ…ط¯ ط£ط­ط¯ط« ط³ط¬ظ„ ظƒط­ط§ظ„ط© ط­ط§ظ„ظٹط©.'
                     : 'All prior test results (including any earlier FAILED tests before re-testing and PASSING) are permanently preserved.'}
                 </p>
               </div>
@@ -158,7 +158,7 @@ export const TankTestHistoryModal: React.FC<TankTestHistoryModalProps> = ({
               <FileText className="w-7 h-7 mx-auto opacity-50" />
               <p className="font-semibold" style={{ color: 'var(--color-ink)' }}>
                 {isRTL
-                  ? 'لا توجد سجلات فحص تاريخية مسجلة لهذا الاختبار بعد.'
+                  ? 'ظ„ط§ طھظˆط¬ط¯ ط³ط¬ظ„ط§طھ ظپط­طµ طھط§ط±ظٹط®ظٹط© ظ…ط³ط¬ظ„ط© ظ„ظ‡ط°ط§ ط§ظ„ط§ط®طھط¨ط§ط± ط¨ط¹ط¯.'
                   : 'No historical test records recorded for this test type yet.'}
               </p>
             </div>
@@ -184,13 +184,13 @@ export const TankTestHistoryModal: React.FC<TankTestHistoryModalProps> = ({
                         {getStatusBadge(rec.test_status)}
                         {isLatest && (
                           <Badge variant="info">
-                            {isRTL ? 'النتيجة الحالية المعتمدة' : 'CURRENT ACTIVE RESULT'}
+                            {isRTL ? 'ط§ظ„ظ†طھظٹط¬ط© ط§ظ„ط­ط§ظ„ظٹط© ط§ظ„ظ…ط¹طھظ…ط¯ط©' : 'CURRENT ACTIVE RESULT'}
                           </Badge>
                         )}
                         {rec.certificate_number && (
                           <span
                             dir="ltr"
-                            className="px-2 py-0.5 text-[11px] font-semibold"
+                            className="px-2 py-0.5 text-[12px] font-semibold"
                             style={{
                               fontFamily: 'var(--font-mono)',
                               background: 'var(--color-page-bg)',
@@ -210,7 +210,7 @@ export const TankTestHistoryModal: React.FC<TankTestHistoryModalProps> = ({
                             <SecondaryButton
                               type="button"
                               onClick={() => setPreviewRecord(rec)}
-                              style={{ height: 28, fontSize: 11.5 }}
+                              style={{ height: 28, fontSize: 12.5 }}
                             >
                               <Eye className="w-3.5 h-3.5" />
                               <span>{t('Preview')}</span>
@@ -227,7 +227,7 @@ export const TankTestHistoryModal: React.FC<TankTestHistoryModalProps> = ({
                                   )
                                 )
                               }
-                              style={{ height: 28, fontSize: 11.5 }}
+                              style={{ height: 28, fontSize: 12.5 }}
                             >
                               <Download className="w-3.5 h-3.5" />
                               <span>{t('Download')}</span>
@@ -241,7 +241,7 @@ export const TankTestHistoryModal: React.FC<TankTestHistoryModalProps> = ({
                               onClose();
                               onEditRecord(rec, false);
                             }}
-                            style={{ height: 28, fontSize: 11.5 }}
+                            style={{ height: 28, fontSize: 12.5 }}
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                             <span>{t('Edit')}</span>
@@ -253,7 +253,7 @@ export const TankTestHistoryModal: React.FC<TankTestHistoryModalProps> = ({
                               onClose();
                               onEditRecord(rec, true);
                             }}
-                            style={{ height: 28, fontSize: 11.5 }}
+                            style={{ height: 28, fontSize: 12.5 }}
                           >
                             <Eye className="w-3.5 h-3.5" />
                             <span>{t('Details')}</span>
@@ -263,12 +263,12 @@ export const TankTestHistoryModal: React.FC<TankTestHistoryModalProps> = ({
                     </div>
 
                     <div
-                      className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1 text-[11px]"
+                      className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1 text-[12px]"
                       style={{ color: 'var(--color-text-secondary)' }}
                     >
                       <div>
                         <span
-                          className="block text-[10px]"
+                          className="block text-[12px]"
                           style={{ color: 'var(--color-text-muted)' }}
                         >
                           <Calendar className="w-3 h-3 inline me-1" />
@@ -281,13 +281,13 @@ export const TankTestHistoryModal: React.FC<TankTestHistoryModalProps> = ({
                             color: 'var(--color-ink)',
                           }}
                         >
-                          {rec.test_date || '—'}
+                          {rec.test_date || 'â€”'}
                         </strong>
                       </div>
 
                       <div>
                         <span
-                          className="block text-[10px]"
+                          className="block text-[12px]"
                           style={{ color: 'var(--color-text-muted)' }}
                         >
                           <Calendar className="w-3 h-3 inline me-1" />
@@ -300,40 +300,40 @@ export const TankTestHistoryModal: React.FC<TankTestHistoryModalProps> = ({
                             color: 'var(--color-ink)',
                           }}
                         >
-                          {rec.next_test_due_date || '—'}
+                          {rec.next_test_due_date || 'â€”'}
                         </strong>
                       </div>
 
                       <div>
                         <span
-                          className="block text-[10px]"
+                          className="block text-[12px]"
                           style={{ color: 'var(--color-text-muted)' }}
                         >
                           <UserCheck className="w-3 h-3 inline me-1" />
                           {t('Inspector Name')}
                         </span>
                         <strong style={{ color: 'var(--color-ink)' }}>
-                          {rec.inspector_name || '—'}
+                          {rec.inspector_name || 'â€”'}
                         </strong>
                       </div>
 
                       <div>
                         <span
-                          className="block text-[10px]"
+                          className="block text-[12px]"
                           style={{ color: 'var(--color-text-muted)' }}
                         >
                           <Building2 className="w-3 h-3 inline me-1" />
                           {t('Inspection Center')}
                         </span>
                         <strong style={{ color: 'var(--color-ink)' }}>
-                          {rec.inspection_center || '—'}
+                          {rec.inspection_center || 'â€”'}
                         </strong>
                       </div>
                     </div>
 
                     {rec.remarks && (
                       <div
-                        className="p-2.5 text-[11px]"
+                        className="p-2.5 text-[12px]"
                         style={{
                           background: 'var(--color-page-bg)',
                           border: '1px solid var(--color-row-divider)',
@@ -374,7 +374,7 @@ export const TankTestHistoryModal: React.FC<TankTestHistoryModalProps> = ({
             `${trailer.trailer_id}-${previewRecord.test_type}`
           }
           documentType={previewRecord.test_type}
-          assetLabel={`${trailer.trailer_id} · ${trailer.plate_number}`}
+          assetLabel={`${trailer.trailer_id} آ· ${trailer.plate_number}`}
           issueDate={previewRecord.test_date || undefined}
           expiryDate={previewRecord.next_test_due_date || undefined}
         />

@@ -85,7 +85,7 @@ export const JobCardFormModal: React.FC<JobCardFormModalProps> = ({ isOpen, onCl
                 <span>
                     {isRTL ? (
                         <>
-                            سيتم إنشاء رقم أمر العمل تلقائياً بتسلسل{' '}
+                            ط³ظٹطھظ… ط¥ظ†ط´ط§ط، ط±ظ‚ظ… ط£ظ…ط± ط§ظ„ط¹ظ…ظ„ طھظ„ظ‚ط§ط¦ظٹط§ظ‹ ط¨طھط³ظ„ط³ظ„{' '}
                             <code
                                 style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--color-ink)' }}
                                 dir="ltr"
@@ -173,7 +173,7 @@ export const JobCardFormModal: React.FC<JobCardFormModalProps> = ({ isOpen, onCl
                             style={{ color: 'var(--color-ink)' }}
                         >
                             <span
-                                className="w-5 h-5 flex items-center justify-center font-bold text-[11px]"
+                                className="w-5 h-5 flex items-center justify-center font-bold text-[12px]"
                                 style={{
                                     background: 'var(--color-page-bg)',
                                     border: '1px solid var(--color-border)',
@@ -186,7 +186,7 @@ export const JobCardFormModal: React.FC<JobCardFormModalProps> = ({ isOpen, onCl
                             <Truck className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
                             <span>{t('Target Vehicle & Equipment Allocation')}</span>
                         </div>
-                        <span className="text-[11px] font-semibold" style={{ color: 'var(--color-brand-accent)' }}>
+                        <span className="text-[12px] font-semibold" style={{ color: 'var(--color-brand-accent)' }}>
                             {t('* Required fields')}
                         </span>
                     </div>
@@ -286,7 +286,7 @@ export const JobCardFormModal: React.FC<JobCardFormModalProps> = ({ isOpen, onCl
                             style={{ color: 'var(--color-ink)' }}
                         >
                             <span
-                                className="w-5 h-5 flex items-center justify-center font-bold text-[11px]"
+                                className="w-5 h-5 flex items-center justify-center font-bold text-[12px]"
                                 style={{
                                     background: 'var(--color-page-bg)',
                                     border: '1px solid var(--color-border)',
@@ -390,7 +390,7 @@ export const JobCardFormModal: React.FC<JobCardFormModalProps> = ({ isOpen, onCl
                             style={{ color: 'var(--color-ink)' }}
                         >
                             <span
-                                className="w-5 h-5 flex items-center justify-center font-bold text-[11px]"
+                                className="w-5 h-5 flex items-center justify-center font-bold text-[12px]"
                                 style={{
                                     background: 'var(--color-page-bg)',
                                     border: '1px solid var(--color-border)',

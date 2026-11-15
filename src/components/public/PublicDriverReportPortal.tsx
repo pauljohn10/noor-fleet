@@ -47,9 +47,9 @@ const ISSUE_CATEGORIES: {
     {
       value: 'Mechanical',
       labelEn: 'Mechanical',
-      labelAr: 'ميكانيكي',
+      labelAr: 'ظ…ظٹظƒط§ظ†ظٹظƒظٹ',
       descEn: 'Engine, brakes, transmission, air or fuel system',
-      descAr: 'المحرك، الفرامل، القير، الهواء أو الوقود',
+      descAr: 'ط§ظ„ظ…ط­ط±ظƒطŒ ط§ظ„ظپط±ط§ظ…ظ„طŒ ط§ظ„ظ‚ظٹط±طŒ ط§ظ„ظ‡ظˆط§ط، ط£ظˆ ط§ظ„ظˆظ‚ظˆط¯',
       icon: <Wrench className="w-4 h-4" />,
       stripeColor: EDITORIAL_STATUS.amber.stripe,
       iconColor: EDITORIAL_STATUS.amber.text,
@@ -57,9 +57,9 @@ const ISSUE_CATEGORIES: {
     {
       value: 'Electrical',
       labelEn: 'Electrical',
-      labelAr: 'كهربائي',
+      labelAr: 'ظƒظ‡ط±ط¨ط§ط¦ظٹ',
       descEn: 'Battery, lights, sensors, starter, wiring',
-      descAr: 'البطارية، الإضاءة، الحساسات، الضفيرة',
+      descAr: 'ط§ظ„ط¨ط·ط§ط±ظٹط©طŒ ط§ظ„ط¥ط¶ط§ط،ط©طŒ ط§ظ„ط­ط³ط§ط³ط§طھطŒ ط§ظ„ط¶ظپظٹط±ط©',
       icon: <Zap className="w-4 h-4" />,
       stripeColor: EDITORIAL_STATUS.blue.stripe,
       iconColor: EDITORIAL_STATUS.blue.text,
@@ -67,9 +67,9 @@ const ISSUE_CATEGORIES: {
     {
       value: 'Tire',
       labelEn: 'Tire',
-      labelAr: 'الإطارات',
+      labelAr: 'ط§ظ„ط¥ط·ط§ط±ط§طھ',
       descEn: 'Flat tire, blowout, tread wear, wheel hub',
-      descAr: 'بنشر، تلف الإطار، الجنط أو الرمان',
+      descAr: 'ط¨ظ†ط´ط±طŒ طھظ„ظپ ط§ظ„ط¥ط·ط§ط±طŒ ط§ظ„ط¬ظ†ط· ط£ظˆ ط§ظ„ط±ظ…ط§ظ†',
       icon: <Disc className="w-4 h-4" />,
       stripeColor: 'var(--color-brand-accent)',
       iconColor: 'var(--color-brand-accent)',
@@ -77,9 +77,9 @@ const ISSUE_CATEGORIES: {
     {
       value: 'Accident',
       labelEn: 'Accident',
-      labelAr: 'حادث مروري',
+      labelAr: 'ط­ط§ط¯ط« ظ…ط±ظˆط±ظٹ',
       descEn: 'Collision, body damage, emergency hazard',
-      descAr: 'تصادم، تلفيات بالهيكل، طوارئ الطريق',
+      descAr: 'طھطµط§ط¯ظ…طŒ طھظ„ظپظٹط§طھ ط¨ط§ظ„ظ‡ظٹظƒظ„طŒ ط·ظˆط§ط±ط¦ ط§ظ„ط·ط±ظٹظ‚',
       icon: <AlertTriangle className="w-4 h-4" />,
       stripeColor: EDITORIAL_STATUS.red.stripe,
       iconColor: EDITORIAL_STATUS.red.text,
@@ -87,9 +87,9 @@ const ISSUE_CATEGORIES: {
     {
       value: 'Other',
       labelEn: 'Other',
-      labelAr: 'أخرى',
+      labelAr: 'ط£ط®ط±ظ‰',
       descEn: 'Tanker valve, cabin, AC, or general issue',
-      descAr: 'صمامات الصهريج، المكيف، أو ملاحظة أخرى',
+      descAr: 'طµظ…ط§ظ…ط§طھ ط§ظ„طµظ‡ط±ظٹط¬طŒ ط§ظ„ظ…ظƒظٹظپطŒ ط£ظˆ ظ…ظ„ط§ط­ط¸ط© ط£ط®ط±ظ‰',
       icon: <HelpCircle className="w-4 h-4" />,
       stripeColor: EDITORIAL_STATUS.muted.stripe,
       iconColor: 'var(--color-text-secondary)',
@@ -176,7 +176,7 @@ export const PublicDriverReportPortal: React.FC = () => {
     if (!file.type.startsWith('image/')) {
       setErrorMsg(
         isRTL
-          ? 'يرجى اختيار ملف صورة صالح (JPG أو PNG أو WEBP).'
+          ? 'ظٹط±ط¬ظ‰ ط§ط®طھظٹط§ط± ظ…ظ„ظپ طµظˆط±ط© طµط§ظ„ط­ (JPG ط£ظˆ PNG ط£ظˆ WEBP).'
           : 'Please select a valid image file (JPG, PNG, or WEBP).'
       );
       return;
@@ -186,7 +186,7 @@ export const PublicDriverReportPortal: React.FC = () => {
     if (file.size > 25 * 1024 * 1024) {
       setErrorMsg(
         isRTL
-          ? 'حجم الصورة الأصلي كبير جداً (الحد الأقصى 25 ميجابايت قبل الضغط).'
+          ? 'ط­ط¬ظ… ط§ظ„طµظˆط±ط© ط§ظ„ط£طµظ„ظٹ ظƒط¨ظٹط± ط¬ط¯ط§ظ‹ (ط§ظ„ط­ط¯ ط§ظ„ط£ظ‚طµظ‰ 25 ظ…ظٹط¬ط§ط¨ط§ظٹطھ ظ‚ط¨ظ„ ط§ظ„ط¶ط؛ط·).'
           : 'Original image is too large (maximum 25 MB before compression).'
       );
       return;
@@ -209,7 +209,7 @@ export const PublicDriverReportPortal: React.FC = () => {
         originalSize: formatFileSize(result.originalSizeBytes),
         compressedSize: formatFileSize(result.compressedSizeBytes),
         savedPercent: result.compressionRatioPercent,
-        dimensions: `${result.compressedWidth} × ${result.compressedHeight} px`,
+        dimensions: `${result.compressedWidth} أ— ${result.compressedHeight} px`,
       });
     } catch (err: any) {
       console.warn('Advanced compression warning, falling back to standard reader:', err);
@@ -246,7 +246,7 @@ export const PublicDriverReportPortal: React.FC = () => {
     if (Date.now() - lastTs < COOLDOWN_MS) {
       setErrorMsg(
         isRTL
-          ? 'يرجى الانتظار بضع ثوانٍ قبل إرسال بلاغ آخر.'
+          ? 'ظٹط±ط¬ظ‰ ط§ظ„ط§ظ†طھط¸ط§ط± ط¨ط¶ط¹ ط«ظˆط§ظ†ظچ ظ‚ط¨ظ„ ط¥ط±ط³ط§ظ„ ط¨ظ„ط§ط؛ ط¢ط®ط±.'
           : 'Please wait a few seconds before submitting another report.'
       );
       return;
@@ -257,7 +257,7 @@ export const PublicDriverReportPortal: React.FC = () => {
 
     if (!driverName.trim() || driverName.trim().length < 2) {
       setErrorMsg(
-        isRTL ? 'يرجى إدخال اسم السائق الثلاثي.' : 'Please enter your full Driver Name.'
+        isRTL ? 'ظٹط±ط¬ظ‰ ط¥ط¯ط®ط§ظ„ ط§ط³ظ… ط§ظ„ط³ط§ط¦ظ‚ ط§ظ„ط«ظ„ط§ط«ظٹ.' : 'Please enter your full Driver Name.'
       );
       return;
     }
@@ -265,7 +265,7 @@ export const PublicDriverReportPortal: React.FC = () => {
     if (!finalPlate) {
       setErrorMsg(
         isRTL
-          ? 'يرجى اختيار أو إدخال رقم لوحة المركبة.'
+          ? 'ظٹط±ط¬ظ‰ ط§ط®طھظٹط§ط± ط£ظˆ ط¥ط¯ط®ط§ظ„ ط±ظ‚ظ… ظ„ظˆط­ط© ط§ظ„ظ…ط±ظƒط¨ط©.'
           : 'Please select or enter the Vehicle Plate Number.'
       );
       return;
@@ -274,7 +274,7 @@ export const PublicDriverReportPortal: React.FC = () => {
     if (!description.trim() || description.trim().length < 5) {
       setErrorMsg(
         isRTL
-          ? 'يرجى كتابة وصف واضح للمشكلة (5 أحرف على الأقل).'
+          ? 'ظٹط±ط¬ظ‰ ظƒطھط§ط¨ط© ظˆطµظپ ظˆط§ط¶ط­ ظ„ظ„ظ…ط´ظƒظ„ط© (5 ط£ط­ط±ظپ ط¹ظ„ظ‰ ط§ظ„ط£ظ‚ظ„).'
           : 'Please provide a clear description of the issue (at least 5 characters).'
       );
       return;
@@ -289,7 +289,7 @@ export const PublicDriverReportPortal: React.FC = () => {
         try {
           setUploadStatusText(
             isRTL
-              ? 'جاري رفع الصورة المضغوطة إلى خوادم أسطول نور...'
+              ? 'ط¬ط§ط±ظٹ ط±ظپط¹ ط§ظ„طµظˆط±ط© ط§ظ„ظ…ط¶ط؛ظˆط·ط© ط¥ظ„ظ‰ ط®ظˆط§ط¯ظ… ط£ط³ط·ظˆظ„ ظ†ظˆط±...'
               : 'Uploading optimized photo to fleet storage...'
           );
           const ext = compressedBlob.type === 'image/webp' ? 'webp' : 'jpg';
@@ -334,7 +334,7 @@ export const PublicDriverReportPortal: React.FC = () => {
       if (!result.success) {
         setErrorMsg(
           result.error ||
-          (isRTL ? 'تعذر إرسال البلاغ. حاول مرة أخرى.' : 'Failed to submit report. Please try again.')
+          (isRTL ? 'طھط¹ط°ط± ط¥ط±ط³ط§ظ„ ط§ظ„ط¨ظ„ط§ط؛. ط­ط§ظˆظ„ ظ…ط±ط© ط£ط®ط±ظ‰.' : 'Failed to submit report. Please try again.')
         );
       } else {
         localStorage.setItem(COOLDOWN_STORAGE_KEY, String(Date.now()));
@@ -351,7 +351,7 @@ export const PublicDriverReportPortal: React.FC = () => {
     } catch (err: any) {
       setErrorMsg(
         err?.message ||
-        (isRTL ? 'حدث خطأ أثناء إرسال البلاغ.' : 'An unexpected error occurred while submitting.')
+        (isRTL ? 'ط­ط¯ط« ط®ط·ط£ ط£ط«ظ†ط§ط، ط¥ط±ط³ط§ظ„ ط§ظ„ط¨ظ„ط§ط؛.' : 'An unexpected error occurred while submitting.')
       );
     } finally {
       setIsSubmitting(false);
@@ -436,7 +436,7 @@ export const PublicDriverReportPortal: React.FC = () => {
                   Noor Fleet
                 </span>
                 <span
-                  className="text-[11px] font-semibold px-2 py-0.5"
+                  className="text-[12px] font-semibold px-2 py-0.5"
                   style={{
                     background: 'var(--color-page-bg)',
                     border: '1px solid var(--color-border)',
@@ -444,16 +444,16 @@ export const PublicDriverReportPortal: React.FC = () => {
                     color: 'var(--color-brand-accent)',
                   }}
                 >
-                  {isRTL ? 'بوابة السائقين' : 'Driver Portal'}
+                  {isRTL ? 'ط¨ظˆط§ط¨ط© ط§ظ„ط³ط§ط¦ظ‚ظٹظ†' : 'Driver Portal'}
                 </span>
               </div>
               <p
-                className="text-[11px] truncate mt-0.5"
+                className="text-[12px] truncate mt-0.5"
                 style={{ color: 'var(--color-text-muted)' }}
               >
                 {isRTL
-                  ? 'مؤسسة النور المتحدة للنقل — قسم الصيانة والأسطول'
-                  : 'Al-Noor United Transport Est. — Fleet & Workshop Division'}
+                  ? 'ظ…ط¤ط³ط³ط© ط§ظ„ظ†ظˆط± ط§ظ„ظ…طھط­ط¯ط© ظ„ظ„ظ†ظ‚ظ„ â€” ظ‚ط³ظ… ط§ظ„طµظٹط§ظ†ط© ظˆط§ظ„ط£ط³ط·ظˆظ„'
+                  : 'Al-Noor United Transport Est. â€” Fleet & Workshop Division'}
               </p>
             </div>
           </div>
@@ -471,7 +471,7 @@ export const PublicDriverReportPortal: React.FC = () => {
             }}
           >
             <Globe className="w-3.5 h-3.5" style={{ color: 'var(--color-brand-accent)' }} />
-            <span>{language === 'en' ? 'العربية' : 'English'}</span>
+            <span>{language === 'en' ? 'ط§ظ„ط¹ط±ط¨ظٹط©' : 'English'}</span>
           </button>
         </div>
       </header>
@@ -516,14 +516,14 @@ export const PublicDriverReportPortal: React.FC = () => {
                   color: 'var(--color-ink)',
                 }}
               >
-                {isRTL ? 'تم إرسال البلاغ بنجاح!' : 'Report Submitted Successfully!'}
+                {isRTL ? 'طھظ… ط¥ط±ط³ط§ظ„ ط§ظ„ط¨ظ„ط§ط؛ ط¨ظ†ط¬ط§ط­!' : 'Report Submitted Successfully!'}
               </h2>
               <p
                 className="text-xs mt-1.5 max-w-sm mx-auto leading-relaxed"
                 style={{ color: 'var(--color-text-secondary)' }}
               >
                 {isRTL
-                  ? 'تم تسجيل بلاغ العطل مباشرة في نظام صيانة أسطول النور وإشعار مشرف الورشة.'
+                  ? 'طھظ… طھط³ط¬ظٹظ„ ط¨ظ„ط§ط؛ ط§ظ„ط¹ط·ظ„ ظ…ط¨ط§ط´ط±ط© ظپظٹ ظ†ط¸ط§ظ… طµظٹط§ظ†ط© ط£ط³ط·ظˆظ„ ط§ظ„ظ†ظˆط± ظˆط¥ط´ط¹ط§ط± ظ…ط´ط±ظپ ط§ظ„ظˆط±ط´ط©.'
                   : 'Your vehicle issue has been recorded directly in the Noor Fleet Maintenance System and dispatched to the workshop team.'}
               </p>
             </div>
@@ -542,7 +542,7 @@ export const PublicDriverReportPortal: React.FC = () => {
                   className="text-xs font-medium block"
                   style={{ color: 'var(--color-text-muted)' }}
                 >
-                  {isRTL ? 'رقم مرجع البلاغ' : 'Official Report Reference'}
+                  {isRTL ? 'ط±ظ‚ظ… ظ…ط±ط¬ط¹ ط§ظ„ط¨ظ„ط§ط؛' : 'Official Report Reference'}
                 </span>
                 <span
                   className="text-2xl font-bold mt-1 block"
@@ -564,10 +564,10 @@ export const PublicDriverReportPortal: React.FC = () => {
               >
                 <div>
                   <span
-                    className="text-[11px] font-medium block"
+                    className="text-[12px] font-medium block"
                     style={{ color: 'var(--color-text-muted)' }}
                   >
-                    {isRTL ? 'اسم السائق' : 'Driver Name'}
+                    {isRTL ? 'ط§ط³ظ… ط§ظ„ط³ط§ط¦ظ‚' : 'Driver Name'}
                   </span>
                   <span
                     className="font-semibold mt-0.5 block"
@@ -578,10 +578,10 @@ export const PublicDriverReportPortal: React.FC = () => {
                 </div>
                 <div>
                   <span
-                    className="text-[11px] font-medium block"
+                    className="text-[12px] font-medium block"
                     style={{ color: 'var(--color-text-muted)' }}
                   >
-                    {isRTL ? 'رقم اللوحة / المركبة' : 'Vehicle Plate / Unit'}
+                    {isRTL ? 'ط±ظ‚ظ… ط§ظ„ظ„ظˆط­ط© / ط§ظ„ظ…ط±ظƒط¨ط©' : 'Vehicle Plate / Unit'}
                   </span>
                   <div className="mt-1 flex items-center gap-2 flex-wrap" dir="ltr">
                     <PlateChip plate={submittedRecord.plateNumber} />
@@ -598,10 +598,10 @@ export const PublicDriverReportPortal: React.FC = () => {
                 </div>
                 <div>
                   <span
-                    className="text-[11px] font-medium block"
+                    className="text-[12px] font-medium block"
                     style={{ color: 'var(--color-text-muted)' }}
                   >
-                    {isRTL ? 'تصنيف المشكلة' : 'Issue Category'}
+                    {isRTL ? 'طھطµظ†ظٹظپ ط§ظ„ظ…ط´ظƒظ„ط©' : 'Issue Category'}
                   </span>
                   <span
                     className="font-semibold mt-0.5 block"
@@ -621,13 +621,13 @@ export const PublicDriverReportPortal: React.FC = () => {
                 </div>
                 <div>
                   <span
-                    className="text-[11px] font-medium block"
+                    className="text-[12px] font-medium block"
                     style={{ color: 'var(--color-text-muted)' }}
                   >
-                    {isRTL ? 'تاريخ ووقت البلاغ' : 'Recorded Date & Time'}
+                    {isRTL ? 'طھط§ط±ظٹط® ظˆظˆظ‚طھ ط§ظ„ط¨ظ„ط§ط؛' : 'Recorded Date & Time'}
                   </span>
                   <span
-                    className="mt-0.5 block text-[11px]"
+                    className="mt-0.5 block text-[12px]"
                     style={{
                       fontFamily: 'var(--font-mono)',
                       color: 'var(--color-text-secondary)',
@@ -646,7 +646,7 @@ export const PublicDriverReportPortal: React.FC = () => {
                 onClick={handleResetForNewReport}
                 className="w-full justify-center py-3 text-sm"
               >
-                {isRTL ? 'إرسال بلاغ آخر' : 'Submit Another Issue Report'}
+                {isRTL ? 'ط¥ط±ط³ط§ظ„ ط¨ظ„ط§ط؛ ط¢ط®ط±' : 'Submit Another Issue Report'}
               </PrimaryButton>
             </div>
           </div>
@@ -679,10 +679,10 @@ export const PublicDriverReportPortal: React.FC = () => {
                     letterSpacing: isRTL ? '0' : '-0.02em',
                   }}
                 >
-                  {isRTL ? 'الإبلاغ عن مشكلة في المركبة' : 'Report a Vehicle Issue'}
+                  {isRTL ? 'ط§ظ„ط¥ط¨ظ„ط§ط؛ ط¹ظ† ظ…ط´ظƒظ„ط© ظپظٹ ط§ظ„ظ…ط±ظƒط¨ط©' : 'Report a Vehicle Issue'}
                 </h1>
                 <span
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold shrink-0"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[12px] font-semibold shrink-0"
                   style={{
                     background: 'var(--color-surface)',
                     border: '1px solid var(--color-border)',
@@ -691,7 +691,7 @@ export const PublicDriverReportPortal: React.FC = () => {
                   }}
                 >
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>{isRTL ? 'بدون تسجيل دخول' : 'No Login Needed'}</span>
+                  <span>{isRTL ? 'ط¨ط¯ظˆظ† طھط³ط¬ظٹظ„ ط¯ط®ظˆظ„' : 'No Login Needed'}</span>
                 </span>
               </div>
               <p
@@ -699,7 +699,7 @@ export const PublicDriverReportPortal: React.FC = () => {
                 style={{ color: 'var(--color-text-secondary)' }}
               >
                 {isRTL
-                  ? 'أكمل النموذج أدناه لإرسال بلاغ فوري إلى قسم الصيانة وإدارة الأسطول.'
+                  ? 'ط£ظƒظ…ظ„ ط§ظ„ظ†ظ…ظˆط°ط¬ ط£ط¯ظ†ط§ظ‡ ظ„ط¥ط±ط³ط§ظ„ ط¨ظ„ط§ط؛ ظپظˆط±ظٹ ط¥ظ„ظ‰ ظ‚ط³ظ… ط§ظ„طµظٹط§ظ†ط© ظˆط¥ط¯ط§ط±ط© ط§ظ„ط£ط³ط·ظˆظ„.'
                   : 'Complete the simple form below to notify Noor Fleet Maintenance & Dispatch immediately.'}
               </p>
             </div>
@@ -745,7 +745,7 @@ export const PublicDriverReportPortal: React.FC = () => {
                 >
                   <span className="inline-flex items-center gap-1.5">
                     <User className="w-3.5 h-3.5" style={{ color: 'var(--color-brand-accent)' }} />
-                    {isRTL ? 'اسم السائق' : 'Driver Name'}{' '}
+                    {isRTL ? 'ط§ط³ظ… ط§ظ„ط³ط§ط¦ظ‚' : 'Driver Name'}{' '}
                     <span style={{ color: EDITORIAL_STATUS.red.text }}>*</span>
                   </span>
                 </label>
@@ -757,7 +757,7 @@ export const PublicDriverReportPortal: React.FC = () => {
                   onChange={(e) => setDriverName(e.target.value)}
                   placeholder={
                     isRTL
-                      ? 'أدخل اسمك الكامل (مثال: محمد علي خان)'
+                      ? 'ط£ط¯ط®ظ„ ط§ط³ظ…ظƒ ط§ظ„ظƒط§ظ…ظ„ (ظ…ط«ط§ظ„: ظ…ط­ظ…ط¯ ط¹ظ„ظٹ ط®ط§ظ†)'
                       : 'Enter your full name (e.g. Mohammed Ali Khan)'
                   }
                   className="nf-field w-full font-medium"
@@ -777,7 +777,7 @@ export const PublicDriverReportPortal: React.FC = () => {
                 >
                   <span className="inline-flex items-center gap-1.5">
                     <Truck className="w-3.5 h-3.5" style={{ color: 'var(--color-brand-accent)' }} />
-                    {isRTL ? 'رقم لوحة المركبة' : 'Vehicle Plate Number'}{' '}
+                    {isRTL ? 'ط±ظ‚ظ… ظ„ظˆط­ط© ط§ظ„ظ…ط±ظƒط¨ط©' : 'Vehicle Plate Number'}{' '}
                     <span style={{ color: EDITORIAL_STATUS.red.text }}>*</span>
                   </span>
                 </label>
@@ -795,16 +795,16 @@ export const PublicDriverReportPortal: React.FC = () => {
                   className="nf-field w-full font-semibold cursor-pointer"
                 >
                   <option value="">
-                    {isRTL ? '-- اختر رقم لوحة الشاحنة --' : '-- Select Vehicle Plate Number --'}
+                    {isRTL ? '-- ط§ط®طھط± ط±ظ‚ظ… ظ„ظˆط­ط© ط§ظ„ط´ط§ط­ظ†ط© --' : '-- Select Vehicle Plate Number --'}
                   </option>
                   {vehicles.map((v) => (
                     <option key={v.id} value={v.plate_number}>
-                      {v.plate_number} — {v.vehicle_id} ({v.make} {v.model})
+                      {v.plate_number} â€” {v.vehicle_id} ({v.make} {v.model})
                     </option>
                   ))}
                   <option value="__CUSTOM__">
                     {isRTL
-                      ? 'لوحة أخرى (إدخال يدوي)...'
+                      ? 'ظ„ظˆط­ط© ط£ط®ط±ظ‰ (ط¥ط¯ط®ط§ظ„ ظٹط¯ظˆظٹ)...'
                       : 'Other Plate Number (Enter Manually)...'}
                   </option>
                 </select>
@@ -817,7 +817,7 @@ export const PublicDriverReportPortal: React.FC = () => {
                     value={customPlate}
                     onChange={(e) => setCustomPlate(e.target.value.toUpperCase())}
                     placeholder={
-                      isRTL ? 'أدخل رقم اللوحة (مثال: LBR-4921)' : 'Enter Plate Number (e.g. LBR-4921)'
+                      isRTL ? 'ط£ط¯ط®ظ„ ط±ظ‚ظ… ط§ظ„ظ„ظˆط­ط© (ظ…ط«ط§ظ„: LBR-4921)' : 'Enter Plate Number (e.g. LBR-4921)'
                     }
                     className="nf-field w-full mt-2.5 font-semibold"
                     style={{ fontFamily: 'var(--font-mono)' }}
@@ -839,7 +839,7 @@ export const PublicDriverReportPortal: React.FC = () => {
                         className="font-medium"
                         style={{ color: 'var(--color-text-secondary)' }}
                       >
-                        {isRTL ? 'المركبة المسجلة:' : 'Linked Fleet Unit:'}
+                        {isRTL ? 'ط§ظ„ظ…ط±ظƒط¨ط© ط§ظ„ظ…ط³ط¬ظ„ط©:' : 'Linked Fleet Unit:'}
                       </span>
                       <span
                         className="font-semibold"
@@ -849,18 +849,18 @@ export const PublicDriverReportPortal: React.FC = () => {
                         {matchedVehicle.vehicle_id}
                       </span>
                       <span style={{ color: 'var(--color-text-secondary)' }}>
-                        — {matchedVehicle.make} {matchedVehicle.model}
+                        â€” {matchedVehicle.make} {matchedVehicle.model}
                       </span>
                     </div>
                     {matchedTrailer && (
                       <div className="flex items-center gap-1.5" dir="ltr">
                         <span
-                          className="text-[11px]"
+                          className="text-[12px]"
                           style={{ color: 'var(--color-text-muted)' }}
                         >
-                          {isRTL ? 'المقطورة:' : 'Trailer:'}
+                          {isRTL ? 'ط§ظ„ظ…ظ‚ط·ظˆط±ط©:' : 'Trailer:'}
                         </span>
-                        <PlateChip plate={`${matchedTrailer.trailer_id} · ${matchedTrailer.plate_number}`} />
+                        <PlateChip plate={`${matchedTrailer.trailer_id} آ· ${matchedTrailer.plate_number}`} />
                       </div>
                     )}
                   </div>
@@ -873,7 +873,7 @@ export const PublicDriverReportPortal: React.FC = () => {
                   className="block text-xs font-semibold mb-2"
                   style={{ color: 'var(--color-ink)' }}
                 >
-                  {isRTL ? 'تصنيف المشكلة' : 'Issue Category'}{' '}
+                  {isRTL ? 'طھطµظ†ظٹظپ ط§ظ„ظ…ط´ظƒظ„ط©' : 'Issue Category'}{' '}
                   <span style={{ color: EDITORIAL_STATUS.red.text }}>*</span>
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -917,7 +917,7 @@ export const PublicDriverReportPortal: React.FC = () => {
                             {isRTL ? item.labelAr : item.labelEn}
                           </div>
                           <div
-                            className="text-[11px] mt-1 leading-snug"
+                            className="text-[12px] mt-1 leading-snug"
                             style={{ color: 'var(--color-text-muted)' }}
                           >
                             {isRTL ? item.descAr : item.descEn}
@@ -935,7 +935,7 @@ export const PublicDriverReportPortal: React.FC = () => {
                   className="block text-xs font-semibold mb-1.5"
                   style={{ color: 'var(--color-ink)' }}
                 >
-                  {isRTL ? 'وصف المشكلة بالتفصيل' : 'Issue Description'}{' '}
+                  {isRTL ? 'ظˆطµظپ ط§ظ„ظ…ط´ظƒظ„ط© ط¨ط§ظ„طھظپطµظٹظ„' : 'Issue Description'}{' '}
                   <span style={{ color: EDITORIAL_STATUS.red.text }}>*</span>
                 </label>
                 <textarea
@@ -945,7 +945,7 @@ export const PublicDriverReportPortal: React.FC = () => {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder={
                     isRTL
-                      ? 'اشرح المشكلة أو العطل الذي لاحظته في الشاحنة...'
+                      ? 'ط§ط´ط±ط­ ط§ظ„ظ…ط´ظƒظ„ط© ط£ظˆ ط§ظ„ط¹ط·ظ„ ط§ظ„ط°ظٹ ظ„ط§ط­ط¸طھظ‡ ظپظٹ ط§ظ„ط´ط§ط­ظ†ط©...'
                       : 'Describe what happened, any warning lights, unusual noises, or leaks...'
                   }
                   className="nf-field w-full resize-y"
@@ -964,11 +964,11 @@ export const PublicDriverReportPortal: React.FC = () => {
                         className="w-3.5 h-3.5"
                         style={{ color: 'var(--color-brand-accent)' }}
                       />
-                      {isRTL ? 'إرفاق صورة للمشكلة' : 'Photo Upload'}
+                      {isRTL ? 'ط¥ط±ظپط§ظ‚ طµظˆط±ط© ظ„ظ„ظ…ط´ظƒظ„ط©' : 'Photo Upload'}
                     </span>
                   </label>
-                  <span className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
-                    {isRTL ? 'اختياري' : 'Optional'}
+                  <span className="text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
+                    {isRTL ? 'ط§ط®طھظٹط§ط±ظٹ' : 'Optional'}
                   </span>
                 </div>
 
@@ -991,15 +991,15 @@ export const PublicDriverReportPortal: React.FC = () => {
                       style={{ color: 'var(--color-ink)' }}
                     >
                       {isRTL
-                        ? 'جاري ضغط وتحسين الصورة للموبايل...'
+                        ? 'ط¬ط§ط±ظٹ ط¶ط؛ط· ظˆطھط­ط³ظٹظ† ط§ظ„طµظˆط±ط© ظ„ظ„ظ…ظˆط¨ط§ظٹظ„...'
                         : 'Compressing & optimizing photo for mobile...'}
                     </span>
                     <span
-                      className="text-[11px]"
+                      className="text-[12px]"
                       style={{ color: 'var(--color-text-muted)' }}
                     >
                       {isRTL
-                        ? 'الحفاظ على وضوح تفاصيل العطل وتصغير الحجم'
+                        ? 'ط§ظ„ط­ظپط§ط¸ ط¹ظ„ظ‰ ظˆط¶ظˆط­ طھظپط§طµظٹظ„ ط§ظ„ط¹ط·ظ„ ظˆطھطµط؛ظٹط± ط§ظ„ط­ط¬ظ…'
                         : 'Preserving damage details & reducing file size'}
                     </span>
                   </div>
@@ -1029,16 +1029,16 @@ export const PublicDriverReportPortal: React.FC = () => {
                         style={{ color: 'var(--color-ink)' }}
                       >
                         {isRTL
-                          ? 'اضغط لالتقاط صورة أو اختيارها من الهاتف'
+                          ? 'ط§ط¶ط؛ط· ظ„ط§ظ„طھظ‚ط§ط· طµظˆط±ط© ط£ظˆ ط§ط®طھظٹط§ط±ظ‡ط§ ظ…ظ† ط§ظ„ظ‡ط§طھظپ'
                           : 'Tap to take a photo or upload from phone'}
                       </span>
                       <span
-                        className="text-[11px] block mt-0.5"
+                        className="text-[12px] block mt-0.5"
                         style={{ color: 'var(--color-text-muted)' }}
                       >
-                        JPG, PNG —{' '}
+                        JPG, PNG â€”{' '}
                         {isRTL
-                          ? 'يتم ضغط الصورة تلقائياً إلى ~200-400KB'
+                          ? 'ظٹطھظ… ط¶ط؛ط· ط§ظ„طµظˆط±ط© طھظ„ظ‚ط§ط¦ظٹط§ظ‹ ط¥ظ„ظ‰ ~200-400KB'
                           : 'Auto-resized to max 1600px & compressed to ~200-400 KB'}
                       </span>
                     </div>
@@ -1071,7 +1071,7 @@ export const PublicDriverReportPortal: React.FC = () => {
                         }}
                         title={
                           isRTL
-                            ? 'اضغط لتكبير الصورة ومعاينتها'
+                            ? 'ط§ط¶ط؛ط· ظ„طھظƒط¨ظٹط± ط§ظ„طµظˆط±ط© ظˆظ…ط¹ط§ظٹظ†طھظ‡ط§'
                             : 'Click to preview full-screen photo'
                         }
                       >
@@ -1091,12 +1091,12 @@ export const PublicDriverReportPortal: React.FC = () => {
                             className="text-xs font-semibold truncate"
                             style={{ color: 'var(--color-ink)' }}
                           >
-                            {photoFileName || (isRTL ? 'صورة مرفقة' : 'Attached Issue Photo')}
+                            {photoFileName || (isRTL ? 'طµظˆط±ط© ظ…ط±ظپظ‚ط©' : 'Attached Issue Photo')}
                           </p>
                           <button
                             type="button"
                             onClick={() => setIsLightboxOpen(true)}
-                            className="text-[11px] font-semibold px-2 py-0.5 flex items-center gap-1 cursor-pointer shrink-0 transition"
+                            className="text-[12px] font-semibold px-2 py-0.5 flex items-center gap-1 cursor-pointer shrink-0 transition"
                             style={{
                               background: 'var(--color-surface)',
                               border: '1px solid var(--color-border)',
@@ -1105,14 +1105,14 @@ export const PublicDriverReportPortal: React.FC = () => {
                             }}
                           >
                             <Maximize2 className="w-2.5 h-2.5" />
-                            <span>{isRTL ? 'معاينة' : 'Preview'}</span>
+                            <span>{isRTL ? 'ظ…ط¹ط§ظٹظ†ط©' : 'Preview'}</span>
                           </button>
                         </div>
 
                         {/* File Size & Compression Ratio */}
                         {compressionStats ? (
                           <div className="mt-1 space-y-0.5">
-                            <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
+                            <div className="flex items-center gap-1.5 flex-wrap text-[12px]">
                               <span
                                 className="line-through"
                                 style={{ color: 'var(--color-text-muted)' }}
@@ -1120,7 +1120,7 @@ export const PublicDriverReportPortal: React.FC = () => {
                                 {compressionStats.originalSize}
                               </span>
                               <span
-                                className="font-semibold px-1.5 py-0.5 text-[10px]"
+                                className="font-semibold px-1.5 py-0.5 text-[12px]"
                                 style={{
                                   background: 'var(--color-surface)',
                                   border: '1px solid var(--color-border)',
@@ -1129,12 +1129,12 @@ export const PublicDriverReportPortal: React.FC = () => {
                                 }}
                               >
                                 {isRTL
-                                  ? `${compressionStats.compressedSize} (توفير ${compressionStats.savedPercent}%)`
+                                  ? `${compressionStats.compressedSize} (طھظˆظپظٹط± ${compressionStats.savedPercent}%)`
                                   : `${compressionStats.compressedSize} (${compressionStats.savedPercent}% smaller)`}
                               </span>
                             </div>
                             <span
-                              className="text-[10px] block"
+                              className="text-[12px] block"
                               style={{
                                 fontFamily: 'var(--font-mono)',
                                 color: 'var(--color-text-muted)',
@@ -1146,12 +1146,12 @@ export const PublicDriverReportPortal: React.FC = () => {
                           </div>
                         ) : (
                           <p
-                            className="text-[11px] font-semibold mt-0.5 flex items-center gap-1"
+                            className="text-[12px] font-semibold mt-0.5 flex items-center gap-1"
                             style={{ color: EDITORIAL_STATUS.green.text }}
                           >
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span>
-                              {isRTL ? 'جاهزة للإرسال مع البلاغ' : 'Ready to attach with report'}
+                              {isRTL ? 'ط¬ط§ظ‡ط²ط© ظ„ظ„ط¥ط±ط³ط§ظ„ ظ…ط¹ ط§ظ„ط¨ظ„ط§ط؛' : 'Ready to attach with report'}
                             </span>
                           </p>
                         )}
@@ -1167,14 +1167,14 @@ export const PublicDriverReportPortal: React.FC = () => {
                           borderRadius: 'var(--radius-sm)',
                           color: EDITORIAL_STATUS.red.text,
                         }}
-                        title={isRTL ? 'حذف الصورة' : 'Remove photo'}
+                        title={isRTL ? 'ط­ط°ظپ ط§ظ„طµظˆط±ط©' : 'Remove photo'}
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
 
                     <p
-                      className="text-[11px] flex items-center gap-1"
+                      className="text-[12px] flex items-center gap-1"
                       style={{ color: 'var(--color-text-muted)' }}
                     >
                       <Sparkles
@@ -1183,7 +1183,7 @@ export const PublicDriverReportPortal: React.FC = () => {
                       />
                       <span>
                         {isRTL
-                          ? 'تم تحسين أبعاد وحجم الصورة تلقائياً لسرعة الإرسال مع الحفاظ على دقة تفاصيل العطل.'
+                          ? 'طھظ… طھط­ط³ظٹظ† ط£ط¨ط¹ط§ط¯ ظˆط­ط¬ظ… ط§ظ„طµظˆط±ط© طھظ„ظ‚ط§ط¦ظٹط§ظ‹ ظ„ط³ط±ط¹ط© ط§ظ„ط¥ط±ط³ط§ظ„ ظ…ط¹ ط§ظ„ط­ظپط§ط¸ ط¹ظ„ظ‰ ط¯ظ‚ط© طھظپط§طµظٹظ„ ط§ظ„ط¹ط·ظ„.'
                           : 'Image optimized for fast mobile upload while keeping vehicle damage details crisp.'}
                       </span>
                     </p>
@@ -1207,7 +1207,7 @@ export const PublicDriverReportPortal: React.FC = () => {
                     style={{ color: 'var(--color-text-muted)' }}
                   />
                   <span>
-                    {isRTL ? 'تاريخ ووقت البلاغ (تلقائي):' : 'Report Date & Time (Auto-recorded):'}
+                    {isRTL ? 'طھط§ط±ظٹط® ظˆظˆظ‚طھ ط§ظ„ط¨ظ„ط§ط؛ (طھظ„ظ‚ط§ط¦ظٹ):' : 'Report Date & Time (Auto-recorded):'}
                   </span>
                 </div>
                 <span
@@ -1236,18 +1236,18 @@ export const PublicDriverReportPortal: React.FC = () => {
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span>
-                      {uploadStatusText || (isRTL ? 'جاري إرسال البلاغ...' : 'Submitting Report...')}
+                      {uploadStatusText || (isRTL ? 'ط¬ط§ط±ظٹ ط¥ط±ط³ط§ظ„ ط§ظ„ط¨ظ„ط§ط؛...' : 'Submitting Report...')}
                     </span>
                   </>
                 ) : isCompressing ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>{isRTL ? 'جاري معالجة الصورة...' : 'Processing Photo...'}</span>
+                    <span>{isRTL ? 'ط¬ط§ط±ظٹ ظ…ط¹ط§ظ„ط¬ط© ط§ظ„طµظˆط±ط©...' : 'Processing Photo...'}</span>
                   </>
                 ) : (
                   <>
                     <Send className="w-4 h-4" />
-                    <span>{isRTL ? 'إرسال البلاغ الآن' : 'Submit Report'}</span>
+                    <span>{isRTL ? 'ط¥ط±ط³ط§ظ„ ط§ظ„ط¨ظ„ط§ط؛ ط§ظ„ط¢ظ†' : 'Submit Report'}</span>
                   </>
                 )}
               </PrimaryButton>
@@ -1262,14 +1262,14 @@ export const PublicDriverReportPortal: React.FC = () => {
           isOpen={isLightboxOpen}
           onClose={() => setIsLightboxOpen(false)}
           imageUrl={photoDataUrl}
-          title={isRTL ? 'معاينة صورة العطل قبل الإرسال' : 'Incident Photo Preview'}
+          title={isRTL ? 'ظ…ط¹ط§ظٹظ†ط© طµظˆط±ط© ط§ظ„ط¹ط·ظ„ ظ‚ط¨ظ„ ط§ظ„ط¥ط±ط³ط§ظ„' : 'Incident Photo Preview'}
           subtitle={photoFileName || (selectedPlate ? `Vehicle: ${selectedPlate}` : undefined)}
         />
       )}
 
       {/* Footer */}
       <footer
-        className="max-w-xl mx-auto w-full px-4 py-4 text-center text-[11px] flex flex-col sm:flex-row items-center justify-between gap-2"
+        className="max-w-xl mx-auto w-full px-4 py-4 text-center text-[12px] flex flex-col sm:flex-row items-center justify-between gap-2"
         style={{
           color: 'var(--color-text-muted)',
           borderTop: '1px solid var(--color-border)',
@@ -1277,8 +1277,8 @@ export const PublicDriverReportPortal: React.FC = () => {
       >
         <span>
           {isRTL
-            ? `© ${new Date().getFullYear()} مؤسسة النور المتحدة للنقل • بوابة بلاغات الأعطال العامة الآمنة`
-            : `© ${new Date().getFullYear()} Al-Noor United Transport Est. • Secure Public Issue Reporting`}
+            ? `آ© ${new Date().getFullYear()} ظ…ط¤ط³ط³ط© ط§ظ„ظ†ظˆط± ط§ظ„ظ…طھط­ط¯ط© ظ„ظ„ظ†ظ‚ظ„ â€¢ ط¨ظˆط§ط¨ط© ط¨ظ„ط§ط؛ط§طھ ط§ظ„ط£ط¹ط·ط§ظ„ ط§ظ„ط¹ط§ظ…ط© ط§ظ„ط¢ظ…ظ†ط©`
+            : `آ© ${new Date().getFullYear()} Al-Noor United Transport Est. â€¢ Secure Public Issue Reporting`}
         </span>
         <a
           href="/"
@@ -1286,7 +1286,7 @@ export const PublicDriverReportPortal: React.FC = () => {
           style={{ color: 'var(--color-ink)' }}
         >
           <Lock className="w-3 h-3" />
-          <span>{isRTL ? 'دخول موظفي الإدارة والورشة' : 'Fleet Staff Login'}</span>
+          <span>{isRTL ? 'ط¯ط®ظˆظ„ ظ…ظˆط¸ظپظٹ ط§ظ„ط¥ط¯ط§ط±ط© ظˆط§ظ„ظˆط±ط´ط©' : 'Fleet Staff Login'}</span>
         </a>
       </footer>
     </div>

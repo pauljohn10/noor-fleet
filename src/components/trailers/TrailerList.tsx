@@ -23,6 +23,7 @@ import {
   PlateChip,
   StatusText,
   TableFooter,
+  EmptyDash,
   EditorialSection,
   MetricStrip,
 } from '../common/EditorialUI';
@@ -423,7 +424,7 @@ export const TrailerList: React.FC = () => {
                           alignItems: 'center',
                           gap: 5,
                           padding: '2px 7px',
-                          fontSize: 11,
+                          fontSize: 12,
                           fontFamily: 'var(--font-mono)',
                           background: 'var(--color-surface)',
                           border: '1px solid var(--color-border)',
@@ -469,9 +470,7 @@ export const TrailerList: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <span style={{ fontSize: 13, color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
-                    {t('Unassigned')}
-                  </span>
+                  <EmptyDash label={t('Unassigned')} />
                 )}
               </td>
 

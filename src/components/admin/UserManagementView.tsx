@@ -162,11 +162,11 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       >
         <Lock size={28} style={{ margin: '0 auto 10px', color: 'var(--color-danger-text)' }} />
         <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-ink)', margin: 0 }}>
-          {isRTL ? 'غير مصرح بالوصول' : 'Restricted Administrator Area'}
+          {isRTL ? 'ط؛ظٹط± ظ…طµط±ط­ ط¨ط§ظ„ظˆطµظˆظ„' : 'Restricted Administrator Area'}
         </h3>
         <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 6 }}>
           {isRTL
-            ? 'إدارة المستخدمين والأدوار متاحة فقط لمدير النظام العام (Super Admin).'
+            ? 'ط¥ط¯ط§ط±ط© ط§ظ„ظ…ط³طھط®ط¯ظ…ظٹظ† ظˆط§ظ„ط£ط¯ظˆط§ط± ظ…طھط§ط­ط© ظپظ‚ط· ظ„ظ…ط¯ظٹط± ط§ظ„ظ†ط¸ط§ظ… ط§ظ„ط¹ط§ظ… (Super Admin).'
             : 'Only Super Admin accounts are authorized to create users, assign roles, or modify permissions.'}
         </p>
       </div>
@@ -245,7 +245,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       showBanner(
         'error',
         isRTL
-          ? 'يرجى إدخال الاسم الكامل والبريد الإلكتروني وكلمة مرور من 6 أحرف على الأقل.'
+          ? 'ظٹط±ط¬ظ‰ ط¥ط¯ط®ط§ظ„ ط§ظ„ط§ط³ظ… ط§ظ„ظƒط§ظ…ظ„ ظˆط§ظ„ط¨ط±ظٹط¯ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ ظˆظƒظ„ظ…ط© ظ…ط±ظˆط± ظ…ظ† 6 ط£ط­ط±ظپ ط¹ظ„ظ‰ ط§ظ„ط£ظ‚ظ„.'
           : 'Please provide full name, valid email, and a password of at least 6 characters.'
       );
       return;
@@ -274,7 +274,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       showBanner(
         'success',
         isRTL
-          ? `تم إنشاء حساب المستخدم ${created.full_name} بدور ${ROLE_DEFINITIONS[normalizeRole(created.role)].labelAr}`
+          ? `طھظ… ط¥ظ†ط´ط§ط، ط­ط³ط§ط¨ ط§ظ„ظ…ط³طھط®ط¯ظ… ${created.full_name} ط¨ط¯ظˆط± ${ROLE_DEFINITIONS[normalizeRole(created.role)].labelAr}`
           : `Created user "${created.full_name}" with role ${ROLE_DEFINITIONS[normalizeRole(created.role)].labelEn}.`
       );
     } catch (err: any) {
@@ -302,7 +302,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       showBanner(
         'error',
         isRTL
-          ? 'لا يمكنك تخفيض صلاحية حسابك الشخصي كمدير نظام عام.'
+          ? 'ظ„ط§ ظٹظ…ظƒظ†ظƒ طھط®ظپظٹط¶ طµظ„ط§ط­ظٹط© ط­ط³ط§ط¨ظƒ ط§ظ„ط´ط®طµظٹ ظƒظ…ط¯ظٹط± ظ†ط¸ط§ظ… ط¹ط§ظ….'
           : 'Safety Lock: You cannot demote your own Super Admin account.'
       );
       return;
@@ -312,7 +312,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       showBanner(
         'error',
         isRTL
-          ? 'لا يمكنك تعطيل حسابك الشخصي النشط.'
+          ? 'ظ„ط§ ظٹظ…ظƒظ†ظƒ طھط¹ط·ظٹظ„ ط­ط³ط§ط¨ظƒ ط§ظ„ط´ط®طµظٹ ط§ظ„ظ†ط´ط·.'
           : 'Safety Lock: You cannot deactivate your own active Super Admin account.'
       );
       return;
@@ -336,7 +336,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       showBanner(
         'success',
         isRTL
-          ? `تم تحديث صلاحيات وبيانات ${updated.full_name} بنجاح.`
+          ? `طھظ… طھط­ط¯ظٹط« طµظ„ط§ط­ظٹط§طھ ظˆط¨ظٹط§ظ†ط§طھ ${updated.full_name} ط¨ظ†ط¬ط§ط­.`
           : `Updated permissions and profile for "${updated.full_name}" (${ROLE_DEFINITIONS[editRole].labelEn}).`
       );
     } catch (err: any) {
@@ -351,7 +351,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       showBanner(
         'error',
         isRTL
-          ? 'لا يمكنك تعطيل حسابك الشخصي النشط.'
+          ? 'ظ„ط§ ظٹظ…ظƒظ†ظƒ طھط¹ط·ظٹظ„ ط­ط³ط§ط¨ظƒ ط§ظ„ط´ط®طµظٹ ط§ظ„ظ†ط´ط·.'
           : 'Safety Lock: You cannot deactivate your own Super Admin account.'
       );
       return;
@@ -367,10 +367,10 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
         'success',
         nextActive
           ? isRTL
-            ? `تم تفعيل حساب ${u.full_name}`
+            ? `طھظ… طھظپط¹ظٹظ„ ط­ط³ط§ط¨ ${u.full_name}`
             : `Activated account for ${u.full_name}.`
           : isRTL
-          ? `تم تعطيل حساب ${u.full_name} وإيقاف وصوله للنظام.`
+          ? `طھظ… طھط¹ط·ظٹظ„ ط­ط³ط§ط¨ ${u.full_name} ظˆط¥ظٹظ‚ط§ظپ ظˆطµظˆظ„ظ‡ ظ„ظ„ظ†ط¸ط§ظ….`
           : `Deactivated account for ${u.full_name}. Access is now blocked by RLS.`
       );
     } catch (err: any) {
@@ -390,7 +390,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       showBanner(
         'success',
         isRTL
-          ? `تم تحديث كلمة المرور للمستخدم ${resetTargetUser.full_name}`
+          ? `طھظ… طھط­ط¯ظٹط« ظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط± ظ„ظ„ظ…ط³طھط®ط¯ظ… ${resetTargetUser.full_name}`
           : `Password reset completed for ${resetTargetUser.full_name}.`
       );
     } catch (err: any) {
@@ -415,7 +415,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       setDeleteTargetUser(null);
       showBanner(
         'success',
-        isRTL ? `تم حذف حساب ${deletedName}` : `Deleted user account "${deletedName}".`
+        isRTL ? `طھظ… ط­ط°ظپ ط­ط³ط§ط¨ ${deletedName}` : `Deleted user account "${deletedName}".`
       );
     } catch (err: any) {
       showBanner('error', err.message || 'Failed to delete user.');
@@ -427,10 +427,10 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <PageHeader
-        title={isRTL ? 'إدارة المستخدمين والصلاحيات (RBAC)' : 'Users & Role-Based Access Control (RBAC)'}
+        title={isRTL ? 'ط¥ط¯ط§ط±ط© ط§ظ„ظ…ط³طھط®ط¯ظ…ظٹظ† ظˆط§ظ„طµظ„ط§ط­ظٹط§طھ (RBAC)' : 'Users & Role-Based Access Control (RBAC)'}
         subtitle={
           isRTL
-            ? 'إنشاء الحسابات، تعيين الأدوار الستة المعتمدة، تفعيل أو تعطيل المستخدمين، وإنفاذ سياسات أمان قاعدة البيانات (Supabase RLS).'
+            ? 'ط¥ظ†ط´ط§ط، ط§ظ„ط­ط³ط§ط¨ط§طھطŒ طھط¹ظٹظٹظ† ط§ظ„ط£ط¯ظˆط§ط± ط§ظ„ط³طھط© ط§ظ„ظ…ط¹طھظ…ط¯ط©طŒ طھظپط¹ظٹظ„ ط£ظˆ طھط¹ط·ظٹظ„ ط§ظ„ظ…ط³طھط®ط¯ظ…ظٹظ†طŒ ظˆط¥ظ†ظپط§ط° ط³ظٹط§ط³ط§طھ ط£ظ…ط§ظ† ظ‚ط§ط¹ط¯ط© ط§ظ„ط¨ظٹط§ظ†ط§طھ (Supabase RLS).'
             : 'Provision users, assign the 6 system roles, enforce read-only viewer guards, and manage account activation backed by Supabase Row Level Security.'
         }
         actions={
@@ -439,10 +439,10 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
               <Shield size={14} style={{ marginInlineEnd: 5, display: 'inline' }} />
               {showRoleMatrix
                 ? isRTL
-                  ? 'إخفاء مصفوفة الصلاحيات'
+                  ? 'ط¥ط®ظپط§ط، ظ…طµظپظˆظپط© ط§ظ„طµظ„ط§ط­ظٹط§طھ'
                   : 'Hide Role Matrix'
                 : isRTL
-                ? 'مصفوفة الأدوار والصلاحيات (6)'
+                ? 'ظ…طµظپظˆظپط© ط§ظ„ط£ط¯ظˆط§ط± ظˆط§ظ„طµظ„ط§ط­ظٹط§طھ (6)'
                 : 'Role Permissions Matrix (6)'}
             </GhostButton>
             <GhostButton onClick={fetchUsers} disabled={loading}>
@@ -451,14 +451,14 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                 className={loading ? 'animate-spin' : ''}
                 style={{ marginInlineEnd: 5, display: 'inline' }}
               />
-              {isRTL ? 'تحديث' : 'Refresh'}
+              {isRTL ? 'طھط­ط¯ظٹط«' : 'Refresh'}
             </GhostButton>
             <PrimaryButton onClick={() => setIsCreateOpen(true)}>
               <UserPlus size={14} style={{ marginInlineEnd: 6, display: 'inline' }} />
-              {isRTL ? '+ إضافة مستخدم جديد' : '+ Create User Account'}
+              {isRTL ? '+ ط¥ط¶ط§ظپط© ظ…ط³طھط®ط¯ظ… ط¬ط¯ظٹط¯' : '+ Create User Account'}
             </PrimaryButton>
             {isModal && onClose && (
-              <GhostButton onClick={onClose}>{isRTL ? 'إغلاق' : 'Close'}</GhostButton>
+              <GhostButton onClick={onClose}>{isRTL ? 'ط¥ط؛ظ„ط§ظ‚' : 'Close'}</GhostButton>
             )}
           </>
         }
@@ -489,7 +489,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
             onClick={() => setErrorMsg(null)}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#991B1B' }}
           >
-            ✕
+            âœ•
           </button>
         </div>
       )}
@@ -518,7 +518,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
             onClick={() => setSuccessMsg(null)}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#166534' }}
           >
-            ✕
+            âœ•
           </button>
         </div>
       )}
@@ -527,26 +527,26 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       <MetricStrip
         items={[
           {
-            label: isRTL ? 'إجمالي الحسابات' : 'Total Accounts',
+            label: isRTL ? 'ط¥ط¬ظ…ط§ظ„ظٹ ط§ظ„ط­ط³ط§ط¨ط§طھ' : 'Total Accounts',
             value: users.length,
-            subtext: `${activeUsersCount} ${isRTL ? 'نشط' : 'active'} · ${deactivatedUsersCount} ${
-              isRTL ? 'معطل' : 'deactivated'
+            subtext: `${activeUsersCount} ${isRTL ? 'ظ†ط´ط·' : 'active'} آ· ${deactivatedUsersCount} ${
+              isRTL ? 'ظ…ط¹ط·ظ„' : 'deactivated'
             }`,
           },
           {
-            label: isRTL ? 'مدير النظام / الأسطول' : 'Super Admin / Fleet Mgr',
+            label: isRTL ? 'ظ…ط¯ظٹط± ط§ظ„ظ†ط¸ط§ظ… / ط§ظ„ط£ط³ط·ظˆظ„' : 'Super Admin / Fleet Mgr',
             value: `${roleCounts.SUPER_ADMIN} / ${roleCounts.FLEET_MANAGER}`,
-            subtext: isRTL ? 'القيادة وإدارة الأسطول' : 'System & Fleet Leadership',
+            subtext: isRTL ? 'ط§ظ„ظ‚ظٹط§ط¯ط© ظˆط¥ط¯ط§ط±ط© ط§ظ„ط£ط³ط·ظˆظ„' : 'System & Fleet Leadership',
           },
           {
-            label: isRTL ? 'مدير الورشة / موظف الأسطول' : 'Workshop Mgr / Fleet Staff',
+            label: isRTL ? 'ظ…ط¯ظٹط± ط§ظ„ظˆط±ط´ط© / ظ…ظˆط¸ظپ ط§ظ„ط£ط³ط·ظˆظ„' : 'Workshop Mgr / Fleet Staff',
             value: `${roleCounts.WORKSHOP_MANAGER} / ${roleCounts.FLEET_STAFF}`,
-            subtext: isRTL ? 'إدارة الصيانة وعمليات الأسطول' : 'Maintenance & Fleet Ops',
+            subtext: isRTL ? 'ط¥ط¯ط§ط±ط© ط§ظ„طµظٹط§ظ†ط© ظˆط¹ظ…ظ„ظٹط§طھ ط§ظ„ط£ط³ط·ظˆظ„' : 'Maintenance & Fleet Ops',
           },
           {
-            label: isRTL ? 'موظف الورشة / مشاهد (قراءة فقط)' : 'Workshop Staff / Viewer',
+            label: isRTL ? 'ظ…ظˆط¸ظپ ط§ظ„ظˆط±ط´ط© / ظ…ط´ط§ظ‡ط¯ (ظ‚ط±ط§ط،ط© ظپظ‚ط·)' : 'Workshop Staff / Viewer',
             value: `${roleCounts.WORKSHOP_STAFF} / ${roleCounts.VIEWER}`,
-            subtext: isRTL ? 'التنفيذ الفني والعرض فقط' : 'Workshop Execution & Read-Only',
+            subtext: isRTL ? 'ط§ظ„طھظ†ظپظٹط° ط§ظ„ظپظ†ظٹ ظˆط§ظ„ط¹ط±ط¶ ظپظ‚ط·' : 'Workshop Execution & Read-Only',
           },
         ]}
       />
@@ -572,12 +572,12 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
             <div>
               <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--color-ink)' }}>
                 {isRTL
-                  ? 'مصفوفة الصلاحيات للأدوار الستة (مطبقة في الواجهة وقاعدة بيانات Supabase RLS)'
+                  ? 'ظ…طµظپظˆظپط© ط§ظ„طµظ„ط§ط­ظٹط§طھ ظ„ظ„ط£ط¯ظˆط§ط± ط§ظ„ط³طھط© (ظ…ط·ط¨ظ‚ط© ظپظٹ ط§ظ„ظˆط§ط¬ظ‡ط© ظˆظ‚ط§ط¹ط¯ط© ط¨ظٹط§ظ†ط§طھ Supabase RLS)'
                   : '6-Role Security & Permission Matrix (Enforced on Frontend, Backend API & Supabase RLS)'}
               </h3>
               <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--color-text-muted)' }}>
                 {isRTL
-                  ? 'لا يُسمح للمستخدمين بترقية صلاحياتهم ذاتياً. دور المشاهد (Viewer) مقيد للقراءة فقط.'
+                  ? 'ظ„ط§ ظٹظڈط³ظ…ط­ ظ„ظ„ظ…ط³طھط®ط¯ظ…ظٹظ† ط¨طھط±ظ‚ظٹط© طµظ„ط§ط­ظٹط§طھظ‡ظ… ط°ط§طھظٹط§ظ‹. ط¯ظˆط± ط§ظ„ظ…ط´ط§ظ‡ط¯ (Viewer) ظ…ظ‚ظٹط¯ ظ„ظ„ظ‚ط±ط§ط،ط© ظپظ‚ط·.'
                   : 'Users are blocked by database triggers from self-escalating roles. Viewers are strictly read-only across all tables and storage buckets.'}
               </p>
             </div>
@@ -634,7 +634,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                     <span
                       style={{
                         fontFamily: 'var(--font-mono)',
-                        fontSize: 10.5,
+                        fontSize: 12,
                         color: 'var(--color-text-muted)',
                       }}
                     >
@@ -643,7 +643,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                   </div>
                   <p
                     style={{
-                      fontSize: 11.5,
+                      fontSize: 12.5,
                       color: 'var(--color-text-secondary)',
                       margin: '0 0 8px',
                       lineHeight: 1.4,
@@ -655,7 +655,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                     style={{
                       margin: 0,
                       paddingInlineStart: 16,
-                      fontSize: 11.5,
+                      fontSize: 12.5,
                       color: 'var(--color-text-muted)',
                       display: 'flex',
                       flexDirection: 'column',
@@ -681,7 +681,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
         onSearchChange={setSearchQuery}
         searchPlaceholder={
           isRTL
-            ? 'بحث بالاسم، البريد، القسم، أو الدور...'
+            ? 'ط¨ط­ط« ط¨ط§ظ„ط§ط³ظ…طŒ ط§ظ„ط¨ط±ظٹط¯طŒ ط§ظ„ظ‚ط³ظ…طŒ ط£ظˆ ط§ظ„ط¯ظˆط±...'
             : 'Search name, email, department, role...'
         }
         extraFilters={
@@ -689,46 +689,46 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
           >
-            <option value="ALL">{isRTL ? 'جميع الحالات' : 'All Account Statuses'}</option>
-            <option value="ACTIVE">{isRTL ? 'نشط فقط' : 'Active Only'}</option>
-            <option value="INACTIVE">{isRTL ? 'معطل فقط' : 'Deactivated Only'}</option>
+            <option value="ALL">{isRTL ? 'ط¬ظ…ظٹط¹ ط§ظ„ط­ط§ظ„ط§طھ' : 'All Account Statuses'}</option>
+            <option value="ACTIVE">{isRTL ? 'ظ†ط´ط· ظپظ‚ط·' : 'Active Only'}</option>
+            <option value="INACTIVE">{isRTL ? 'ظ…ط¹ط·ظ„ ظپظ‚ط·' : 'Deactivated Only'}</option>
           </EditorialSelect>
         }
         tabs={[
-          { key: 'ALL', label: isRTL ? 'الكل' : 'All Roles', count: users.length },
+          { key: 'ALL', label: isRTL ? 'ط§ظ„ظƒظ„' : 'All Roles', count: users.length },
           {
             key: 'SUPER_ADMIN',
-            label: isRTL ? 'مدير النظام' : 'Super Admin',
+            label: isRTL ? 'ظ…ط¯ظٹط± ط§ظ„ظ†ط¸ط§ظ…' : 'Super Admin',
             count: roleCounts.SUPER_ADMIN,
             stripe: ROLE_DEFINITIONS.SUPER_ADMIN.dotColor,
           },
           {
             key: 'FLEET_MANAGER',
-            label: isRTL ? 'مدير الأسطول' : 'Fleet Manager',
+            label: isRTL ? 'ظ…ط¯ظٹط± ط§ظ„ط£ط³ط·ظˆظ„' : 'Fleet Manager',
             count: roleCounts.FLEET_MANAGER,
             stripe: ROLE_DEFINITIONS.FLEET_MANAGER.dotColor,
           },
           {
             key: 'WORKSHOP_MANAGER',
-            label: isRTL ? 'مدير الورشة' : 'Workshop Manager',
+            label: isRTL ? 'ظ…ط¯ظٹط± ط§ظ„ظˆط±ط´ط©' : 'Workshop Manager',
             count: roleCounts.WORKSHOP_MANAGER,
             stripe: ROLE_DEFINITIONS.WORKSHOP_MANAGER.dotColor,
           },
           {
             key: 'FLEET_STAFF',
-            label: isRTL ? 'موظف الأسطول' : 'Fleet Staff',
+            label: isRTL ? 'ظ…ظˆط¸ظپ ط§ظ„ط£ط³ط·ظˆظ„' : 'Fleet Staff',
             count: roleCounts.FLEET_STAFF,
             stripe: ROLE_DEFINITIONS.FLEET_STAFF.dotColor,
           },
           {
             key: 'WORKSHOP_STAFF',
-            label: isRTL ? 'موظف الورشة' : 'Workshop Staff',
+            label: isRTL ? 'ظ…ظˆط¸ظپ ط§ظ„ظˆط±ط´ط©' : 'Workshop Staff',
             count: roleCounts.WORKSHOP_STAFF,
             stripe: ROLE_DEFINITIONS.WORKSHOP_STAFF.dotColor,
           },
           {
             key: 'VIEWER',
-            label: isRTL ? 'مشاهد (قراءة فقط)' : 'Viewer (Read Only)',
+            label: isRTL ? 'ظ…ط´ط§ظ‡ط¯ (ظ‚ط±ط§ط،ط© ظپظ‚ط·)' : 'Viewer (Read Only)',
             count: roleCounts.VIEWER,
             stripe: ROLE_DEFINITIONS.VIEWER.dotColor,
           },
@@ -755,19 +755,19 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                 }}
               >
                 <th style={{ padding: '10px 14px', fontWeight: 500, color: 'var(--color-text-muted)', fontSize: 12 }}>
-                  {isRTL ? 'المستخدم' : 'User'}
+                  {isRTL ? 'ط§ظ„ظ…ط³طھط®ط¯ظ…' : 'User'}
                 </th>
                 <th style={{ padding: '10px 14px', fontWeight: 500, color: 'var(--color-text-muted)', fontSize: 12 }}>
-                  {isRTL ? 'الدور الأمني (Role)' : 'Assigned Role'}
+                  {isRTL ? 'ط§ظ„ط¯ظˆط± ط§ظ„ط£ظ…ظ†ظٹ (Role)' : 'Assigned Role'}
                 </th>
                 <th style={{ padding: '10px 14px', fontWeight: 500, color: 'var(--color-text-muted)', fontSize: 12 }}>
-                  {isRTL ? 'القسم' : 'Department'}
+                  {isRTL ? 'ط§ظ„ظ‚ط³ظ…' : 'Department'}
                 </th>
                 <th style={{ padding: '10px 14px', fontWeight: 500, color: 'var(--color-text-muted)', fontSize: 12 }}>
-                  {isRTL ? 'مستوى الوصول' : 'Access Level'}
+                  {isRTL ? 'ظ…ط³طھظˆظ‰ ط§ظ„ظˆطµظˆظ„' : 'Access Level'}
                 </th>
                 <th style={{ padding: '10px 14px', fontWeight: 500, color: 'var(--color-text-muted)', fontSize: 12 }}>
-                  {isRTL ? 'حالة الحساب' : 'Account Status'}
+                  {isRTL ? 'ط­ط§ظ„ط© ط§ظ„ط­ط³ط§ط¨' : 'Account Status'}
                 </th>
                 <th
                   style={{
@@ -778,7 +778,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                     textAlign: 'end',
                   }}
                 >
-                  {isRTL ? 'الإجراءات' : 'Actions'}
+                  {isRTL ? 'ط§ظ„ط¥ط¬ط±ط§ط،ط§طھ' : 'Actions'}
                 </th>
               </tr>
             </thead>
@@ -786,13 +786,13 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
               {loading ? (
                 <tr>
                   <td colSpan={6} style={{ padding: 36, textAlign: 'center', color: 'var(--color-text-muted)' }}>
-                    {isRTL ? 'جاري تحميل حسابات المستخدمين...' : 'Loading user accounts & permissions...'}
+                    {isRTL ? 'ط¬ط§ط±ظٹ طھط­ظ…ظٹظ„ ط­ط³ط§ط¨ط§طھ ط§ظ„ظ…ط³طھط®ط¯ظ…ظٹظ†...' : 'Loading user accounts & permissions...'}
                   </td>
                 </tr>
               ) : paginatedUsers.length === 0 ? (
                 <tr>
                   <td colSpan={6} style={{ padding: 36, textAlign: 'center', color: 'var(--color-text-muted)' }}>
-                    {isRTL ? 'لا توجد حسابات مطابقة للبحث.' : 'No user accounts match the current filters.'}
+                    {isRTL ? 'ظ„ط§ طھظˆط¬ط¯ ط­ط³ط§ط¨ط§طھ ظ…ط·ط§ط¨ظ‚ط© ظ„ظ„ط¨ط­ط«.' : 'No user accounts match the current filters.'}
                   </td>
                 </tr>
               ) : (
@@ -817,7 +817,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                           {isSelf && (
                             <span
                               style={{
-                                fontSize: 10.5,
+                                fontSize: 12,
                                 fontWeight: 600,
                                 padding: '1px 6px',
                                 borderRadius: 4,
@@ -826,7 +826,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                                 border: '1px solid var(--color-border)',
                               }}
                             >
-                              {isRTL ? 'أنت' : 'You'}
+                              {isRTL ? 'ط£ظ†طھ' : 'You'}
                             </span>
                           )}
                         </div>
@@ -838,8 +838,8 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                             marginTop: 2,
                           }}
                         >
-                          {u.email || '—'}
-                          {u.phone ? ` · ${u.phone}` : ''}
+                          {u.email || 'â€”'}
+                          {u.phone ? ` آ· ${u.phone}` : ''}
                         </div>
                       </td>
 
@@ -877,20 +877,20 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                       <td style={{ padding: '12px 14px', fontSize: 12, color: 'var(--color-text-muted)' }}>
                         {normalizedRole === 'VIEWER' ? (
                           <span style={{ color: '#6B7280', fontWeight: 500 }}>
-                            {isRTL ? 'قراءة فقط (ممنوع الإضافة/التعديل/الرفع)' : 'Read-Only (No Add/Edit/Delete/Upload)'}
+                            {isRTL ? 'ظ‚ط±ط§ط،ط© ظپظ‚ط· (ظ…ظ…ظ†ظˆط¹ ط§ظ„ط¥ط¶ط§ظپط©/ط§ظ„طھط¹ط¯ظٹظ„/ط§ظ„ط±ظپط¹)' : 'Read-Only (No Add/Edit/Delete/Upload)'}
                           </span>
                         ) : normalizedRole === 'SUPER_ADMIN' ? (
                           <span style={{ color: '#9A3412', fontWeight: 500 }}>
-                            {isRTL ? 'صلاحيات النظام الكاملة' : 'Full System & Admin Control'}
+                            {isRTL ? 'طµظ„ط§ط­ظٹط§طھ ط§ظ„ظ†ط¸ط§ظ… ط§ظ„ظƒط§ظ…ظ„ط©' : 'Full System & Admin Control'}
                           </span>
                         ) : normalizedRole === 'FLEET_MANAGER' ? (
-                          <span>{isRTL ? 'إدارة الأسطول كاملة' : 'Full Fleet Management'}</span>
+                          <span>{isRTL ? 'ط¥ط¯ط§ط±ط© ط§ظ„ط£ط³ط·ظˆظ„ ظƒط§ظ…ظ„ط©' : 'Full Fleet Management'}</span>
                         ) : normalizedRole === 'WORKSHOP_MANAGER' ? (
-                          <span>{isRTL ? 'إدارة الورشة والصيانة كاملة' : 'Full Workshop & Store Management'}</span>
+                          <span>{isRTL ? 'ط¥ط¯ط§ط±ط© ط§ظ„ظˆط±ط´ط© ظˆط§ظ„طµظٹط§ظ†ط© ظƒط§ظ…ظ„ط©' : 'Full Workshop & Store Management'}</span>
                         ) : normalizedRole === 'FLEET_STAFF' ? (
-                          <span>{isRTL ? 'تشغيل وسجلات الأسطول المصرحة' : 'Authorized Fleet Operations'}</span>
+                          <span>{isRTL ? 'طھط´ط؛ظٹظ„ ظˆط³ط¬ظ„ط§طھ ط§ظ„ط£ط³ط·ظˆظ„ ط§ظ„ظ…طµط±ط­ط©' : 'Authorized Fleet Operations'}</span>
                         ) : (
-                          <span>{isRTL ? 'تشغيل وسجلات الورشة المصرحة' : 'Authorized Workshop Operations'}</span>
+                          <span>{isRTL ? 'طھط´ط؛ظٹظ„ ظˆط³ط¬ظ„ط§طھ ط§ظ„ظˆط±ط´ط© ط§ظ„ظ…طµط±ط­ط©' : 'Authorized Workshop Operations'}</span>
                         )}
                       </td>
 
@@ -898,12 +898,12 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                         {u.is_active !== false ? (
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#15803D', fontWeight: 500 }}>
                             <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#15803D' }} />
-                            {isRTL ? 'نشط' : 'Active'}
+                            {isRTL ? 'ظ†ط´ط·' : 'Active'}
                           </span>
                         ) : (
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#B91C1C', fontWeight: 500 }}>
                             <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#B91C1C' }} />
-                            {isRTL ? 'معطل' : 'Deactivated'}
+                            {isRTL ? 'ظ…ط¹ط·ظ„' : 'Deactivated'}
                           </span>
                         )}
                       </td>
@@ -912,10 +912,10 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                           <GhostButton
                             onClick={() => openEditModal(u)}
-                            title={isRTL ? 'تعديل الدور والصلاحيات' : 'Change Role & Permissions'}
+                            title={isRTL ? 'طھط¹ط¯ظٹظ„ ط§ظ„ط¯ظˆط± ظˆط§ظ„طµظ„ط§ط­ظٹط§طھ' : 'Change Role & Permissions'}
                           >
                             <Edit3 size={13} style={{ marginInlineEnd: 4, display: 'inline' }} />
-                            {isRTL ? 'الدور / تعديل' : 'Role / Edit'}
+                            {isRTL ? 'ط§ظ„ط¯ظˆط± / طھط¹ط¯ظٹظ„' : 'Role / Edit'}
                           </GhostButton>
 
                           <GhostButton
@@ -923,7 +923,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                               setResetTargetUser(u);
                               setNewPasswordVal('');
                             }}
-                            title={isRTL ? 'إعادة تعيين كلمة المرور' : 'Reset Password'}
+                            title={isRTL ? 'ط¥ط¹ط§ط¯ط© طھط¹ظٹظٹظ† ظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط±' : 'Reset Password'}
                           >
                             <KeyRound size={13} />
                           </GhostButton>
@@ -934,10 +934,10 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                               title={
                                 u.is_active !== false
                                   ? isRTL
-                                    ? 'تعطيل الحساب'
+                                    ? 'طھط¹ط·ظٹظ„ ط§ظ„ط­ط³ط§ط¨'
                                     : 'Deactivate Account'
                                   : isRTL
-                                  ? 'تفعيل الحساب'
+                                  ? 'طھظپط¹ظٹظ„ ط§ظ„ط­ط³ط§ط¨'
                                   : 'Activate Account'
                               }
                             >
@@ -952,7 +952,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                           {!isSelf && (
                             <GhostButton
                               onClick={() => setDeleteTargetUser(u)}
-                              title={isRTL ? 'حذف المستخدم' : 'Delete User'}
+                              title={isRTL ? 'ط­ط°ظپ ط§ظ„ظ…ط³طھط®ط¯ظ…' : 'Delete User'}
                             >
                               <Trash2 size={13} style={{ color: '#B91C1C' }} />
                             </GhostButton>
@@ -969,7 +969,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
 
         <div style={{ padding: '0 14px' }}>
           <TableFooter
-            summaryText={`${filteredUsers.length} ${isRTL ? 'مستخدم' : 'users'}`}
+            summaryText={`${filteredUsers.length} ${isRTL ? 'ظ…ط³طھط®ط¯ظ…' : 'users'}`}
             page={currentPage}
             totalPages={Math.max(1, Math.ceil(filteredUsers.length / pageSize))}
             totalRecords={filteredUsers.length}
@@ -1010,11 +1010,11 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
             >
               <div>
                 <h3 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: 'var(--color-ink)' }}>
-                  {isRTL ? 'إنشاء حساب مستخدم جديد وتعيين الصلاحيات' : 'Create New User Account & Assign Role'}
+                  {isRTL ? 'ط¥ظ†ط´ط§ط، ط­ط³ط§ط¨ ظ…ط³طھط®ط¯ظ… ط¬ط¯ظٹط¯ ظˆطھط¹ظٹظٹظ† ط§ظ„طµظ„ط§ط­ظٹط§طھ' : 'Create New User Account & Assign Role'}
                 </h3>
                 <p style={{ margin: '3px 0 0', fontSize: 12.5, color: 'var(--color-text-muted)' }}>
                   {isRTL
-                    ? 'اختر أحد الأدوار الستة المعتمدة. سيتم تطبيق الصلاحيات تلقائياً في Supabase RLS.'
+                    ? 'ط§ط®طھط± ط£ط­ط¯ ط§ظ„ط£ط¯ظˆط§ط± ط§ظ„ط³طھط© ط§ظ„ظ…ط¹طھظ…ط¯ط©. ط³ظٹطھظ… طھط·ط¨ظٹظ‚ ط§ظ„طµظ„ط§ط­ظٹط§طھ طھظ„ظ‚ط§ط¦ظٹط§ظ‹ ظپظٹ Supabase RLS.'
                     : 'Select one of the 6 system roles. Permissions are enforced automatically via Supabase RLS.'}
                 </p>
               </div>
@@ -1029,7 +1029,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                   color: 'var(--color-text-muted)',
                 }}
               >
-                ✕
+                âœ•
               </button>
             </div>
 
@@ -1037,14 +1037,14 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>
-                    {isRTL ? 'الاسم الكامل *' : 'Full Name *'}
+                    {isRTL ? 'ط§ظ„ط§ط³ظ… ط§ظ„ظƒط§ظ…ظ„ *' : 'Full Name *'}
                   </label>
                   <input
                     type="text"
                     required
                     value={createFullName}
                     onChange={e => setCreateFullName(e.target.value)}
-                    placeholder={isRTL ? 'مثال: خالد العتيبي' : 'e.g., Khalid Al-Otaibi'}
+                    placeholder={isRTL ? 'ظ…ط«ط§ظ„: ط®ط§ظ„ط¯ ط§ظ„ط¹طھظٹط¨ظٹ' : 'e.g., Khalid Al-Otaibi'}
                     style={{
                       width: '100%',
                       height: 36,
@@ -1059,7 +1059,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
 
                 <div>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>
-                    {isRTL ? 'البريد الإلكتروني الرسمي *' : 'Corporate Email *'}
+                    {isRTL ? 'ط§ظ„ط¨ط±ظٹط¯ ط§ظ„ط¥ظ„ظƒطھط±ظˆظ†ظٹ ط§ظ„ط±ط³ظ…ظٹ *' : 'Corporate Email *'}
                   </label>
                   <input
                     type="email"
@@ -1084,7 +1084,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>
-                    {isRTL ? 'كلمة المرور الأولية (6 أحرف على الأقل) *' : 'Initial Password (min 6 chars) *'}
+                    {isRTL ? 'ظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط± ط§ظ„ط£ظˆظ„ظٹط© (6 ط£ط­ط±ظپ ط¹ظ„ظ‰ ط§ظ„ط£ظ‚ظ„) *' : 'Initial Password (min 6 chars) *'}
                   </label>
                   <div style={{ position: 'relative' }}>
                     <input
@@ -1093,7 +1093,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                       minLength={6}
                       value={createPassword}
                       onChange={e => setCreatePassword(e.target.value)}
-                      placeholder="••••••••"
+                      placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                       style={{
                         width: '100%',
                         height: 36,
@@ -1126,7 +1126,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
 
                 <div>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>
-                    {isRTL ? 'رقم الجوال' : 'Phone / Mobile'}
+                    {isRTL ? 'ط±ظ‚ظ… ط§ظ„ط¬ظˆط§ظ„' : 'Phone / Mobile'}
                   </label>
                   <input
                     type="text"
@@ -1150,7 +1150,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
               {/* 6-Role Selector Grid */}
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>
-                  {isRTL ? 'تعيين الدور الأمني (اختر واحداً من الأدوار الستة) *' : 'Assign System Role (6 Roles) *'}
+                  {isRTL ? 'طھط¹ظٹظٹظ† ط§ظ„ط¯ظˆط± ط§ظ„ط£ظ…ظ†ظٹ (ط§ط®طھط± ظˆط§ط­ط¯ط§ظ‹ ظ…ظ† ط§ظ„ط£ط¯ظˆط§ط± ط§ظ„ط³طھط©) *' : 'Assign System Role (6 Roles) *'}
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {ALL_SYSTEM_ROLES.map(r => {
@@ -1179,7 +1179,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                           </span>
                           {selected && <Check size={14} style={{ color: 'var(--color-ink)' }} />}
                         </div>
-                        <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4, lineHeight: 1.35 }}>
+                        <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 4, lineHeight: 1.35 }}>
                           {isRTL ? meta.shortDescAr : meta.shortDescEn}
                         </div>
                       </button>
@@ -1191,7 +1191,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>
-                    {isRTL ? 'القسم / الإدارة' : 'Department'}
+                    {isRTL ? 'ط§ظ„ظ‚ط³ظ… / ط§ظ„ط¥ط¯ط§ط±ط©' : 'Department'}
                   </label>
                   <input
                     type="text"
@@ -1222,7 +1222,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                       checked={createIsActive}
                       onChange={e => setCreateIsActive(e.target.checked)}
                     />
-                    <span>{isRTL ? 'الحساب نشط ومفعل للدخول فوراً' : 'Account Active (Allow immediate sign-in)'}</span>
+                    <span>{isRTL ? 'ط§ظ„ط­ط³ط§ط¨ ظ†ط´ط· ظˆظ…ظپط¹ظ„ ظ„ظ„ط¯ط®ظˆظ„ ظپظˆط±ط§ظ‹' : 'Account Active (Allow immediate sign-in)'}</span>
                   </label>
                 </div>
               </div>
@@ -1237,15 +1237,15 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                 }}
               >
                 <GhostButton type="button" onClick={() => setIsCreateOpen(false)}>
-                  {isRTL ? 'إلغاء' : 'Cancel'}
+                  {isRTL ? 'ط¥ظ„ط؛ط§ط،' : 'Cancel'}
                 </GhostButton>
                 <PrimaryButton type="submit" disabled={submittingCreate}>
                   {submittingCreate
                     ? isRTL
-                      ? 'جاري الإنشاء...'
+                      ? 'ط¬ط§ط±ظٹ ط§ظ„ط¥ظ†ط´ط§ط،...'
                       : 'Creating Account...'
                     : isRTL
-                    ? 'إنشاء الحساب وتعيين الدور'
+                    ? 'ط¥ظ†ط´ط§ط، ط§ظ„ط­ط³ط§ط¨ ظˆطھط¹ظٹظٹظ† ط§ظ„ط¯ظˆط±'
                     : 'Create User & Assign Role'}
                 </PrimaryButton>
               </div>
@@ -1284,7 +1284,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
             >
               <div>
                 <h3 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: 'var(--color-ink)' }}>
-                  {isRTL ? 'تعديل دور وصلاحيات المستخدم' : 'Modify User Role & Permissions'}
+                  {isRTL ? 'طھط¹ط¯ظٹظ„ ط¯ظˆط± ظˆطµظ„ط§ط­ظٹط§طھ ط§ظ„ظ…ط³طھط®ط¯ظ…' : 'Modify User Role & Permissions'}
                 </h3>
                 <p style={{ margin: '3px 0 0', fontSize: 12.5, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
                   {editingUser.email}
@@ -1301,7 +1301,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                   color: 'var(--color-text-muted)',
                 }}
               >
-                ✕
+                âœ•
               </button>
             </div>
 
@@ -1309,7 +1309,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>
-                    {isRTL ? 'الاسم الكامل *' : 'Full Name *'}
+                    {isRTL ? 'ط§ظ„ط§ط³ظ… ط§ظ„ظƒط§ظ…ظ„ *' : 'Full Name *'}
                   </label>
                   <input
                     type="text"
@@ -1330,7 +1330,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
 
                 <div>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>
-                    {isRTL ? 'رقم الجوال' : 'Phone / Mobile'}
+                    {isRTL ? 'ط±ظ‚ظ… ط§ظ„ط¬ظˆط§ظ„' : 'Phone / Mobile'}
                   </label>
                   <input
                     type="text"
@@ -1353,7 +1353,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
               {/* 6-Role Selector */}
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>
-                  {isRTL ? 'الدور الأمني ومستوى الصلاحيات *' : 'System Role & Permission Tier *'}
+                  {isRTL ? 'ط§ظ„ط¯ظˆط± ط§ظ„ط£ظ…ظ†ظٹ ظˆظ…ط³طھظˆظ‰ ط§ظ„طµظ„ط§ط­ظٹط§طھ *' : 'System Role & Permission Tier *'}
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {ALL_SYSTEM_ROLES.map(r => {
@@ -1385,7 +1385,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                           </span>
                           {selected && <Check size={14} style={{ color: 'var(--color-ink)' }} />}
                         </div>
-                        <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4, lineHeight: 1.35 }}>
+                        <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 4, lineHeight: 1.35 }}>
                           {isRTL ? meta.shortDescAr : meta.shortDescEn}
                         </div>
                       </button>
@@ -1406,7 +1406,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
               >
                 <div style={{ fontWeight: 600, color: 'var(--color-ink)', marginBottom: 4 }}>
                   {isRTL
-                    ? `الصلاحيات الفعلية لدور (${ROLE_DEFINITIONS[editRole].labelAr}):`
+                    ? `ط§ظ„طµظ„ط§ط­ظٹط§طھ ط§ظ„ظپط¹ظ„ظٹط© ظ„ط¯ظˆط± (${ROLE_DEFINITIONS[editRole].labelAr}):`
                     : `Effective Permissions for ${ROLE_DEFINITIONS[editRole].labelEn}:`}
                 </div>
                 <ul style={{ margin: 0, paddingInlineStart: 18, color: 'var(--color-text-secondary)' }}>
@@ -1422,7 +1422,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>
-                    {isRTL ? 'القسم / الإدارة' : 'Department'}
+                    {isRTL ? 'ط§ظ„ظ‚ط³ظ… / ط§ظ„ط¥ط¯ط§ط±ط©' : 'Department'}
                   </label>
                   <input
                     type="text"
@@ -1449,7 +1449,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                       checked={editIsActive}
                       onChange={e => setEditIsActive(e.target.checked)}
                     />
-                    <span>{isRTL ? 'الحساب نشط (مسموح بتسجيل الدخول)' : 'Account Active (Authorized to access system)'}</span>
+                    <span>{isRTL ? 'ط§ظ„ط­ط³ط§ط¨ ظ†ط´ط· (ظ…ط³ظ…ظˆط­ ط¨طھط³ط¬ظٹظ„ ط§ظ„ط¯ط®ظˆظ„)' : 'Account Active (Authorized to access system)'}</span>
                   </label>
                 </div>
               </div>
@@ -1464,15 +1464,15 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                 }}
               >
                 <GhostButton type="button" onClick={() => setEditingUser(null)}>
-                  {isRTL ? 'إلغاء' : 'Cancel'}
+                  {isRTL ? 'ط¥ظ„ط؛ط§ط،' : 'Cancel'}
                 </GhostButton>
                 <PrimaryButton type="submit" disabled={submittingEdit}>
                   {submittingEdit
                     ? isRTL
-                      ? 'جاري الحفظ...'
+                      ? 'ط¬ط§ط±ظٹ ط§ظ„ط­ظپط¸...'
                       : 'Saving Changes...'
                     : isRTL
-                    ? 'حفظ الدور والصلاحيات'
+                    ? 'ط­ظپط¸ ط§ظ„ط¯ظˆط± ظˆط§ظ„طµظ„ط§ط­ظٹط§طھ'
                     : 'Save Role & Permissions'}
                 </PrimaryButton>
               </div>
@@ -1500,7 +1500,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
             }}
           >
             <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600, color: 'var(--color-ink)' }}>
-              {isRTL ? 'إعادة تعيين كلمة المرور' : 'Reset User Password'}
+              {isRTL ? 'ط¥ط¹ط§ط¯ط© طھط¹ظٹظٹظ† ظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط±' : 'Reset User Password'}
             </h3>
             <p style={{ margin: '0 0 14px', fontSize: 12.5, color: 'var(--color-text-muted)' }}>
               {resetTargetUser.full_name} ({resetTargetUser.email})
@@ -1513,7 +1513,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                   minLength={6}
                   value={newPasswordVal}
                   onChange={e => setNewPasswordVal(e.target.value)}
-                  placeholder={isRTL ? 'كلمة المرور الجديدة (6 أحرف على الأقل)' : 'New password (min 6 characters)'}
+                  placeholder={isRTL ? 'ظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط± ط§ظ„ط¬ط¯ظٹط¯ط© (6 ط£ط­ط±ظپ ط¹ظ„ظ‰ ط§ظ„ط£ظ‚ظ„)' : 'New password (min 6 characters)'}
                   style={{
                     width: '100%',
                     height: 36,
@@ -1544,15 +1544,15 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
                 <GhostButton type="button" onClick={() => setResetTargetUser(null)}>
-                  {isRTL ? 'إلغاء' : 'Cancel'}
+                  {isRTL ? 'ط¥ظ„ط؛ط§ط،' : 'Cancel'}
                 </GhostButton>
                 <PrimaryButton type="submit" disabled={submittingReset}>
                   {submittingReset
                     ? isRTL
-                      ? 'جاري التحديث...'
+                      ? 'ط¬ط§ط±ظٹ ط§ظ„طھط­ط¯ظٹط«...'
                       : 'Updating...'
                     : isRTL
-                    ? 'تحديث كلمة المرور'
+                    ? 'طھط­ط¯ظٹط« ظƒظ„ظ…ط© ط§ظ„ظ…ط±ظˆط±'
                     : 'Update Password'}
                 </PrimaryButton>
               </div>
@@ -1580,16 +1580,16 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
             }}
           >
             <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600, color: '#991B1B' }}>
-              {isRTL ? 'تأكيد حذف حساب المستخدم' : 'Confirm User Deletion'}
+              {isRTL ? 'طھط£ظƒظٹط¯ ط­ط°ظپ ط­ط³ط§ط¨ ط§ظ„ظ…ط³طھط®ط¯ظ…' : 'Confirm User Deletion'}
             </h3>
             <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--color-text-secondary)' }}>
               {isRTL
-                ? `هل أنت متأكد من حذف حساب "${deleteTargetUser.full_name}" (${deleteTargetUser.email})؟ يمكنك بدلاً من ذلك تعطيل الحساب مع الاحتفاظ بالسجل.`
+                ? `ظ‡ظ„ ط£ظ†طھ ظ…طھط£ظƒط¯ ظ…ظ† ط­ط°ظپ ط­ط³ط§ط¨ "${deleteTargetUser.full_name}" (${deleteTargetUser.email})طں ظٹظ…ظƒظ†ظƒ ط¨ط¯ظ„ط§ظ‹ ظ…ظ† ط°ظ„ظƒ طھط¹ط·ظٹظ„ ط§ظ„ط­ط³ط§ط¨ ظ…ط¹ ط§ظ„ط§ط­طھظپط§ط¸ ط¨ط§ظ„ط³ط¬ظ„.`
                 : `Are you sure you want to permanently remove "${deleteTargetUser.full_name}" (${deleteTargetUser.email})? Tip: You can deactivate the account instead to preserve historical links.`}
             </p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
               <GhostButton type="button" onClick={() => setDeleteTargetUser(null)}>
-                {isRTL ? 'إلغاء' : 'Cancel'}
+                {isRTL ? 'ط¥ظ„ط؛ط§ط،' : 'Cancel'}
               </GhostButton>
               <PrimaryButton
                 type="button"
@@ -1599,10 +1599,10 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
               >
                 {submittingDelete
                   ? isRTL
-                    ? 'جاري الحذف...'
+                    ? 'ط¬ط§ط±ظٹ ط§ظ„ط­ط°ظپ...'
                     : 'Deleting...'
                   : isRTL
-                  ? 'حذف الحساب نهائياً'
+                  ? 'ط­ط°ظپ ط§ظ„ط­ط³ط§ط¨ ظ†ظ‡ط§ط¦ظٹط§ظ‹'
                   : 'Delete Account'}
               </PrimaryButton>
             </div>

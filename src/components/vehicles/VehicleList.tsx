@@ -21,6 +21,7 @@ import {
   PlateChip,
   StatusText,
   TableFooter,
+  EmptyDash,
 } from '../common/EditorialUI';
 
 /* ── Design-token helpers ──────────────────────────────────────── */
@@ -404,9 +405,7 @@ export const VehicleList: React.FC = () => {
                     {driver.full_name}
                   </span>
                 ) : (
-                  <span style={{ fontSize: 13, color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
-                    {isRTL ? 'غير محدد' : 'Unassigned'}
-                  </span>
+                  <EmptyDash label={isRTL ? 'غير محدد' : 'Unassigned'} />
                 )}
               </td>
 
@@ -426,9 +425,7 @@ export const VehicleList: React.FC = () => {
                     {trailer.trailer_id}
                   </span>
                 ) : (
-                  <span style={{ fontSize: 13, color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
-                    {isRTL ? 'غير مقترن' : 'Unassigned'}
-                  </span>
+                  <EmptyDash label={isRTL ? 'غير مقترن' : 'Unassigned'} />
                 )}
               </td>
 

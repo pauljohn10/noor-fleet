@@ -52,6 +52,7 @@
 
   body {
     font-family: var(--font-ui);
+    font-size: 14px;
     background: var(--color-page-bg);
     color: var(--color-ink);
     -webkit-font-smoothing: antialiased;
@@ -269,6 +270,23 @@
 /* Data table row hover & keyboard focus action reveal */
 .nf-data-row {
   transition: background-color 0.1s ease;
+}
+
+.nf-data-row td {
+  font-size: 14px;
+}
+
+.nf-sortable-th .nf-sort-icon {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.nf-sortable-th:hover .nf-sort-icon {
+  opacity: 0.65;
+}
+
+.nf-sortable-th.is-sorted .nf-sort-icon {
+  opacity: 1;
 }
 
 .nf-data-row:hover {

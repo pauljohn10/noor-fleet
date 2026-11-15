@@ -170,7 +170,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
           {isRTL ? 'النور المتحدة' : 'Al-Noor United'}
         </div>
         <div style={{
-          fontSize: 11,
+          fontSize: 12,
           color: 'var(--color-text-muted)',
           marginTop: 3,
           fontFamily: uiFont,
@@ -194,9 +194,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
           <div key={group.id} style={{ marginBottom: 4 }}>
             {/* Group label */}
             <div style={{
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: 500,
-              color: 'var(--color-text-muted)',
+              color: 'var(--color-text-secondary)',
               padding: '8px 8px 4px',
               letterSpacing: '0.01em',
               textTransform: 'none',
@@ -232,7 +232,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
         }}>
           {currentProfile.full_name}
         </div>
-        <div style={{ color: 'var(--color-text-muted)', fontSize: 11, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ color: 'var(--color-text-muted)', fontSize: 12, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
           <span
             style={{
               width: 6,
@@ -286,7 +286,7 @@ const NavBtn: React.FC<{
     textAlign: 'start',
     padding: '6px 8px',
     borderRadius: 4,
-    fontSize: 13.5,
+    fontSize: 14,
     fontWeight: isActive ? 600 : 400,
     fontFamily: isRTL ? 'var(--font-arabic)' : 'var(--font-ui)',
     cursor: 'pointer',

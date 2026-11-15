@@ -228,7 +228,7 @@ export const InspectionFormMobile: React.FC<InspectionFormMobileProps> = ({ onCo
               >
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <span className="text-[11px] font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                    <span className="text-[12px] font-medium" style={{ color: 'var(--color-text-muted)' }}>
                       {t(item.category)}
                     </span>
                     <h4 className="font-semibold text-xs mt-0.5" style={{ color: 'var(--color-ink)' }}>
@@ -331,7 +331,7 @@ export const InspectionFormMobile: React.FC<InspectionFormMobileProps> = ({ onCo
                                 borderInlineStart: `3px solid ${sevStripe}`,
                                 borderRadius: 'var(--radius-sm)',
                               }}
-                              className="py-1.5 font-semibold text-[11px] transition-colors cursor-pointer"
+                              className="py-1.5 font-semibold text-[12px] transition-colors cursor-pointer"
                             >
                               {t(sev)}
                             </button>

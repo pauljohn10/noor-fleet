@@ -62,7 +62,7 @@ export const PageHeader: React.FC<{
         alignItems: 'flex-start',
         justifyContent: 'space-between',
         gap: 16,
-        marginBottom: 28,
+        marginBottom: 24,
       }}
     >
       <div style={{ minWidth: 0 }}>
@@ -70,10 +70,10 @@ export const PageHeader: React.FC<{
           <h1
             style={{
               fontFamily: isRTL ? 'var(--font-arabic)' : 'var(--font-brand)',
-              fontSize: 36,
-              fontWeight: 700,
-              letterSpacing: isRTL ? '0' : '-0.04em',
-              lineHeight: 1.1,
+              fontSize: 30,
+              fontWeight: 600,
+              letterSpacing: isRTL ? '0' : '-0.025em',
+              lineHeight: 1.15,
               color: 'var(--color-ink)',
               margin: 0,
             }}
@@ -344,7 +344,7 @@ export const StatusTabs: React.FC<{
                 gap: 6,
                 padding: '10px 14px',
                 marginBottom: -1,
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: isActive ? 600 : 400,
                 color: isActive ? 'var(--color-ink)' : 'var(--color-text-secondary)',
                 background: 'none',
@@ -373,7 +373,7 @@ export const StatusTabs: React.FC<{
                 <span
                   style={{
                     fontFamily: 'var(--font-mono)',
-                    fontSize: 12,
+                    fontSize: 13,
                     color: isActive ? 'var(--color-ink)' : 'var(--color-text-muted)',
                   }}
                 >
@@ -568,6 +568,11 @@ export const DataTable: React.FC<{
               return (
                 <th
                   key={idx}
+                  className={
+                    sortCtrl && col.label
+                      ? `nf-sortable-th ${isSorted ? 'is-sorted' : ''}`
+                      : undefined
+                  }
                   onClick={
                     sortCtrl && col.label
                       ? () => sortCtrl.onSort(idx, col.label)
@@ -576,7 +581,7 @@ export const DataTable: React.FC<{
                   style={{
                     width: col.width,
                     padding: '11px 16px',
-                    fontSize: 12,
+                    fontSize: 12.5,
                     fontWeight: 500,
                     color: isSorted ? 'var(--color-ink)' : 'var(--color-text-muted)',
                     textAlign: col.align || 'start',
@@ -594,9 +599,9 @@ export const DataTable: React.FC<{
                     <span>{col.label}</span>
                     {sortCtrl && col.label && (
                       <span
+                        className="nf-sort-icon"
                         style={{
-                          fontSize: 10,
-                          opacity: isSorted ? 1 : 0.35,
+                          fontSize: 12,
                           fontFamily: 'var(--font-mono)',
                         }}
                       >
@@ -769,6 +774,22 @@ export const PlateChip: React.FC<{
   </span>
 );
 
+export const EmptyDash: React.FC<{
+  label?: string;
+}> = ({ label = 'Unassigned' }) => (
+  <span
+    aria-label={label}
+    title={label}
+    style={{
+      color: 'var(--color-text-muted)',
+      fontStyle: 'normal',
+      fontSize: 14,
+    }}
+  >
+    —
+  </span>
+);
+
 export const StatusText: React.FC<{
   label: string;
   color?: string;
@@ -776,11 +797,11 @@ export const StatusText: React.FC<{
   monoSubtext?: boolean;
 }> = ({ label, color = 'var(--color-text-secondary)', subtext, monoSubtext = false }) => (
   <div>
-    <span style={{ fontSize: 13, fontWeight: 500, color }}>{label}</span>
+    <span style={{ fontSize: 13, fontWeight: 600, color }}>{label}</span>
     {subtext && (
       <div
         style={{
-          fontSize: 11.5,
+          fontSize: 12.5,
           color: 'var(--color-text-muted)',
           marginTop: 2,
           fontFamily: monoSubtext ? 'var(--font-mono)' : 'inherit',
@@ -906,55 +927,16 @@ export const TableFooter: React.FC<{
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: '12px 16px',
-        padding: '16px 0 4px',
-        fontSize: 12,
+        padding: '14px 0 4px',
+        fontSize: 13,
+        fontFamily: 'var(--font-ui)',
         color: 'var(--color-text-muted)',
-        borderTop: '1px solid var(--color-row-divider)',
       }}
     >
-      {/* Left: Record summary, current page & total count */}
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          gap: '8px 14px',
-        }}
-      >
-        <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>
-          {summaryText}
-        </span>
-        <span style={{ color: 'var(--color-border)' }}>·</span>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5 }}>
-          {rangeStart !== null && rangeEnd !== null && totalRecords !== undefined ? (
-            isRTL ? (
-              <>
-                عرض <strong>{rangeStart}–{rangeEnd}</strong> من إجمالي{' '}
-                <strong style={{ color: 'var(--color-ink)' }}>{totalRecords}</strong> · صفحة{' '}
-                <strong style={{ color: 'var(--color-ink)' }}>{safePage}</strong> من{' '}
-                <strong style={{ color: 'var(--color-ink)' }}>{safeTotalPages}</strong>
-              </>
-            ) : (
-              <>
-                Showing <strong style={{ color: 'var(--color-ink)' }}>{rangeStart}–{rangeEnd}</strong> of{' '}
-                <strong style={{ color: 'var(--color-ink)' }}>{totalRecords}</strong> · Page{' '}
-                <strong style={{ color: 'var(--color-ink)' }}>{safePage}</strong> of{' '}
-                <strong style={{ color: 'var(--color-ink)' }}>{safeTotalPages}</strong>
-              </>
-            )
-          ) : isRTL ? (
-            <>
-              صفحة <strong style={{ color: 'var(--color-ink)' }}>{safePage}</strong> من{' '}
-              <strong style={{ color: 'var(--color-ink)' }}>{safeTotalPages}</strong>
-            </>
-          ) : (
-            <>
-              Page <strong style={{ color: 'var(--color-ink)' }}>{safePage}</strong> of{' '}
-              <strong style={{ color: 'var(--color-ink)' }}>{safeTotalPages}</strong>
-            </>
-          )}
-        </span>
-      </div>
+      {/* Left: Single-line record summary in UI font */}
+      <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500, fontFamily: 'var(--font-ui)' }}>
+        {summaryText}
+      </span>
 
       {/* Right: Rows per page selector + Page numbers (1, 2, 3...) + Previous / Next */}
       <div
@@ -968,7 +950,7 @@ export const TableFooter: React.FC<{
       >
         {onPageSizeChange && (
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 12, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 12.5, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
               {isRTL ? 'سجلات لكل صفحة:' : 'Rows per page:'}
             </span>
             <select
@@ -978,9 +960,9 @@ export const TableFooter: React.FC<{
               style={{
                 height: 30,
                 padding: '0 8px',
-                fontSize: 12,
-                fontFamily: 'var(--font-mono)',
-                fontWeight: 600,
+                fontSize: 12.5,
+                fontFamily: 'var(--font-ui)',
+                fontWeight: 500,
                 background: 'var(--color-surface)',
                 border: '1px solid var(--color-input-border)',
                 borderRadius: 4,

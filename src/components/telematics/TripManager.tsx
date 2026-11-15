@@ -219,7 +219,7 @@ export const TripManager: React.FC = () => {
         ],
         metadata: [
           { label: t('Status Filter'), value: statusFilter === 'ALL' ? t('All') : t(statusFilter.replace(/_/g, ' ')) },
-          { label: t('Export Scope'), value: isRTL ? `${filteredTrips.length} رحلة مدرجة` : `${filteredTrips.length} trips listed` },
+          { label: t('Export Scope'), value: isRTL ? `${filteredTrips.length} ط±ط­ظ„ط© ظ…ط¯ط±ط¬ط©` : `${filteredTrips.length} trips listed` },
         ],
       }
     );
@@ -238,9 +238,9 @@ export const TripManager: React.FC = () => {
       <PageHeader
         title={
           <>
-            {isRTL ? 'الرحلات والمسارات' : 'Trip & Route'}
+            {isRTL ? 'ط§ظ„ط±ط­ظ„ط§طھ ظˆط§ظ„ظ…ط³ط§ط±ط§طھ' : 'Trip & Route'}
             <br />
-            {isRTL ? 'وإدارة الإرسال' : 'Dispatch Management'}
+            {isRTL ? 'ظˆط¥ط¯ط§ط±ط© ط§ظ„ط¥ط±ط³ط§ظ„' : 'Dispatch Management'}
           </>
         }
         subtitle={t('Dispatch fuel tanker trucks, calculate road distance, and verify odometer against GPS route history.')}
@@ -250,7 +250,7 @@ export const TripManager: React.FC = () => {
               {t('Excel')}
             </GhostButton>
             <GhostButton onClick={handleExportPDF} title={t('Export to PDF')}>
-              {isRTL ? 'تقرير PDF' : 'PDF report'}
+              {isRTL ? 'طھظ‚ط±ظٹط± PDF' : 'PDF report'}
             </GhostButton>
             {canManage && (
               <PrimaryButton onClick={() => setIsModalOpen(true)}>
@@ -279,7 +279,7 @@ export const TripManager: React.FC = () => {
         columns={[
           { label: t('Trip Number') },
           { label: t('Assigned Vehicle & Driver') },
-          { label: t('Route Origin → Destination') },
+          { label: t('Route Origin â†’ Destination') },
           { label: t('Cargo & Payload') },
           { label: t('Distance Audit (KM)') },
           { label: t('Status') },
@@ -332,7 +332,7 @@ export const TripManager: React.FC = () => {
                 <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }} dir="ltr">
                   {trip.trip_number}
                 </div>
-                <div style={{ fontSize: 11.5, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)', marginTop: 2 }} dir="ltr">
+                <div style={{ fontSize: 12.5, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)', marginTop: 2 }} dir="ltr">
                   {new Date(trip.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-ca-gregory' : 'en-US')}
                 </div>
               </td>
@@ -350,7 +350,7 @@ export const TripManager: React.FC = () => {
                   {t('Driver')}: {drv ? drv.full_name : t('Unassigned')}
                   {trl ? (
                     <span style={{ color: 'var(--color-text-muted)', marginInlineStart: 8 }}>
-                      • {t('Trailer')}: <span dir="ltr">{trl.trailer_id} ({trl.plate_number})</span>
+                      â€¢ {t('Trailer')}: <span dir="ltr">{trl.trailer_id} ({trl.plate_number})</span>
                     </span>
                   ) : null}
                 </div>
@@ -371,7 +371,7 @@ export const TripManager: React.FC = () => {
                     display: 'inline-block',
                     padding: '2px 7px',
                     borderRadius: 4,
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: 600,
                     background: trip.is_loaded_trip ? '#FFFBEB' : 'var(--color-page-bg)',
                     color: trip.is_loaded_trip ? '#92400E' : 'var(--color-text-secondary)',
@@ -389,7 +389,7 @@ export const TripManager: React.FC = () => {
                 <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>
                   {dist ? <><span dir="ltr">{dist.toFixed(1)}</span> {t('KM')}</> : '--'}
                 </div>
-                <div style={{ fontSize: 11.5, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>
+                <div style={{ fontSize: 12.5, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>
                   {t('Start Odo')}: <span dir="ltr">{(trip.start_odometer_km || 0).toLocaleString()}</span> {t('KM')}
                 </div>
               </td>
@@ -428,10 +428,10 @@ export const TripManager: React.FC = () => {
             <div style={{ padding: 14, borderRadius: 4, background: 'var(--color-surface)', border: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 8, borderBottom: '1px solid var(--color-row-divider)' }}>
                 <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--color-ink)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ width: 20, height: 20, borderRadius: 4, background: 'var(--color-ink)', color: 'var(--color-page-bg)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600 }}>1</span>
+                  <span style={{ width: 20, height: 20, borderRadius: 4, background: 'var(--color-ink)', color: 'var(--color-page-bg)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600 }}>1</span>
                   {t('Fleet Asset & Driver Allocation')}
                 </span>
-                <span style={{ fontSize: 11.5, color: 'var(--color-text-muted)' }}>{t('* Required fields')}</span>
+                <span style={{ fontSize: 12.5, color: 'var(--color-text-muted)' }}>{t('* Required fields')}</span>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
@@ -494,7 +494,7 @@ export const TripManager: React.FC = () => {
             <div style={{ padding: 14, borderRadius: 4, background: 'var(--color-surface)', border: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', paddingBottom: 8, borderBottom: '1px solid var(--color-row-divider)' }}>
                 <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--color-ink)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ width: 20, height: 20, borderRadius: 4, background: 'var(--color-ink)', color: 'var(--color-page-bg)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600 }}>2</span>
+                  <span style={{ width: 20, height: 20, borderRadius: 4, background: 'var(--color-ink)', color: 'var(--color-page-bg)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600 }}>2</span>
                   {t('Route, Cargo & Gate Pass Notes')}
                 </span>
               </div>

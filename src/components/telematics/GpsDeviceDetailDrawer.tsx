@@ -42,7 +42,7 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={`${t('GPS TRACKER')}: ${device.device_imei}`}
-      subtitle={`${device.device_model} • ${t('Hardware Registry Detail')}`}
+      subtitle={`${device.device_model} â€¢ ${t('Hardware Registry Detail')}`}
       width="xl"
     >
       <div className="space-y-4 text-xs" style={{ color: 'var(--color-ink)' }}>
@@ -60,7 +60,7 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
         >
           <div>
             <div
-              className="text-[11px] font-medium"
+              className="text-[12px] font-medium"
               style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)' }}
             >
               {t('PHYSICAL HARDWARE IDENTIFIER')}
@@ -72,7 +72,7 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
             >
               {device.device_imei}
             </div>
-            <div className="text-[11px] mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>
+            <div className="text-[12px] mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>
               {t('Model')}: {device.device_model}
             </div>
           </div>
@@ -82,7 +82,7 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
               {isGpsProviderConnected ? t('Active Live Feed') : t('Awaiting Provider Feed')}
             </Badge>
             <div
-              className="text-[11px] mt-1"
+              className="text-[12px] mt-1"
               style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)' }}
             >
               {t('ERP State')}: {device.is_active ? t('Active Unit') : t('Deactivated')}
@@ -93,7 +93,7 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
         {/* Section 1: Assigned Tractor Head Truck */}
         <div className="space-y-2">
           <div
-            className="text-[11px] font-semibold pb-1 flex items-center gap-1.5"
+            className="text-[12px] font-semibold pb-1 flex items-center gap-1.5"
             style={{
               color: 'var(--color-text-muted)',
               borderBottom: '1px solid var(--color-row-divider)',
@@ -121,14 +121,14 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
                     </span>
                     <PlateChip plate={linkedVehicle.plate_number} />
                     <span
-                      className="text-[11px]"
+                      className="text-[12px]"
                       style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)' }}
                     >
                       {t('Fleet #')}
                       <span dir="ltr">{linkedVehicle.fleet_number}</span>
                     </span>
                   </div>
-                  <div className="text-[11px] mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>
+                  <div className="text-[12px] mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>
                     {linkedVehicle.make} {linkedVehicle.model} (<span dir="ltr">{linkedVehicle.year}</span>)
                   </div>
                 </div>
@@ -139,11 +139,11 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
               </div>
 
               <div
-                className="grid grid-cols-2 gap-2 pt-2 text-[11px]"
+                className="grid grid-cols-2 gap-2 pt-2 text-[12px]"
                 style={{ borderTop: '1px solid var(--color-row-divider)' }}
               >
                 <div>
-                  <span className="text-[10px] block" style={{ color: 'var(--color-text-muted)' }}>
+                  <span className="text-[12px] block" style={{ color: 'var(--color-text-muted)' }}>
                     {t('CURRENT ODOMETER')}
                   </span>
                   <span
@@ -155,7 +155,7 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
                 </div>
 
                 <div>
-                  <span className="text-[10px] block" style={{ color: 'var(--color-text-muted)' }}>
+                  <span className="text-[12px] block" style={{ color: 'var(--color-text-muted)' }}>
                     {t('ENGINE HOURS')}
                   </span>
                   <span
@@ -168,7 +168,7 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
                 </div>
 
                 <div>
-                  <span className="text-[10px] block" style={{ color: 'var(--color-text-muted)' }}>
+                  <span className="text-[12px] block" style={{ color: 'var(--color-text-muted)' }}>
                     {t('ASSIGNED DEPOT')}
                   </span>
                   <span className="font-semibold" style={{ color: 'var(--color-ink)' }}>
@@ -177,11 +177,11 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
                 </div>
 
                 <div>
-                  <span className="text-[10px] block" style={{ color: 'var(--color-text-muted)' }}>
+                  <span className="text-[12px] block" style={{ color: 'var(--color-text-muted)' }}>
                     {t('VIN / CHASSIS NUMBER')}
                   </span>
                   <span
-                    className="text-[10px]"
+                    className="text-[12px]"
                     style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-secondary)' }}
                     dir="ltr"
                   >
@@ -204,7 +204,7 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
               <div className="font-semibold text-xs" style={{ color: 'var(--color-ink)' }}>
                 {t('No Vehicle Linked')}
               </div>
-              <p className="text-[11px] mt-0.5">
+              <p className="text-[12px] mt-0.5">
                 {t('This unit is currently stored in inventory as an unassigned spare device.')}
               </p>
             </div>
@@ -214,7 +214,7 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
         {/* Section 2: Hardware Telemetry Metrics */}
         <div className="space-y-2">
           <div
-            className="text-[11px] font-semibold pb-1 flex items-center gap-1.5"
+            className="text-[12px] font-semibold pb-1 flex items-center gap-1.5"
             style={{
               color: 'var(--color-text-muted)',
               borderBottom: '1px solid var(--color-row-divider)',
@@ -277,7 +277,7 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
                 }}
               >
                 <div
-                  className="flex items-center justify-between text-[10px]"
+                  className="flex items-center justify-between text-[12px]"
                   style={{ color: 'var(--color-text-muted)' }}
                 >
                   <span>{cell.label}</span>
@@ -289,7 +289,7 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
                 >
                   {cell.val}
                 </div>
-                <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                <span className="text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                   {cell.sub}
                 </span>
               </div>
@@ -300,7 +300,7 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
         {/* Section 3: Installation & Commissioning */}
         <div className="space-y-2">
           <div
-            className="text-[11px] font-semibold pb-1 flex items-center gap-1.5"
+            className="text-[12px] font-semibold pb-1 flex items-center gap-1.5"
             style={{
               color: 'var(--color-text-muted)',
               borderBottom: '1px solid var(--color-row-divider)',
@@ -318,9 +318,9 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
               borderRadius: 'var(--radius-sm)',
             }}
           >
-            <div className="grid grid-cols-2 gap-2 text-[11px]">
+            <div className="grid grid-cols-2 gap-2 text-[12px]">
               <div>
-                <span className="text-[10px] block" style={{ color: 'var(--color-text-muted)' }}>
+                <span className="text-[12px] block" style={{ color: 'var(--color-text-muted)' }}>
                   {t('INSTALLATION DATE')}
                 </span>
                 <span
@@ -332,7 +332,7 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
                 </span>
               </div>
               <div>
-                <span className="text-[10px] block" style={{ color: 'var(--color-text-muted)' }}>
+                <span className="text-[12px] block" style={{ color: 'var(--color-text-muted)' }}>
                   {t('ODOMETER AT INSTALL')}
                 </span>
                 <span
@@ -343,7 +343,7 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
                 </span>
               </div>
               <div>
-                <span className="text-[10px] block" style={{ color: 'var(--color-text-muted)' }}>
+                <span className="text-[12px] block" style={{ color: 'var(--color-text-muted)' }}>
                   {t('HARDWARE SERIAL')}
                 </span>
                 <span
@@ -354,7 +354,7 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
                 </span>
               </div>
               <div>
-                <span className="text-[10px] block" style={{ color: 'var(--color-text-muted)' }}>
+                <span className="text-[12px] block" style={{ color: 'var(--color-text-muted)' }}>
                   {t('REGISTRATION DATE')}
                 </span>
                 <span style={{ color: 'var(--color-text-secondary)' }} dir="ltr">
@@ -368,7 +368,7 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
             {device.notes && (
               <div className="pt-2" style={{ borderTop: '1px solid var(--color-row-divider)' }}>
                 <span
-                  className="text-[10px] block font-semibold mb-1"
+                  className="text-[12px] block font-semibold mb-1"
                   style={{ color: 'var(--color-text-muted)' }}
                 >
                   {t('INSTALLATION NOTES')}
@@ -400,7 +400,7 @@ export const GpsDeviceDetailDrawer: React.FC<GpsDeviceDetailDrawerProps> = ({
                 if (
                   confirm(
                     isRTL
-                      ? `هل أنت متأكد من حذف جهاز التتبع ${device.device_imei}؟`
+                      ? `ظ‡ظ„ ط£ظ†طھ ظ…طھط£ظƒط¯ ظ…ظ† ط­ط°ظپ ط¬ظ‡ط§ط² ط§ظ„طھطھط¨ط¹ ${device.device_imei}طں`
                       : `Are you sure you want to delete GPS device ${device.device_imei}?`
                   )
                 ) {

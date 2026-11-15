@@ -20,6 +20,7 @@ import {
   PlateChip,
   StatusText,
   TableFooter,
+  EmptyDash,
 } from '../common/EditorialUI';
 
 const getExpiryStatus = (dateStr: string): { color: string; hint: string; hintAr: string } => {
@@ -377,7 +378,7 @@ export const DriverList: React.FC = () => {
                 >
                   {d.license_expiry || '—'}
                 </div>
-                <div style={{ fontSize: 11.5, color: expStatus.color, marginTop: 2 }}>
+                <div style={{ fontSize: 12.5, color: expStatus.color, marginTop: 2 }}>
                   {isRTL ? expStatus.hintAr : expStatus.hint}
                 </div>
               </td>
@@ -390,7 +391,7 @@ export const DriverList: React.FC = () => {
                     <div
                       style={{
                         fontFamily: 'var(--font-mono)',
-                        fontSize: 11.5,
+                        fontSize: 12.5,
                         color: 'var(--color-text-muted)',
                         marginTop: 4,
                       }}
@@ -399,9 +400,7 @@ export const DriverList: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <span style={{ fontSize: 13, color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
-                    {t('Unassigned')}
-                  </span>
+                  <EmptyDash label={t('Unassigned')} />
                 )}
               </td>
 

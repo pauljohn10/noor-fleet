@@ -55,24 +55,24 @@ export const StorekeeperDashboard: React.FC<StorekeeperDashboardProps> = ({ onNa
   return (
     <PageContainer>
       <PageHeader
-        title={isRTL ? 'مخزن قطع الغيار وإدارة المستودع' : 'Spare Parts Store & Warehouse Control'}
+        title={isRTL ? 'ظ…ط®ط²ظ† ظ‚ط·ط¹ ط§ظ„ط؛ظٹط§ط± ظˆط¥ط¯ط§ط±ط© ط§ظ„ظ…ط³طھظˆط¯ط¹' : 'Spare Parts Store & Warehouse Control'}
         subtitle={
           isRTL
-            ? 'إدارة كتالوج قطع الغيار، استلام التوريدات، الصرف لأوامر العمل، وجرد المخزون الفعلي.'
+            ? 'ط¥ط¯ط§ط±ط© ظƒطھط§ظ„ظˆط¬ ظ‚ط·ط¹ ط§ظ„ط؛ظٹط§ط±طŒ ط§ط³طھظ„ط§ظ… ط§ظ„طھظˆط±ظٹط¯ط§طھطŒ ط§ظ„طµط±ظپ ظ„ط£ظˆط§ظ…ط± ط§ظ„ط¹ظ…ظ„طŒ ظˆط¬ط±ط¯ ط§ظ„ظ…ط®ط²ظˆظ† ط§ظ„ظپط¹ظ„ظٹ.'
             : 'Spare parts catalog management, inventory receiving, work order issuances, and physical stock count audits.'
         }
         badge={
           <Badge variant="purple" size="sm">
-            {isRTL ? 'لوحة أمين المستودع' : 'Storekeeper Focus'}
+            {isRTL ? 'ظ„ظˆط­ط© ط£ظ…ظٹظ† ط§ظ„ظ…ط³طھظˆط¯ط¹' : 'Storekeeper Focus'}
           </Badge>
         }
         actions={
           <>
             <SecondaryButton onClick={() => onNavigateTab('inventory')}>
-              <Package className="w-4 h-4" /> {isRTL ? 'كتالوج المخزون الكامل' : 'Full Inventory Catalog'}
+              <Package className="w-4 h-4" /> {isRTL ? 'ظƒطھط§ظ„ظˆط¬ ط§ظ„ظ…ط®ط²ظˆظ† ط§ظ„ظƒط§ظ…ظ„' : 'Full Inventory Catalog'}
             </SecondaryButton>
             <PrimaryButton onClick={() => setIsPartModalOpen(true)}>
-              <Plus className="w-4 h-4" /> {isRTL ? 'إضافة قطعة غيار' : 'Add Spare Part SKU'}
+              <Plus className="w-4 h-4" /> {isRTL ? 'ط¥ط¶ط§ظپط© ظ‚ط·ط¹ط© ط؛ظٹط§ط±' : 'Add Spare Part SKU'}
             </PrimaryButton>
           </>
         }
@@ -81,54 +81,54 @@ export const StorekeeperDashboard: React.FC<StorekeeperDashboardProps> = ({ onNa
       {/* Storekeeper KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
         <StatCard
-          title={isRTL ? 'إجمالي الأصناف' : 'Total parts SKUs'}
+          title={isRTL ? 'ط¥ط¬ظ…ط§ظ„ظٹ ط§ظ„ط£طµظ†ط§ظپ' : 'Total parts SKUs'}
           value={parts.length}
-          subtitle={isRTL ? 'أصناف الكتالوج' : 'Catalog SKUs'}
+          subtitle={isRTL ? 'ط£طµظ†ط§ظپ ط§ظ„ظƒطھط§ظ„ظˆط¬' : 'Catalog SKUs'}
           icon={<Package className="w-4 h-4" />}
           color="purple"
           onClick={() => onNavigateTab('inventory')}
         />
         <StatCard
-          title={isRTL ? 'مخزون منخفض' : 'Low stock'}
+          title={isRTL ? 'ظ…ط®ط²ظˆظ† ظ…ظ†ط®ظپط¶' : 'Low stock'}
           value={lowStockParts.length}
-          subtitle={isRTL ? '≤ الحد الأدنى' : '≤ Min Threshold'}
+          subtitle={isRTL ? 'â‰¤ ط§ظ„ط­ط¯ ط§ظ„ط£ط¯ظ†ظ‰' : 'â‰¤ Min Threshold'}
           icon={<AlertTriangle className="w-4 h-4" />}
           color="amber"
           onClick={() => onNavigateTab('inventory')}
         />
         <StatCard
-          title={isRTL ? 'نفد المخزون' : 'Out of stock'}
+          title={isRTL ? 'ظ†ظپط¯ ط§ظ„ظ…ط®ط²ظˆظ†' : 'Out of stock'}
           value={outOfStockParts.length}
-          subtitle={isRTL ? '0 متوفر' : '0 Available'}
+          subtitle={isRTL ? '0 ظ…طھظˆظپط±' : '0 Available'}
           icon={<AlertTriangle className="w-4 h-4" />}
           color="rose"
           onClick={() => onNavigateTab('inventory')}
         />
         <StatCard
-          title={isRTL ? 'استلام اليوم' : 'Today receiving'}
+          title={isRTL ? 'ط§ط³طھظ„ط§ظ… ط§ظ„ظٹظˆظ…' : 'Today receiving'}
           value={12}
-          subtitle={isRTL ? 'سندات استلام' : 'Stock Receipts'}
+          subtitle={isRTL ? 'ط³ظ†ط¯ط§طھ ط§ط³طھظ„ط§ظ…' : 'Stock Receipts'}
           icon={<ArrowDownRight className="w-4 h-4" />}
           color="emerald"
         />
         <StatCard
-          title={isRTL ? 'صرف اليوم' : 'Today issues'}
+          title={isRTL ? 'طµط±ظپ ط§ظ„ظٹظˆظ…' : 'Today issues'}
           value={18}
-          subtitle={isRTL ? 'مصروفة للأوامر' : 'Issued to WOs'}
+          subtitle={isRTL ? 'ظ…طµط±ظˆظپط© ظ„ظ„ط£ظˆط§ظ…ط±' : 'Issued to WOs'}
           icon={<ArrowUpRight className="w-4 h-4" />}
           color="blue"
         />
         <StatCard
-          title={isRTL ? 'المرتجعات' : 'Returns'}
+          title={isRTL ? 'ط§ظ„ظ…ط±طھط¬ط¹ط§طھ' : 'Returns'}
           value={2}
-          subtitle={isRTL ? 'قطع غير مستخدمة' : 'Unused Parts'}
+          subtitle={isRTL ? 'ظ‚ط·ط¹ ط؛ظٹط± ظ…ط³طھط®ط¯ظ…ط©' : 'Unused Parts'}
           icon={<RefreshCw className="w-4 h-4" />}
           color="amber"
         />
         <StatCard
-          title={isRTL ? 'تقييم المخزن' : 'Store valuation'}
-          value={`${(totalValuation || 0).toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`}
-          subtitle={isRTL ? 'قيمة المخزون' : 'Stock Value'}
+          title={isRTL ? 'طھظ‚ظٹظٹظ… ط§ظ„ظ…ط®ط²ظ†' : 'Store valuation'}
+          value={`${(totalValuation || 0).toLocaleString()} ${isRTL ? 'ط±.ط³' : 'SAR'}`}
+          subtitle={isRTL ? 'ظ‚ظٹظ…ط© ط§ظ„ظ…ط®ط²ظˆظ†' : 'Stock Value'}
           icon={<DollarSign className="w-4 h-4" />}
           color="emerald"
         />
@@ -138,20 +138,20 @@ export const StorekeeperDashboard: React.FC<StorekeeperDashboardProps> = ({ onNa
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Low Stock Warning List */}
         <EditorialSection
-          title={isRTL ? 'أصناف المخزون المنخفض' : 'Low Stock Inventory Items'}
+          title={isRTL ? 'ط£طµظ†ط§ظپ ط§ظ„ظ…ط®ط²ظˆظ† ط§ظ„ظ…ظ†ط®ظپط¶' : 'Low Stock Inventory Items'}
           marginTop={0}
         >
           <DataTable
             showPagination
             columns={[
-              { label: isRTL ? 'القطعة' : 'Part' },
-              { label: isRTL ? 'الموقع' : 'Rack' },
-              { label: isRTL ? 'المخزون' : 'Stock', align: 'end' },
+              { label: isRTL ? 'ط§ظ„ظ‚ط·ط¹ط©' : 'Part' },
+              { label: isRTL ? 'ط§ظ„ظ…ظˆظ‚ط¹' : 'Rack' },
+              { label: isRTL ? 'ط§ظ„ظ…ط®ط²ظˆظ†' : 'Stock', align: 'end' },
             ]}
             isEmpty={lowStockParts.length === 0}
             emptyMessage={
               isRTL
-                ? 'لا توجد تحذيرات نقص مخزون. جميع الأصناف فوق الحد الأدنى.'
+                ? 'ظ„ط§ طھظˆط¬ط¯ طھط­ط°ظٹط±ط§طھ ظ†ظ‚طµ ظ…ط®ط²ظˆظ†. ط¬ظ…ظٹط¹ ط§ظ„ط£طµظ†ط§ظپ ظپظˆظ‚ ط§ظ„ط­ط¯ ط§ظ„ط£ط¯ظ†ظ‰.'
                 : 'No low stock warnings. All items above threshold.'
             }
           >
@@ -166,7 +166,7 @@ export const StorekeeperDashboard: React.FC<StorekeeperDashboardProps> = ({ onNa
                 actions={
                   <RowAction
                     icon={<Plus className="w-4 h-4" />}
-                    title={isRTL ? '+ استلام مخزون' : '+ Receive Stock'}
+                    title={isRTL ? '+ ط§ط³طھظ„ط§ظ… ظ…ط®ط²ظˆظ†' : '+ Receive Stock'}
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedPart(p);
@@ -191,11 +191,11 @@ export const StorekeeperDashboard: React.FC<StorekeeperDashboardProps> = ({ onNa
                   </p>
                 </td>
                 <td className="py-3 pe-3 whitespace-nowrap">
-                  <StatusText label={p.location_rack || '—'} color="var(--color-text-secondary)" />
+                  <StatusText label={p.location_rack || 'â€”'} color="var(--color-text-secondary)" />
                 </td>
                 <td className="py-3 text-end whitespace-nowrap">
                   <Badge variant="amber" size="sm">
-                    {p.current_stock} / {isRTL ? 'أدنى' : 'Min'} {p.minimum_stock}
+                    {p.current_stock} / {isRTL ? 'ط£ط¯ظ†ظ‰' : 'Min'} {p.minimum_stock}
                   </Badge>
                 </td>
               </DataRow>
@@ -205,19 +205,19 @@ export const StorekeeperDashboard: React.FC<StorekeeperDashboardProps> = ({ onNa
 
         {/* Most Consumed Parts */}
         <EditorialSection
-          title={isRTL ? 'القطع الأكثر استهلاكاً' : 'Most Frequently Consumed Parts'}
+          title={isRTL ? 'ط§ظ„ظ‚ط·ط¹ ط§ظ„ط£ظƒط«ط± ط§ط³طھظ‡ظ„ط§ظƒط§ظ‹' : 'Most Frequently Consumed Parts'}
           marginTop={0}
         >
           <DataTable
             showPagination
             columns={[
-              { label: isRTL ? 'القطعة' : 'Part' },
-              { label: isRTL ? 'الموقع' : 'Rack' },
-              { label: isRTL ? 'التكلفة' : 'Unit cost', align: 'end' },
+              { label: isRTL ? 'ط§ظ„ظ‚ط·ط¹ط©' : 'Part' },
+              { label: isRTL ? 'ط§ظ„ظ…ظˆظ‚ط¹' : 'Rack' },
+              { label: isRTL ? 'ط§ظ„طھظƒظ„ظپط©' : 'Unit cost', align: 'end' },
             ]}
             hasActionsColumn={false}
             isEmpty={parts.length === 0}
-            emptyMessage={isRTL ? 'لا توجد قطع غيار مسجلة.' : 'No spare parts available.'}
+            emptyMessage={isRTL ? 'ظ„ط§ طھظˆط¬ط¯ ظ‚ط·ط¹ ط؛ظٹط§ط± ظ…ط³ط¬ظ„ط©.' : 'No spare parts available.'}
           >
             {parts.map((p) => (
               <DataRow key={p.id} stripeColor={EDITORIAL_STATUS.blue.stripe}>
@@ -237,7 +237,7 @@ export const StorekeeperDashboard: React.FC<StorekeeperDashboardProps> = ({ onNa
                   </p>
                 </td>
                 <td className="py-3 pe-3 whitespace-nowrap">
-                  <StatusText label={p.location_rack || '—'} color="var(--color-text-secondary)" />
+                  <StatusText label={p.location_rack || 'â€”'} color="var(--color-text-secondary)" />
                 </td>
                 <td className="py-3 text-end whitespace-nowrap">
                   <span
@@ -248,7 +248,7 @@ export const StorekeeperDashboard: React.FC<StorekeeperDashboardProps> = ({ onNa
                       color: 'var(--color-ink)',
                     }}
                   >
-                    {p.unit_cost} {isRTL ? 'ر.س' : 'SAR'} / {p.unit}
+                    {p.unit_cost} {isRTL ? 'ط±.ط³' : 'SAR'} / {p.unit}
                   </span>
                 </td>
               </DataRow>
@@ -265,11 +265,11 @@ export const StorekeeperDashboard: React.FC<StorekeeperDashboardProps> = ({ onNa
           onClose={() => setIsReceiveOpen(false)}
           title={
             isRTL
-              ? `استلام مخزون: ${selectedPart.part_number}`
+              ? `ط§ط³طھظ„ط§ظ… ظ…ط®ط²ظˆظ†: ${selectedPart.part_number}`
               : `Receive Stock: ${selectedPart.part_number}`
           }
           subtitle={`${selectedPart.part_name || selectedPart.name || ''} | ${
-            isRTL ? 'الرصيد الحالي:' : 'Current In Stock:'
+            isRTL ? 'ط§ظ„ط±طµظٹط¯ ط§ظ„ط­ط§ظ„ظٹ:' : 'Current In Stock:'
           } ${selectedPart.current_stock} ${selectedPart.unit || selectedPart.unit_of_measure || ''}`}
           maxWidth="md"
         >
@@ -288,23 +288,23 @@ export const StorekeeperDashboard: React.FC<StorekeeperDashboardProps> = ({ onNa
                   {selectedPart.part_name || selectedPart.name}
                 </span>
                 <span
-                  className="text-[11px]"
+                  className="text-[12px]"
                   style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)' }}
                 >
-                  {isRTL ? 'الموقع:' : 'Location:'}{' '}
+                  {isRTL ? 'ط§ظ„ظ…ظˆظ‚ط¹:' : 'Location:'}{' '}
                   {selectedPart.location_rack ||
                     selectedPart.warehouse_location ||
-                    (isRTL ? 'المستودع الرئيسي' : 'Main Depot')}
+                    (isRTL ? 'ط§ظ„ظ…ط³طھظˆط¯ط¹ ط§ظ„ط±ط¦ظٹط³ظٹ' : 'Main Depot')}
                 </span>
               </div>
               <Badge variant="amber" size="sm">
-                {isRTL ? 'الكمية:' : 'Qty:'} {selectedPart.current_stock}
+                {isRTL ? 'ط§ظ„ظƒظ…ظٹط©:' : 'Qty:'} {selectedPart.current_stock}
               </Badge>
             </div>
 
             <div>
               <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--color-ink)' }}>
-                {isRTL ? 'الكمية المستلمة' : 'Quantity Received'}{' '}
+                {isRTL ? 'ط§ظ„ظƒظ…ظٹط© ط§ظ„ظ…ط³طھظ„ظ…ط©' : 'Quantity Received'}{' '}
                 <span style={{ color: EDITORIAL_STATUS.red.text }}>*</span>
               </label>
               <input
@@ -323,9 +323,9 @@ export const StorekeeperDashboard: React.FC<StorekeeperDashboardProps> = ({ onNa
               style={{ borderTop: '1px solid var(--color-row-divider)' }}
             >
               <SecondaryButton type="button" onClick={() => setIsReceiveOpen(false)}>
-                {isRTL ? 'إلغاء' : 'Cancel'}
+                {isRTL ? 'ط¥ظ„ط؛ط§ط،' : 'Cancel'}
               </SecondaryButton>
-              <PrimaryButton type="submit">{isRTL ? 'تأكيد الاستلام' : 'Confirm Receipt'}</PrimaryButton>
+              <PrimaryButton type="submit">{isRTL ? 'طھط£ظƒظٹط¯ ط§ظ„ط§ط³طھظ„ط§ظ…' : 'Confirm Receipt'}</PrimaryButton>
             </div>
           </form>
         </Modal>

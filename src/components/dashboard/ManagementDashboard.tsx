@@ -80,12 +80,12 @@ export const ManagementDashboard: React.FC<ManagementDashboardProps> = ({ onNavi
   const totalMonthlyMaintCost = workOrders.reduce((sum, w) => sum + (w.total_cost || 0), 0);
 
   const dateFilterOptions: { key: DateFilterOption; label: string }[] = [
-    { key: 'TODAY', label: isRTL ? 'اليوم' : 'Today' },
-    { key: 'WEEK', label: isRTL ? 'هذا الأسبوع' : 'This Week' },
-    { key: 'MONTH', label: isRTL ? 'هذا الشهر' : 'This Month' },
-    { key: 'YEAR', label: isRTL ? 'هذه السنة' : 'This Year' },
-    { key: 'ALL', label: isRTL ? 'كل الأوقات' : 'All Time' },
-    { key: 'CUSTOM', label: isRTL ? 'فترة مخصصة' : 'Custom Range' },
+    { key: 'TODAY', label: isRTL ? 'ط§ظ„ظٹظˆظ…' : 'Today' },
+    { key: 'WEEK', label: isRTL ? 'ظ‡ط°ط§ ط§ظ„ط£ط³ط¨ظˆط¹' : 'This Week' },
+    { key: 'MONTH', label: isRTL ? 'ظ‡ط°ط§ ط§ظ„ط´ظ‡ط±' : 'This Month' },
+    { key: 'YEAR', label: isRTL ? 'ظ‡ط°ظ‡ ط§ظ„ط³ظ†ط©' : 'This Year' },
+    { key: 'ALL', label: isRTL ? 'ظƒظ„ ط§ظ„ط£ظˆظ‚ط§طھ' : 'All Time' },
+    { key: 'CUSTOM', label: isRTL ? 'ظپطھط±ط© ظ…ط®طµطµط©' : 'Custom Range' },
   ];
 
   const getWoStripe = (priority: string, status: string) => {
@@ -98,10 +98,10 @@ export const ManagementDashboard: React.FC<ManagementDashboardProps> = ({ onNavi
   return (
     <PageContainer>
       <PageHeader
-        title={isRTL ? 'لوحة الإدارة التنفيذية للأسطول والورشة' : 'Executive Fleet & Workshop Dashboard'}
+        title={isRTL ? 'ظ„ظˆط­ط© ط§ظ„ط¥ط¯ط§ط±ط© ط§ظ„طھظ†ظپظٹط°ظٹط© ظ„ظ„ط£ط³ط·ظˆظ„ ظˆط§ظ„ظˆط±ط´ط©' : 'Executive Fleet & Workshop Dashboard'}
         subtitle={
           isRTL
-            ? 'التتبع المباشر، أوامر العمل، تنبيهات المخزون، ومؤشرات صيانة صهاريج الوقود.'
+            ? 'ط§ظ„طھطھط¨ط¹ ط§ظ„ظ…ط¨ط§ط´ط±طŒ ط£ظˆط§ظ…ط± ط§ظ„ط¹ظ…ظ„طŒ طھظ†ط¨ظٹظ‡ط§طھ ط§ظ„ظ…ط®ط²ظˆظ†طŒ ظˆظ…ط¤ط´ط±ط§طھ طµظٹط§ظ†ط© طµظ‡ط§ط±ظٹط¬ ط§ظ„ظˆظ‚ظˆط¯.'
             : 'Real-time telemetry, job card pipeline, stock alerts, and fuel tanker maintenance metrics.'
         }
       />
@@ -124,7 +124,7 @@ export const ManagementDashboard: React.FC<ManagementDashboardProps> = ({ onNavi
                 className="nf-field"
                 style={{ height: 32, padding: '4px 8px', width: 'auto' }}
               />
-              <span style={{ color: 'var(--color-text-muted)' }}>{isRTL ? 'إلى' : 'to'}</span>
+              <span style={{ color: 'var(--color-text-muted)' }}>{isRTL ? 'ط¥ظ„ظ‰' : 'to'}</span>
               <input
                 type="date"
                 value={customDateRange.endDate}
@@ -140,97 +140,97 @@ export const ManagementDashboard: React.FC<ManagementDashboardProps> = ({ onNavi
       {/* Primary KPI Grid (12 Counters) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
         <StatCard
-          title={isRTL ? 'إجمالي الشاحنات' : 'Total trucks'}
+          title={isRTL ? 'ط¥ط¬ظ…ط§ظ„ظٹ ط§ظ„ط´ط§ط­ظ†ط§طھ' : 'Total trucks'}
           value={totalTrucks}
-          subtitle={isRTL ? 'رؤوس الشاحنات' : 'Tractor Heads'}
+          subtitle={isRTL ? 'ط±ط¤ظˆط³ ط§ظ„ط´ط§ط­ظ†ط§طھ' : 'Tractor Heads'}
           icon={<Truck className="w-4 h-4" />}
           color="amber"
           onClick={() => onNavigateTab('vehicles')}
         />
         <StatCard
-          title={isRTL ? 'إجمالي المقطورات' : 'Total trailers'}
+          title={isRTL ? 'ط¥ط¬ظ…ط§ظ„ظٹ ط§ظ„ظ…ظ‚ط·ظˆط±ط§طھ' : 'Total trailers'}
           value={totalTrailers}
-          subtitle={isRTL ? 'وحدات الصهاريج' : 'Tanker Units'}
+          subtitle={isRTL ? 'ظˆط­ط¯ط§طھ ط§ظ„طµظ‡ط§ط±ظٹط¬' : 'Tanker Units'}
           icon={<Truck className="w-4 h-4" />}
           color="cyan"
           onClick={() => onNavigateTab('trailers')}
         />
         <StatCard
-          title={isRTL ? 'متاح للخدمة' : 'Available'}
+          title={isRTL ? 'ظ…طھط§ط­ ظ„ظ„ط®ط¯ظ…ط©' : 'Available'}
           value={availableCount}
-          subtitle={isRTL ? 'جاهزة للرحلة' : 'Ready for Trip'}
+          subtitle={isRTL ? 'ط¬ط§ظ‡ط²ط© ظ„ظ„ط±ط­ظ„ط©' : 'Ready for Trip'}
           icon={<Truck className="w-4 h-4" />}
           color="emerald"
           onClick={() => onNavigateTab('vehicles')}
         />
         <StatCard
-          title={isRTL ? 'في رحلة' : 'On trip'}
+          title={isRTL ? 'ظپظٹ ط±ط­ظ„ط©' : 'On trip'}
           value={onTripCount}
-          subtitle={isRTL ? 'توصيل نشط' : 'Active Delivery'}
+          subtitle={isRTL ? 'طھظˆطµظٹظ„ ظ†ط´ط·' : 'Active Delivery'}
           icon={<Truck className="w-4 h-4" />}
           color="blue"
           onClick={() => onNavigateTab('vehicles')}
         />
         <StatCard
-          title={isRTL ? 'في الورشة' : 'In workshop'}
+          title={isRTL ? 'ظپظٹ ط§ظ„ظˆط±ط´ط©' : 'In workshop'}
           value={inWorkshopCount}
-          subtitle={isRTL ? 'تحت الصيانة' : 'Under Maintenance'}
+          subtitle={isRTL ? 'طھط­طھ ط§ظ„طµظٹط§ظ†ط©' : 'Under Maintenance'}
           icon={<Wrench className="w-4 h-4" />}
           color="amber"
           onClick={() => onNavigateTab('workOrders')}
         />
         <StatCard
-          title={isRTL ? 'خارج الخدمة' : 'Out of service'}
+          title={isRTL ? 'ط®ط§ط±ط¬ ط§ظ„ط®ط¯ظ…ط©' : 'Out of service'}
           value={outOfServiceCount}
-          subtitle={isRTL ? 'وحدات متوقفة' : 'Grounded Units'}
+          subtitle={isRTL ? 'ظˆط­ط¯ط§طھ ظ…طھظˆظ‚ظپط©' : 'Grounded Units'}
           icon={<AlertTriangle className="w-4 h-4" />}
           color="rose"
           onClick={() => onNavigateTab('vehicles')}
         />
         <StatCard
-          title={isRTL ? 'صيانة مستحقة' : 'Maintenance due'}
+          title={isRTL ? 'طµظٹط§ظ†ط© ظ…ط³طھط­ظ‚ط©' : 'Maintenance due'}
           value={maintenanceDueCount}
-          subtitle={isRTL ? 'مستحقة / متأخرة' : 'PM Overdue/Due'}
+          subtitle={isRTL ? 'ظ…ط³طھط­ظ‚ط© / ظ…طھط£ط®ط±ط©' : 'PM Overdue/Due'}
           icon={<CalendarCheck className="w-4 h-4" />}
           color="purple"
           onClick={() => onNavigateTab('preventive')}
         />
         <StatCard
-          title={isRTL ? 'وثائق تنتهي قريباً' : 'Docs expiring'}
+          title={isRTL ? 'ظˆط«ط§ط¦ظ‚ طھظ†طھظ‡ظٹ ظ‚ط±ظٹط¨ط§ظ‹' : 'Docs expiring'}
           value={docsExpiringCount}
-          subtitle={isRTL ? '≤ 30 يوم للانتهاء' : '≤ 30 Days Expiry'}
+          subtitle={isRTL ? 'â‰¤ 30 ظٹظˆظ… ظ„ظ„ط§ظ†طھظ‡ط§ط،' : 'â‰¤ 30 Days Expiry'}
           icon={<FileText className="w-4 h-4" />}
           color="amber"
           onClick={() => onNavigateTab('documents')}
         />
         <StatCard
-          title={isRTL ? 'أوامر عمل مفتوحة' : 'Open job cards'}
+          title={isRTL ? 'ط£ظˆط§ظ…ط± ط¹ظ…ظ„ ظ…ظپطھظˆط­ط©' : 'Open job cards'}
           value={openWOsCount}
-          subtitle={isRTL ? 'أوامر عمل نشطة' : 'Active Work Orders'}
+          subtitle={isRTL ? 'ط£ظˆط§ظ…ط± ط¹ظ…ظ„ ظ†ط´ط·ط©' : 'Active Work Orders'}
           icon={<Wrench className="w-4 h-4" />}
           color="blue"
           onClick={() => onNavigateTab('workOrders')}
         />
         <StatCard
-          title={isRTL ? 'أعمال متأخرة' : 'Overdue jobs'}
+          title={isRTL ? 'ط£ط¹ظ…ط§ظ„ ظ…طھط£ط®ط±ط©' : 'Overdue jobs'}
           value={overdueWOsCount}
-          subtitle={isRTL ? 'تجاوزت الموعد' : 'Passed Completion'}
+          subtitle={isRTL ? 'طھط¬ط§ظˆط²طھ ط§ظ„ظ…ظˆط¹ط¯' : 'Passed Completion'}
           icon={<AlertTriangle className="w-4 h-4" />}
           color="rose"
           onClick={() => onNavigateTab('workOrders')}
         />
         <StatCard
-          title={isRTL ? 'قطع منخفضة المخزون' : 'Low stock parts'}
+          title={isRTL ? 'ظ‚ط·ط¹ ظ…ظ†ط®ظپط¶ط© ط§ظ„ظ…ط®ط²ظˆظ†' : 'Low stock parts'}
           value={lowStockCount}
-          subtitle={isRTL ? 'أقل من الحد الأدنى' : 'Below Min Threshold'}
+          subtitle={isRTL ? 'ط£ظ‚ظ„ ظ…ظ† ط§ظ„ط­ط¯ ط§ظ„ط£ط¯ظ†ظ‰' : 'Below Min Threshold'}
           icon={<Package className="w-4 h-4" />}
           color="rose"
           onClick={() => onNavigateTab('inventory')}
         />
         <StatCard
-          title={isRTL ? 'التكلفة الشهرية' : 'Monthly cost'}
-          value={`${(totalMonthlyMaintCost || 0).toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`}
-          subtitle={isRTL ? 'إجمالي الصيانة' : 'Total Maintenance'}
+          title={isRTL ? 'ط§ظ„طھظƒظ„ظپط© ط§ظ„ط´ظ‡ط±ظٹط©' : 'Monthly cost'}
+          value={`${(totalMonthlyMaintCost || 0).toLocaleString()} ${isRTL ? 'ط±.ط³' : 'SAR'}`}
+          subtitle={isRTL ? 'ط¥ط¬ظ…ط§ظ„ظٹ ط§ظ„طµظٹط§ظ†ط©' : 'Total Maintenance'}
           icon={<DollarSign className="w-4 h-4" />}
           color="emerald"
           onClick={() => onNavigateTab('analytics')}
@@ -252,23 +252,23 @@ export const ManagementDashboard: React.FC<ManagementDashboardProps> = ({ onNavi
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Work Orders */}
         <EditorialSection
-          title={isRTL ? 'بطاقات العمل والإصلاحات النشطة' : 'Active Job Cards & Repairs'}
+          title={isRTL ? 'ط¨ط·ط§ظ‚ط§طھ ط§ظ„ط¹ظ…ظ„ ظˆط§ظ„ط¥طµظ„ط§ط­ط§طھ ط§ظ„ظ†ط´ط·ط©' : 'Active Job Cards & Repairs'}
           action={
             <GhostButton onClick={() => onNavigateTab('workOrders')}>
-              {isRTL ? 'عرض الكل' : 'View All'} <ArrowUpRight className="w-3.5 h-3.5" />
+              {isRTL ? 'ط¹ط±ط¶ ط§ظ„ظƒظ„' : 'View All'} <ArrowUpRight className="w-3.5 h-3.5" />
             </GhostButton>
           }
           marginTop={0}
         >
           <DataTable
             columns={[
-              { label: isRTL ? 'رقم الأمر' : 'Job card' },
-              { label: isRTL ? 'الوصف' : 'Issue' },
-              { label: isRTL ? 'الحالة والتكلفة' : 'Status & cost', align: 'end' },
+              { label: isRTL ? 'ط±ظ‚ظ… ط§ظ„ط£ظ…ط±' : 'Job card' },
+              { label: isRTL ? 'ط§ظ„ظˆطµظپ' : 'Issue' },
+              { label: isRTL ? 'ط§ظ„ط­ط§ظ„ط© ظˆط§ظ„طھظƒظ„ظپط©' : 'Status & cost', align: 'end' },
             ]}
             hasActionsColumn={false}
             isEmpty={workOrders.length === 0}
-            emptyMessage={isRTL ? 'لا توجد أوامر عمل حالياً.' : 'No work orders recorded.'}
+            emptyMessage={isRTL ? 'ظ„ط§ طھظˆط¬ط¯ ط£ظˆط§ظ…ط± ط¹ظ…ظ„ ط­ط§ظ„ظٹط§ظ‹.' : 'No work orders recorded.'}
           >
             {workOrders.slice(0, 4).map((wo) => (
               <DataRow
@@ -305,9 +305,9 @@ export const ManagementDashboard: React.FC<ManagementDashboardProps> = ({ onNavi
                   >
                     {wo.problem_description}
                   </p>
-                  <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>
+                  <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>
                     {isRTL
-                      ? `تاريخ البلاغ: ${new Date(wo.date_reported).toLocaleDateString('ar-SA')}`
+                      ? `طھط§ط±ظٹط® ط§ظ„ط¨ظ„ط§ط؛: ${new Date(wo.date_reported).toLocaleDateString('ar-SA')}`
                       : `Reported: ${new Date(wo.date_reported).toLocaleDateString()}`}
                   </p>
                 </td>
@@ -324,7 +324,7 @@ export const ManagementDashboard: React.FC<ManagementDashboardProps> = ({ onNavi
                         color: 'var(--color-text-secondary)',
                       }}
                     >
-                      {wo.total_cost} {isRTL ? 'ر.س' : 'SAR'}
+                      {wo.total_cost} {isRTL ? 'ط±.ط³' : 'SAR'}
                     </span>
                   </div>
                 </td>
@@ -335,25 +335,25 @@ export const ManagementDashboard: React.FC<ManagementDashboardProps> = ({ onNavi
 
         {/* Low Stock Inventory Warnings */}
         <EditorialSection
-          title={isRTL ? 'تنبيه انخفاض مخزون قطع الغيار' : 'Low Stock Spare Parts Alert'}
+          title={isRTL ? 'طھظ†ط¨ظٹظ‡ ط§ظ†ط®ظپط§ط¶ ظ…ط®ط²ظˆظ† ظ‚ط·ط¹ ط§ظ„ط؛ظٹط§ط±' : 'Low Stock Spare Parts Alert'}
           action={
             <GhostButton onClick={() => onNavigateTab('inventory')}>
-              {isRTL ? 'إدارة المخزن' : 'Manage Store'} <ArrowUpRight className="w-3.5 h-3.5" />
+              {isRTL ? 'ط¥ط¯ط§ط±ط© ط§ظ„ظ…ط®ط²ظ†' : 'Manage Store'} <ArrowUpRight className="w-3.5 h-3.5" />
             </GhostButton>
           }
           marginTop={0}
         >
           <DataTable
             columns={[
-              { label: isRTL ? 'القطعة' : 'Part' },
-              { label: isRTL ? 'الموقع' : 'Rack' },
-              { label: isRTL ? 'المخزون' : 'Stock level', align: 'end' },
+              { label: isRTL ? 'ط§ظ„ظ‚ط·ط¹ط©' : 'Part' },
+              { label: isRTL ? 'ط§ظ„ظ…ظˆظ‚ط¹' : 'Rack' },
+              { label: isRTL ? 'ط§ظ„ظ…ط®ط²ظˆظ†' : 'Stock level', align: 'end' },
             ]}
             hasActionsColumn={false}
             isEmpty={lowStockParts.length === 0}
             emptyMessage={
               isRTL
-                ? 'جميع مستويات مخزون قطع الغيار أعلى من الحد الأدنى.'
+                ? 'ط¬ظ…ظٹط¹ ظ…ط³طھظˆظٹط§طھ ظ…ط®ط²ظˆظ† ظ‚ط·ط¹ ط§ظ„ط؛ظٹط§ط± ط£ط¹ظ„ظ‰ ظ…ظ† ط§ظ„ط­ط¯ ط§ظ„ط£ط¯ظ†ظ‰.'
                 : 'All spare parts inventory levels are above minimum thresholds.'
             }
           >
@@ -379,21 +379,21 @@ export const ManagementDashboard: React.FC<ManagementDashboardProps> = ({ onNavi
                   </p>
                 </td>
                 <td className="py-3 pe-3 whitespace-nowrap">
-                  <StatusText label={p.location_rack || '—'} color="var(--color-text-secondary)" />
+                  <StatusText label={p.location_rack || 'â€”'} color="var(--color-text-secondary)" />
                 </td>
                 <td className="py-3 text-end whitespace-nowrap">
                   <div className="flex flex-col items-end gap-1">
                     <Badge variant="danger" size="sm">
-                      {p.current_stock} / {isRTL ? 'الأدنى' : 'Min'} {p.minimum_stock} {p.unit}
+                      {p.current_stock} / {isRTL ? 'ط§ظ„ط£ط¯ظ†ظ‰' : 'Min'} {p.minimum_stock} {p.unit}
                     </Badge>
                     <span
                       style={{
                         fontFamily: 'var(--font-mono)',
-                        fontSize: 11,
+                        fontSize: 12,
                         color: 'var(--color-text-muted)',
                       }}
                     >
-                      {p.unit_cost} {isRTL ? 'ر.س' : 'SAR'} / {p.unit}
+                      {p.unit_cost} {isRTL ? 'ط±.ط³' : 'SAR'} / {p.unit}
                     </span>
                   </div>
                 </td>

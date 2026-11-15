@@ -148,11 +148,11 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
   const getTestTypeTitle = (type: TankTestType) => {
     switch (type) {
       case 'Hydrostatic Test':
-        return isRTL ? 'الاختبار الهيدروستاتيكي (Hydrostatic Test)' : 'Hydrostatic Test';
+        return isRTL ? 'ط§ظ„ط§ط®طھط¨ط§ط± ط§ظ„ظ‡ظٹط¯ط±ظˆط³طھط§طھظٹظƒظٹ (Hydrostatic Test)' : 'Hydrostatic Test';
       case 'Pneumatic Test':
-        return isRTL ? 'الاختبار الهوائي (Pneumatic Test)' : 'Pneumatic Test';
+        return isRTL ? 'ط§ظ„ط§ط®طھط¨ط§ط± ط§ظ„ظ‡ظˆط§ط¦ظٹ (Pneumatic Test)' : 'Pneumatic Test';
       case 'Vacuum Test':
-        return isRTL ? 'اختبار التفريغ (Vacuum Test)' : 'Vacuum Test';
+        return isRTL ? 'ط§ط®طھط¨ط§ط± ط§ظ„طھظپط±ظٹط؛ (Vacuum Test)' : 'Vacuum Test';
     }
   };
 
@@ -160,15 +160,15 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
     switch (type) {
       case 'Hydrostatic Test':
         return isRTL
-          ? 'فحص ضغط جسم الصهريج والحواجز الداخلية بالماء المضغوط للتحقق من المتانة وعدم وجود تسريب.'
+          ? 'ظپط­طµ ط¶ط؛ط· ط¬ط³ظ… ط§ظ„طµظ‡ط±ظٹط¬ ظˆط§ظ„ط­ظˆط§ط¬ط² ط§ظ„ط¯ط§ط®ظ„ظٹط© ط¨ط§ظ„ظ…ط§ط، ط§ظ„ظ…ط¶ط؛ظˆط· ظ„ظ„طھط­ظ‚ظ‚ ظ…ظ† ط§ظ„ظ…طھط§ظ†ط© ظˆط¹ط¯ظ… ظˆط¬ظˆط¯ طھط³ط±ظٹط¨.'
           : 'Pressurized water integrity test for tank shell, compartment bulkheads, and welds.';
       case 'Pneumatic Test':
         return isRTL
-          ? 'فحص منظومة الصمامات الهوائية، صمامات القاع (API)، وخطوط استرجاع الأبخرة تحت الضغط.'
+          ? 'ظپط­طµ ظ…ظ†ط¸ظˆظ…ط© ط§ظ„طµظ…ط§ظ…ط§طھ ط§ظ„ظ‡ظˆط§ط¦ظٹط©طŒ طµظ…ط§ظ…ط§طھ ط§ظ„ظ‚ط§ط¹ (API)طŒ ظˆط®ط·ظˆط· ط§ط³طھط±ط¬ط§ط¹ ط§ظ„ط£ط¨ط®ط±ط© طھط­طھ ط§ظ„ط¶ط؛ط·.'
           : 'Pressurized air leak test for pneumatic emergency foot valves, API bottom valves, and vapor lines.';
       case 'Vacuum Test':
         return isRTL
-          ? 'فحص مقاومة الصهريج وصمامات التنفيس للضغط السلبي والتفريغ لمنع انهيار الجدران.'
+          ? 'ظپط­طµ ظ…ظ‚ط§ظˆظ…ط© ط§ظ„طµظ‡ط±ظٹط¬ ظˆطµظ…ط§ظ…ط§طھ ط§ظ„طھظ†ظپظٹط³ ظ„ظ„ط¶ط؛ط· ط§ظ„ط³ظ„ط¨ظٹ ظˆط§ظ„طھظپط±ظٹط؛ ظ„ظ…ظ†ط¹ ط§ظ†ظ‡ظٹط§ط± ط§ظ„ط¬ط¯ط±ط§ظ†.'
           : 'Negative-pressure vacuum stability and breather relief valve verification test.';
     }
   };
@@ -176,14 +176,14 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
   const getStatusBadge = (status: TankTestStatus) => {
     switch (status) {
       case 'PASS':
-        return <Badge variant="success">{isRTL ? 'ناجح (PASS)' : 'PASS'}</Badge>;
+        return <Badge variant="success">{isRTL ? 'ظ†ط§ط¬ط­ (PASS)' : 'PASS'}</Badge>;
       case 'FAIL':
-        return <Badge variant="danger">{isRTL ? 'راسب (FAIL)' : 'FAIL'}</Badge>;
+        return <Badge variant="danger">{isRTL ? 'ط±ط§ط³ط¨ (FAIL)' : 'FAIL'}</Badge>;
       case 'PENDING':
-        return <Badge variant="amber">{isRTL ? 'قيد الانتظار (PENDING)' : 'PENDING'}</Badge>;
+        return <Badge variant="amber">{isRTL ? 'ظ‚ظٹط¯ ط§ظ„ط§ظ†طھط¸ط§ط± (PENDING)' : 'PENDING'}</Badge>;
       case 'NOT TESTED':
       default:
-        return <Badge variant="slate">{isRTL ? 'غير مفحوص (NOT TESTED)' : 'NOT TESTED'}</Badge>;
+        return <Badge variant="slate">{isRTL ? 'ط؛ظٹط± ظ…ظپط­ظˆطµ (NOT TESTED)' : 'NOT TESTED'}</Badge>;
     }
   };
 
@@ -278,7 +278,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
             </div>
           </div>
           <div className="text-end">
-            <p className="text-[11px] font-semibold" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-[12px] font-semibold" style={{ color: 'var(--color-text-muted)' }}>
               {t('Total Capacity')}
             </p>
             <p
@@ -305,7 +305,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
               }}
             >
               <div>
-                <p className="font-semibold text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="font-semibold text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                   {t('Tank Shell Type')}
                 </p>
                 <p className="font-semibold text-xs mt-0.5" style={{ color: 'var(--color-ink)' }}>
@@ -313,7 +313,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                 </p>
               </div>
               <div>
-                <p className="font-semibold text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="font-semibold text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                   {t('Compartments')}
                 </p>
                 <p className="font-semibold text-xs mt-0.5" style={{ color: 'var(--color-ink)' }}>
@@ -321,7 +321,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                 </p>
               </div>
               <div>
-                <p className="font-semibold text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="font-semibold text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                   {t('Manufacturer')}
                 </p>
                 <p className="font-semibold text-xs mt-0.5" style={{ color: 'var(--color-ink)' }}>
@@ -329,7 +329,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                 </p>
               </div>
               <div>
-                <p className="font-semibold text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="font-semibold text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                   {t('Model & Year')}
                 </p>
                 <p className="font-medium text-xs mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>
@@ -337,7 +337,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                 </p>
               </div>
               <div>
-                <p className="font-semibold text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="font-semibold text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                   {t('Current Depot')}
                 </p>
                 <p className="font-medium text-xs mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>
@@ -374,7 +374,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                     >
                       {assignedTractor.vehicle_id} ({assignedTractor.plate_number})
                     </span>
-                    <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                    <p className="text-[12px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
                       {assignedTractor.make} {assignedTractor.model}
                     </p>
                   </div>
@@ -407,13 +407,13 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                     <Settings2 className="w-4 h-4" style={{ color: 'var(--color-ink)' }} />
                     <span className="font-semibold text-xs" style={{ color: 'var(--color-ink)' }}>
                       {isRTL
-                        ? 'معيار فحص الصهريج المعتمد والاختبارات المطلوبة'
+                        ? 'ظ…ط¹ظٹط§ط± ظپط­طµ ط§ظ„طµظ‡ط±ظٹط¬ ط§ظ„ظ…ط¹طھظ…ط¯ ظˆط§ظ„ط§ط®طھط¨ط§ط±ط§طھ ط§ظ„ظ…ط·ظ„ظˆط¨ط©'
                         : 'Applicable Tank Inspection Standard & Required Tests'}
                     </span>
                   </div>
-                  <p className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                  <p className="text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                     {isRTL
-                      ? 'حدد الاختبارات الإلزامية لهذا الصهريج وفقاً للمعيار الفني المطبق (ليست جميع الاختبارات الثلاثة إلزامية لكل صهريج).'
+                      ? 'ط­ط¯ط¯ ط§ظ„ط§ط®طھط¨ط§ط±ط§طھ ط§ظ„ط¥ظ„ط²ط§ظ…ظٹط© ظ„ظ‡ط°ط§ ط§ظ„طµظ‡ط±ظٹط¬ ظˆظپظ‚ط§ظ‹ ظ„ظ„ظ…ط¹ظٹط§ط± ط§ظ„ظپظ†ظٹ ط§ظ„ظ…ط·ط¨ظ‚ (ظ„ظٹط³طھ ط¬ظ…ظٹط¹ ط§ظ„ط§ط®طھط¨ط§ط±ط§طھ ط§ظ„ط«ظ„ط§ط«ط© ط¥ظ„ط²ط§ظ…ظٹط© ظ„ظƒظ„ طµظ‡ط±ظٹط¬).'
                       : 'Configure which tests are mandatory for this tanker according to its applicable inspection standard.'}
                   </p>
                 </div>
@@ -430,7 +430,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                       background: 'var(--color-page-bg)',
                       border: '1px solid var(--color-input-border)',
                       borderRadius: 'var(--radius-sm)',
-                      fontSize: 11.5,
+                      fontSize: 12.5,
                       color: 'var(--color-ink)',
                       fontWeight: 500,
                     }}
@@ -453,10 +453,10 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
 
               <div className="flex items-center gap-2 flex-wrap pt-1">
                 <span
-                  className="text-[11px] font-semibold"
+                  className="text-[12px] font-semibold"
                   style={{ color: 'var(--color-text-secondary)' }}
                 >
-                  {isRTL ? 'الاختبارات المطلوبة لهذا الصهريج:' : 'Required tests for this tanker:'}
+                  {isRTL ? 'ط§ظ„ط§ط®طھط¨ط§ط±ط§طھ ط§ظ„ظ…ط·ظ„ظˆط¨ط© ظ„ظ‡ط°ط§ ط§ظ„طµظ‡ط±ظٹط¬:' : 'Required tests for this tanker:'}
                 </span>
                 {TANK_TEST_TYPES.map((tt) => {
                   const isReq = requiredTests.includes(tt);
@@ -466,7 +466,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                       type="button"
                       disabled={!canManage || isSavingConfig}
                       onClick={() => handleToggleRequiredTest(tt)}
-                      className="px-2.5 py-1 text-[11px] font-medium flex items-center gap-1.5 transition-colors"
+                      className="px-2.5 py-1 text-[12px] font-medium flex items-center gap-1.5 transition-colors"
                       style={{
                         background: isReq ? 'var(--color-ink)' : 'var(--color-page-bg)',
                         color: isReq ? 'var(--color-surface)' : 'var(--color-text-secondary)',
@@ -477,10 +477,10 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                         cursor: canManage ? 'pointer' : 'default',
                       }}
                     >
-                      <span>{isReq ? '✓' : '○'}</span>
+                      <span>{isReq ? 'âœ“' : 'â—‹'}</span>
                       <span>{getTestTypeTitle(tt)}</span>
-                      <span style={{ opacity: 0.75, fontSize: 10 }}>
-                        ({isReq ? (isRTL ? 'إلزامي' : 'Required') : isRTL ? 'اختياري' : 'Optional'})
+                      <span style={{ opacity: 0.75, fontSize: 12 }}>
+                        ({isReq ? (isRTL ? 'ط¥ظ„ط²ط§ظ…ظٹ' : 'Required') : isRTL ? 'ط§ط®طھظٹط§ط±ظٹ' : 'Optional'})
                       </span>
                     </button>
                   );
@@ -545,36 +545,36 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                           <Badge variant={isRequired ? 'info' : 'slate'}>
                             {isRequired
                               ? isRTL
-                                ? 'اختبار إلزامي'
+                                ? 'ط§ط®طھط¨ط§ط± ط¥ظ„ط²ط§ظ…ظٹ'
                                 : 'Required by Standard'
                               : isRTL
-                              ? 'اختياري / غير إلزامي'
+                              ? 'ط§ط®طھظٹط§ط±ظٹ / ط؛ظٹط± ط¥ظ„ط²ط§ظ…ظٹ'
                               : 'Optional / Non-Mandatory'}
                           </Badge>
                           {isOverdue && (
                             <Badge variant="danger">
                               {isRTL
-                                ? `متأخر (${Math.abs(dueDiffDays!)} يوم)`
+                                ? `ظ…طھط£ط®ط± (${Math.abs(dueDiffDays!)} ظٹظˆظ…)`
                                 : `OVERDUE (${Math.abs(dueDiffDays!)}d ago)`}
                             </Badge>
                           )}
                           {isExpiringSoon && (
                             <Badge variant="amber">
                               {isRTL
-                                ? `يستحق قريباً (خلال ${dueDiffDays} يوم)`
+                                ? `ظٹط³طھط­ظ‚ ظ‚ط±ظٹط¨ط§ظ‹ (ط®ظ„ط§ظ„ ${dueDiffDays} ظٹظˆظ…)`
                                 : `DUE SOON (${dueDiffDays}d left)`}
                             </Badge>
                           )}
                           {hadPreviousFail && (
                             <Badge variant="purple">
                               {isRTL
-                                ? 'اجتاز إعادة الفحص (السجل السابق محفوظ)'
+                                ? 'ط§ط¬طھط§ط² ط¥ط¹ط§ط¯ط© ط§ظ„ظپط­طµ (ط§ظ„ط³ط¬ظ„ ط§ظ„ط³ط§ط¨ظ‚ ظ…ط­ظپظˆط¸)'
                                 : 'Re-Tested & Passed (Prior Fail Preserved)'}
                             </Badge>
                           )}
                         </div>
                         <p
-                          className="text-[11px]"
+                          className="text-[12px]"
                           style={{ color: 'var(--color-text-muted)' }}
                         >
                           {getTestTypeDescription(testType)}
@@ -623,7 +623,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                     >
                       <div>
                         <span
-                          className="block text-[10px] font-semibold"
+                          className="block text-[12px] font-semibold"
                           style={{ color: 'var(--color-text-muted)' }}
                         >
                           <Calendar className="w-3 h-3 inline me-1" />
@@ -637,13 +637,13 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                             color: 'var(--color-ink)',
                           }}
                         >
-                          {latestRecord?.test_date || (isRTL ? 'غير مسجل' : 'Not recorded')}
+                          {latestRecord?.test_date || (isRTL ? 'ط؛ظٹط± ظ…ط³ط¬ظ„' : 'Not recorded')}
                         </span>
                       </div>
 
                       <div>
                         <span
-                          className="block text-[10px] font-semibold"
+                          className="block text-[12px] font-semibold"
                           style={{ color: 'var(--color-text-muted)' }}
                         >
                           <Calendar className="w-3 h-3 inline me-1" />
@@ -662,13 +662,13 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                           }}
                         >
                           {latestRecord?.next_test_due_date ||
-                            (isRTL ? 'غير محدد' : 'Not scheduled')}
+                            (isRTL ? 'ط؛ظٹط± ظ…ط­ط¯ط¯' : 'Not scheduled')}
                         </span>
                       </div>
 
                       <div>
                         <span
-                          className="block text-[10px] font-semibold"
+                          className="block text-[12px] font-semibold"
                           style={{ color: 'var(--color-text-muted)' }}
                         >
                           <UserCheck className="w-3 h-3 inline me-1" />
@@ -678,13 +678,13 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                           className="font-semibold text-xs mt-0.5 block truncate"
                           style={{ color: 'var(--color-ink)' }}
                         >
-                          {latestRecord?.inspector_name || '—'}
+                          {latestRecord?.inspector_name || 'â€”'}
                         </span>
                       </div>
 
                       <div>
                         <span
-                          className="block text-[10px] font-semibold"
+                          className="block text-[12px] font-semibold"
                           style={{ color: 'var(--color-text-muted)' }}
                         >
                           <Building2 className="w-3 h-3 inline me-1" />
@@ -694,7 +694,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                           className="font-semibold text-xs mt-0.5 block truncate"
                           style={{ color: 'var(--color-ink)' }}
                         >
-                          {latestRecord?.inspection_center || '—'}
+                          {latestRecord?.inspection_center || 'â€”'}
                         </span>
                       </div>
                     </div>
@@ -704,7 +704,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                       <div className="space-y-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span
-                            className="text-[11px]"
+                            className="text-[12px]"
                             style={{ color: 'var(--color-text-muted)' }}
                           >
                             {t('Certificate')}:
@@ -712,7 +712,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                           {latestRecord?.certificate_number ? (
                             <span
                               dir="ltr"
-                              className="px-2 py-0.5 text-[11px] font-semibold"
+                              className="px-2 py-0.5 text-[12px] font-semibold"
                               style={{
                                 fontFamily: 'var(--font-mono)',
                                 background: 'var(--color-page-bg)',
@@ -725,16 +725,16 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                             </span>
                           ) : (
                             <span
-                              className="text-[11px] italic"
+                              className="text-[12px] italic"
                               style={{ color: 'var(--color-text-muted)' }}
                             >
-                              {isRTL ? 'لا توجد شهادة مرفقة بعد' : 'No certificate issued yet'}
+                              {isRTL ? 'ظ„ط§ طھظˆط¬ط¯ ط´ظ‡ط§ط¯ط© ظ…ط±ظپظ‚ط© ط¨ط¹ط¯' : 'No certificate issued yet'}
                             </span>
                           )}
                         </div>
                         {latestRecord?.remarks && (
                           <p
-                            className="text-[11px]"
+                            className="text-[12px]"
                             style={{ color: 'var(--color-text-secondary)' }}
                           >
                             <strong style={{ color: 'var(--color-ink)' }}>
@@ -752,7 +752,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                               <SecondaryButton
                                 type="button"
                                 onClick={() => setPreviewTestRecord(latestRecord)}
-                                style={{ height: 30, fontSize: 11.5 }}
+                                style={{ height: 30, fontSize: 12.5 }}
                               >
                                 <Eye className="w-3.5 h-3.5" />
                                 <span>{t('Preview Certificate')}</span>
@@ -769,7 +769,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                                     )
                                   )
                                 }
-                                style={{ height: 30, fontSize: 11.5 }}
+                                style={{ height: 30, fontSize: 12.5 }}
                               >
                                 <Download className="w-3.5 h-3.5" />
                                 <span>{t('Download')}</span>
@@ -785,7 +785,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                                 setIsTestFormReadOnly(false);
                                 setIsTestFormOpen(true);
                               }}
-                              style={{ height: 30, fontSize: 11.5 }}
+                              style={{ height: 30, fontSize: 12.5 }}
                             >
                               <Edit3 className="w-3.5 h-3.5" />
                               <span>{t('Edit Latest')}</span>
@@ -799,7 +799,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                                 setIsTestFormReadOnly(true);
                                 setIsTestFormOpen(true);
                               }}
-                              style={{ height: 30, fontSize: 11.5 }}
+                              style={{ height: 30, fontSize: 12.5 }}
                             >
                               <Eye className="w-3.5 h-3.5" />
                               <span>{t('Details')}</span>
@@ -872,7 +872,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                 <span className="font-semibold text-xs" style={{ color: 'var(--color-ink)' }}>
                   {t('Tanker Permits & Compliance Documents')}
                 </span>
-                <p className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                   {t('Hydrostatic Certificates, Civil Defense, Istimara & Aramco Permits')}
                 </p>
               </div>
@@ -906,7 +906,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                 <p className="font-semibold" style={{ color: 'var(--color-ink)' }}>
                   {t('No documents registered for this tanker trailer.')}
                 </p>
-                <p className="text-[11px]">
+                <p className="text-[12px]">
                   {t('Register Hydrostatic test or Aramco permits to monitor expiration dates.')}
                 </p>
               </div>
@@ -942,23 +942,23 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                         {isExpired ? (
                           <Badge variant="danger">
                             {isRTL
-                              ? `منتهي (منذ ${Math.abs(diffDays)} يوم)`
+                              ? `ظ…ظ†طھظ‡ظٹ (ظ…ظ†ط° ${Math.abs(diffDays)} ظٹظˆظ…)`
                               : `EXPIRED (${Math.abs(diffDays)}d ago)`}
                           </Badge>
                         ) : isExpiringSoon ? (
                           <Badge variant="amber">
                             {isRTL
-                              ? `قريب الانتهاء (متبقي ${diffDays} يوم)`
+                              ? `ظ‚ط±ظٹط¨ ط§ظ„ط§ظ†طھظ‡ط§ط، (ظ…طھط¨ظ‚ظٹ ${diffDays} ظٹظˆظ…)`
                               : `EXPIRING SOON (${diffDays}d left)`}
                           </Badge>
                         ) : (
                           <Badge variant="success">
-                            {isRTL ? `ساري (متبقي ${diffDays} يوم)` : `VALID (${diffDays}d left)`}
+                            {isRTL ? `ط³ط§ط±ظٹ (ظ…طھط¨ظ‚ظٹ ${diffDays} ظٹظˆظ…)` : `VALID (${diffDays}d left)`}
                           </Badge>
                         )}
                       </div>
                       <div
-                        className="flex items-center gap-3 text-[11px] flex-wrap"
+                        className="flex items-center gap-3 text-[12px] flex-wrap"
                         style={{ color: 'var(--color-text-muted)' }}
                       >
                         <span>
@@ -970,7 +970,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                             {d.document_number}
                           </strong>
                         </span>
-                        <span>•</span>
+                        <span>â€¢</span>
                         <span>
                           {t('Authority')}:{' '}
                           <strong style={{ color: 'var(--color-text-secondary)' }}>
@@ -979,7 +979,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                         </span>
                       </div>
                       <div
-                        className="flex items-center gap-3 text-[11px] flex-wrap pt-0.5"
+                        className="flex items-center gap-3 text-[12px] flex-wrap pt-0.5"
                         style={{ color: 'var(--color-text-secondary)' }}
                       >
                         {d.issue_date && (
@@ -990,7 +990,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                             </span>
                           </span>
                         )}
-                        {d.issue_date && <span>•</span>}
+                        {d.issue_date && <span>â€¢</span>}
                         <span className="font-semibold">
                           {t('Expiry Date')}:{' '}
                           <span
@@ -1010,7 +1010,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                       </div>
                       {d.updated_at && (
                         <div
-                          className="text-[11px] flex items-center gap-1.5 pt-0.5"
+                          className="text-[12px] flex items-center gap-1.5 pt-0.5"
                           style={{ color: 'var(--color-text-muted)' }}
                         >
                           <Clock className="w-3 h-3" />
@@ -1110,7 +1110,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
           attachmentUrl={previewDoc.attachment_url}
           documentNumber={previewDoc.document_number}
           documentType={previewDoc.document_type}
-          assetLabel={`${trailer.trailer_id} · ${trailer.plate_number}`}
+          assetLabel={`${trailer.trailer_id} آ· ${trailer.plate_number}`}
           issueDate={previewDoc.issue_date}
           expiryDate={previewDoc.expiry_date}
         />
@@ -1164,7 +1164,7 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
             `${trailer.trailer_id}-${previewTestRecord.test_type}`
           }
           documentType={previewTestRecord.test_type}
-          assetLabel={`${trailer.trailer_id} · ${trailer.plate_number}`}
+          assetLabel={`${trailer.trailer_id} آ· ${trailer.plate_number}`}
           issueDate={previewTestRecord.test_date || undefined}
           expiryDate={previewTestRecord.next_test_due_date || undefined}
         />

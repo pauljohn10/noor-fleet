@@ -125,7 +125,8 @@ interface FleetContextType {
   updateTrip: (id: string, updates: Partial<Trip>) => Promise<void>;
   addFuelTransaction: (tx: Omit<FuelTransaction, 'id' | 'transaction_number' | 'created_at'>) => Promise<FuelTransaction>;
   reconcileTripFuel: (tripId: string) => TripFuelReconciliation | null;
-  simulateGpsSync: () => void;
+  simulateGpsSync: () => Promise<{ success: boolean; message: string }>;
+  testGpsConnection: () => Promise<{ success: boolean; message: string; latency_ms: number }>;
   refreshData: () => Promise<void>;
 }
 
@@ -188,7 +189,7 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const [
         vehList, smallVehList, trlList, drvList, techList, partList,
         woList, schedList, insList, docList, repList,
-        tripList, devList, fuelList, auditList, notifList, tankerTestsList
+        tripList, devList, pingList, syncLogList, fuelList, auditList, notifList, tankerTestsList
       ] = await Promise.all([
         dbService.fetchVehicles().catch(err => { console.warn('Vehicles fetch:', err); return []; }),
         dbService.fetchSmallVehicles().catch(err => { console.warn('SmallVehicles fetch:', err); return []; }),
@@ -203,6 +204,8 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         dbService.fetchDefectReports().catch(err => { console.warn('Defects fetch:', err); return []; }),
         dbService.fetchTrips().catch(err => { console.warn('Trips fetch:', err); return []; }),
         dbService.fetchGpsDevices().catch(err => { console.warn('GPS Devices fetch:', err); return []; }),
+        dbService.fetchLatestVehicleGpsPings().catch(err => { console.warn('GPS Pings fetch:', err); return []; }),
+        dbService.fetchGpsSyncLogs().catch(err => { console.warn('GPS Sync Logs fetch:', err); return []; }),
         dbService.fetchFuelTransactions().catch(err => { console.warn('Fuel fetch:', err); return []; }),
         dbService.fetchAuditLogs().catch(err => { console.warn('Audit fetch:', err); return []; }),
         dbService.fetchNotifications().catch(err => { console.warn('Notifications fetch:', err); return []; }),
@@ -222,6 +225,8 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setDefectReports(repList);
       setTrips(tripList);
       setGpsDevices(devList);
+      setGpsPings(pingList);
+      setGpsSyncLogs(syncLogList);
       setFuelTransactions(fuelList);
       setAuditLogs(auditList);
       setTankerTestRecords(tankerTestsList);
@@ -305,6 +310,61 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     refreshData();
   }, [refreshData]);
+
+  // Live GPS Telemetry Realtime subscription + 30s fallback refresh
+  const refreshGpsTelemetry = useCallback(async () => {
+    if (!isSupabaseConfigured) return;
+    try {
+      const [pingList, devList, syncLogList] = await Promise.all([
+        dbService.fetchLatestVehicleGpsPings(),
+        dbService.fetchGpsDevices(),
+        dbService.fetchGpsSyncLogs(),
+      ]);
+      setGpsPings(pingList);
+      setGpsDevices(devList);
+      setGpsSyncLogs(syncLogList);
+    } catch (err) {
+      console.warn('[Telematics] Live GPS refresh error:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+
+    const channel = supabase
+      .channel('gps-live-telemetry')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'vehicle_gps_pings' },
+        () => {
+          void refreshGpsTelemetry();
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'gps_devices' },
+        () => {
+          void refreshGpsTelemetry();
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'gps_sync_logs' },
+        () => {
+          void refreshGpsTelemetry();
+        },
+      )
+      .subscribe();
+
+    const pollInterval = window.setInterval(() => {
+      void refreshGpsTelemetry();
+    }, 30000);
+
+    return () => {
+      window.clearInterval(pollInterval);
+      void supabase.removeChannel(channel);
+    };
+  }, [refreshGpsTelemetry]);
 
   // ============================================================================
   // ACTIONS: VEHICLES
@@ -1023,10 +1083,60 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return null;
   };
 
-  const simulateGpsSync = (): void => {
-    console.log('[Telematics] Manual GPS Sync trigger');
-    refreshData();
+  const simulateGpsSync = async (): Promise<{ success: boolean; message: string }> => {
+    if (!isSupabaseConfigured) {
+      return { success: false, message: 'Supabase is not configured.' };
+    }
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-gps-positions', {
+        body: { action: 'sync' },
+        headers: { 'x-triggered-by': 'MANUAL_REFRESH' },
+      });
+      if (error) {
+        return { success: false, message: error.message || 'GPS sync failed.' };
+      }
+      await refreshGpsTelemetry();
+      return {
+        success: true,
+        message: `Synced ${data?.pings_inserted ?? 0} new GPS position(s).`,
+      };
+    } catch (err: unknown) {
+      return {
+        success: false,
+        message: err instanceof Error ? err.message : 'GPS sync failed.',
+      };
+    }
   };
+
+  const testGpsConnection = async (): Promise<{ success: boolean; message: string; latency_ms: number }> => {
+    if (!isSupabaseConfigured) {
+      return { success: false, message: 'Supabase is not configured.', latency_ms: 0 };
+    }
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-gps-positions', {
+        body: { action: 'test' },
+        headers: { 'x-triggered-by': 'TEST_CONNECTION' },
+      });
+      if (error) {
+        return { success: false, message: error.message || 'Provider connection test failed.', latency_ms: 0 };
+      }
+      return {
+        success: Boolean(data?.success),
+        message: String(data?.message || 'Connection test completed.'),
+        latency_ms: Number(data?.latency_ms) || 0,
+      };
+    } catch (err: unknown) {
+      return {
+        success: false,
+        message: err instanceof Error ? err.message : 'Provider connection test failed.',
+        latency_ms: 0,
+      };
+    }
+  };
+
+  const isGpsProviderConnected =
+    gpsPings.some(p => p.data_source === 'LIVE_PROVIDER' && p.is_valid_point) ||
+    gpsSyncLogs.some(l => l.sync_status === 'SUCCESS' && !l.provider_name.toUpperCase().includes('MOCK'));
 
   return (
     <FleetContext.Provider
@@ -1052,7 +1162,7 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         fuelBenchmarks,
         tripReconciliations,
         gpsSyncLogs,
-        isGpsProviderConnected: true,
+        isGpsProviderConnected,
         isLoadingData,
         databaseError,
         dateFilter,
@@ -1104,6 +1214,7 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addFuelTransaction,
         reconcileTripFuel,
         simulateGpsSync,
+        testGpsConnection,
         refreshData
       }}
     >

@@ -85,7 +85,7 @@ export const SmallVehicleDetailDrawer: React.FC<SmallVehicleDetailDrawerProps> =
             <div>
               <div
                 style={{
-                  fontSize: 11,
+                  fontSize: 12,
                   fontFamily: 'var(--font-mono, monospace)',
                   color: 'var(--color-brand-accent, #2563eb)',
                   fontWeight: 600,
@@ -147,8 +147,8 @@ export const SmallVehicleDetailDrawer: React.FC<SmallVehicleDetailDrawerProps> =
             }}
           >
             <div>
-              <span style={{ fontSize: 11, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>
-                {isRTL ? 'لوحة الترخيص الرسمية' : 'Official Plate Number'}
+              <span style={{ fontSize: 12, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>
+                {isRTL ? 'ظ„ظˆط­ط© ط§ظ„طھط±ط®ظٹطµ ط§ظ„ط±ط³ظ…ظٹط©' : 'Official Plate Number'}
               </span>
               <div
                 style={{
@@ -178,8 +178,8 @@ export const SmallVehicleDetailDrawer: React.FC<SmallVehicleDetailDrawerProps> =
             </div>
 
             <div style={{ textAlign: 'end' }}>
-              <span style={{ fontSize: 11, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>
-                {isRTL ? 'الرقم التسلسلي' : 'Serial (Sn)'}
+              <span style={{ fontSize: 12, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>
+                {isRTL ? 'ط§ظ„ط±ظ‚ظ… ط§ظ„طھط³ظ„ط³ظ„ظٹ' : 'Serial (Sn)'}
               </span>
               <span
                 style={{
@@ -212,47 +212,47 @@ export const SmallVehicleDetailDrawer: React.FC<SmallVehicleDetailDrawerProps> =
                 borderBottom: '1px solid var(--color-row-divider, #f1f5f9)',
               }}
             >
-              {isRTL ? 'بيانات السجل الرسمي' : 'Official Registry Specifications'}
+              {isRTL ? 'ط¨ظٹط§ظ†ط§طھ ط§ظ„ط³ط¬ظ„ ط§ظ„ط±ط³ظ…ظٹ' : 'Official Registry Specifications'}
             </div>
 
             <DetailRow
               icon={<Hash size={14} />}
-              label={isRTL ? 'الرقم التسلسلي (Sn)' : 'Serial Number (Sn)'}
+              label={isRTL ? 'ط§ظ„ط±ظ‚ظ… ط§ظ„طھط³ظ„ط³ظ„ظٹ (Sn)' : 'Serial Number (Sn)'}
               value={`#${vehicle.sn}`}
               mono
             />
             <DetailRow
               icon={<Tag size={14} />}
-              label={isRTL ? 'رقم اللوحة' : 'Plate No.'}
+              label={isRTL ? 'ط±ظ‚ظ… ط§ظ„ظ„ظˆط­ط©' : 'Plate No.'}
               value={vehicle.plate_number}
               mono
             />
             <DetailRow
               icon={<Car size={14} />}
-              label={isRTL ? 'رقم المركبة' : 'Vehicle Number'}
+              label={isRTL ? 'ط±ظ‚ظ… ط§ظ„ظ…ط±ظƒط¨ط©' : 'Vehicle Number'}
               value={vehicle.vehicle_number}
               mono
             />
             <DetailRow
               icon={<Calendar size={14} />}
-              label={isRTL ? 'سنة الصنع' : 'Model Year'}
-              value={vehicle.model_year ? String(vehicle.model_year) : '—'}
+              label={isRTL ? 'ط³ظ†ط© ط§ظ„طµظ†ط¹' : 'Model Year'}
+              value={vehicle.model_year ? String(vehicle.model_year) : 'â€”'}
               mono
             />
             <DetailRow
               icon={<Car size={14} />}
-              label={isRTL ? 'الماركة / النوع' : 'Brand'}
-              value={vehicle.brand || '—'}
+              label={isRTL ? 'ط§ظ„ظ…ط§ط±ظƒط© / ط§ظ„ظ†ظˆط¹' : 'Brand'}
+              value={vehicle.brand || 'â€”'}
             />
             <DetailRow
               icon={<User size={14} />}
-              label={isRTL ? 'اسم السائق' : 'Driver Name'}
-              value={vehicle.driver_name || (isRTL ? 'غير مخصص / احتياط' : 'Unassigned / Standby')}
+              label={isRTL ? 'ط§ط³ظ… ط§ظ„ط³ط§ط¦ظ‚' : 'Driver Name'}
+              value={vehicle.driver_name || (isRTL ? 'ط؛ظٹط± ظ…ط®طµطµ / ط§ط­طھظٹط§ط·' : 'Unassigned / Standby')}
             />
             <DetailRow
               icon={<MapPin size={14} />}
-              label={isRTL ? 'القسم / الموقع' : 'Dept. / Location'}
-              value={vehicle.department_location || '—'}
+              label={isRTL ? 'ط§ظ„ظ‚ط³ظ… / ط§ظ„ظ…ظˆظ‚ط¹' : 'Dept. / Location'}
+              value={vehicle.department_location || 'â€”'}
             />
           </div>
 
@@ -262,7 +262,7 @@ export const SmallVehicleDetailDrawer: React.FC<SmallVehicleDetailDrawerProps> =
               padding: '12px 14px',
               borderRadius: 6,
               background: 'var(--color-page-bg, #f8fafc)',
-              fontSize: 11.5,
+              fontSize: 12.5,
               color: 'var(--color-text-muted, #64748b)',
               display: 'flex',
               flexDirection: 'column',
@@ -272,7 +272,7 @@ export const SmallVehicleDetailDrawer: React.FC<SmallVehicleDetailDrawerProps> =
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <Clock size={12} />
               <span>
-                {isRTL ? 'تاريخ التسجيل:' : 'Registered:'}{' '}
+                {isRTL ? 'طھط§ط±ظٹط® ط§ظ„طھط³ط¬ظٹظ„:' : 'Registered:'}{' '}
                 <span dir="ltr">{new Date(vehicle.created_at).toLocaleString(isRTL ? 'ar-SA-u-ca-gregory' : 'en-US')}</span>
               </span>
             </div>
@@ -280,7 +280,7 @@ export const SmallVehicleDetailDrawer: React.FC<SmallVehicleDetailDrawerProps> =
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Clock size={12} />
                 <span>
-                  {isRTL ? 'آخر تحديث:' : 'Last Updated:'}{' '}
+                  {isRTL ? 'ط¢ط®ط± طھط­ط¯ظٹط«:' : 'Last Updated:'}{' '}
                   <span dir="ltr">{new Date(vehicle.updated_at).toLocaleString(isRTL ? 'ar-SA-u-ca-gregory' : 'en-US')}</span>
                 </span>
               </div>
@@ -318,7 +318,7 @@ export const SmallVehicleDetailDrawer: React.FC<SmallVehicleDetailDrawerProps> =
               }}
             >
               <Trash2 size={14} />
-              <span>{isRTL ? 'حذف' : 'Delete'}</span>
+              <span>{isRTL ? 'ط­ط°ظپ' : 'Delete'}</span>
             </button>
           ) : <div />}
 
@@ -336,7 +336,7 @@ export const SmallVehicleDetailDrawer: React.FC<SmallVehicleDetailDrawerProps> =
                 cursor: 'pointer',
               }}
             >
-              {isRTL ? 'إغلاق' : 'Close'}
+              {isRTL ? 'ط¥ط؛ظ„ط§ظ‚' : 'Close'}
             </button>
             {canEdit && (
               <button
@@ -356,7 +356,7 @@ export const SmallVehicleDetailDrawer: React.FC<SmallVehicleDetailDrawerProps> =
                 }}
               >
                 <Edit3 size={14} />
-                <span>{isRTL ? 'تعديل السجل' : 'Edit Record'}</span>
+                <span>{isRTL ? 'طھط¹ط¯ظٹظ„ ط§ظ„ط³ط¬ظ„' : 'Edit Record'}</span>
               </button>
             )}
           </div>

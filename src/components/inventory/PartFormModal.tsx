@@ -186,7 +186,7 @@ export const PartFormModal: React.FC<PartFormModalProps> = ({
               style={{ color: 'var(--color-ink)' }}
             >
               <span
-                className="w-5 h-5 flex items-center justify-center font-bold text-[11px]"
+                className="w-5 h-5 flex items-center justify-center font-bold text-[12px]"
                 style={{
                   background: 'var(--color-page-bg)',
                   border: '1px solid var(--color-border)',
@@ -199,7 +199,7 @@ export const PartFormModal: React.FC<PartFormModalProps> = ({
               <Package className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
               <span>{t('Part Identification & Classification')}</span>
             </div>
-            <span className="text-[11px] font-semibold" style={{ color: 'var(--color-brand-accent)' }}>
+            <span className="text-[12px] font-semibold" style={{ color: 'var(--color-brand-accent)' }}>
               {t('* Required fields')}
             </span>
           </div>
@@ -321,7 +321,7 @@ export const PartFormModal: React.FC<PartFormModalProps> = ({
               style={{ color: 'var(--color-ink)' }}
             >
               <span
-                className="w-5 h-5 flex items-center justify-center font-bold text-[11px]"
+                className="w-5 h-5 flex items-center justify-center font-bold text-[12px]"
                 style={{
                   background: 'var(--color-page-bg)',
                   border: '1px solid var(--color-border)',

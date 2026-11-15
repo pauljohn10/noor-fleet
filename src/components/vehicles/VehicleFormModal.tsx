@@ -185,7 +185,7 @@ export const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
 
   const modalFooter = (
     <>
-      <span className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+      <span className="text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
         {t('Validated for Saudi Ministry of Transport & Aramco safety compliance.')}
       </span>
       <div className="flex items-center gap-2.5">
@@ -262,7 +262,7 @@ export const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
               style={{ color: 'var(--color-ink)' }}
             >
               <span
-                className="w-5 h-5 flex items-center justify-center font-bold text-[11px]"
+                className="w-5 h-5 flex items-center justify-center font-bold text-[12px]"
                 style={{
                   background: 'var(--color-page-bg)',
                   border: '1px solid var(--color-border)',
@@ -276,7 +276,7 @@ export const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
               <span>{t('Vehicle Identification & Registration')}</span>
             </div>
             <span
-              className="text-[11px] font-semibold"
+              className="text-[12px] font-semibold"
               style={{ color: 'var(--color-brand-accent)' }}
             >
               {t('* Required fields')}
@@ -381,7 +381,7 @@ export const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
             }}
           >
             <span
-              className="w-5 h-5 flex items-center justify-center font-bold text-[11px]"
+              className="w-5 h-5 flex items-center justify-center font-bold text-[12px]"
               style={{
                 background: 'var(--color-page-bg)',
                 border: '1px solid var(--color-border)',
@@ -526,7 +526,7 @@ export const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
             }}
           >
             <span
-              className="w-5 h-5 flex items-center justify-center font-bold text-[11px]"
+              className="w-5 h-5 flex items-center justify-center font-bold text-[12px]"
               style={{
                 background: 'var(--color-page-bg)',
                 border: '1px solid var(--color-border)',
@@ -629,7 +629,7 @@ export const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
                 <option value="">{t('-- Unassigned --')}</option>
                 {trailers.map((tr) => (
                   <option key={tr.id} value={tr.id}>
-                    {tr.trailer_id} — {tr.plate_number} ({tr.tank_capacity_liters.toLocaleString()} L)
+                    {tr.trailer_id} â€” {tr.plate_number} ({tr.tank_capacity_liters.toLocaleString()} L)
                   </option>
                 ))}
               </select>

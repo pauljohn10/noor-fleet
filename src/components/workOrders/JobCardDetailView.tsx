@@ -160,7 +160,7 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
 
           <div className="flex flex-col sm:items-end gap-2 shrink-0">
             <div className="text-start sm:text-end">
-              <p className="text-[11px] font-semibold" style={{ color: 'var(--color-text-muted)' }}>
+              <p className="text-[12px] font-semibold" style={{ color: 'var(--color-text-muted)' }}>
                 {t('Total Work Order Cost')}
               </p>
               <p
@@ -187,7 +187,7 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
             borderRadius: 'var(--radius-sm)',
           }}
         >
-          <p className="text-[11px] font-semibold mb-3" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="text-[12px] font-semibold mb-3" style={{ color: 'var(--color-text-muted)' }}>
             {t('Workflow Lifecycle Pipeline')}
           </p>
           <div className="flex items-center justify-between overflow-x-auto no-scrollbar py-2 gap-2">
@@ -234,7 +234,7 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
                     {idx + 1}
                   </div>
                   <span
-                    className="text-[10px] font-semibold mt-1"
+                    className="text-[12px] font-semibold mt-1"
                     style={{
                       color: isCurrent
                         ? 'var(--color-ink)'
@@ -265,7 +265,7 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
               }}
             >
               <div>
-                <p className="font-semibold text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="font-semibold text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                   {t('Assigned Truck')}
                 </p>
                 <p
@@ -277,7 +277,7 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
                 </p>
               </div>
               <div>
-                <p className="font-semibold text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="font-semibold text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                   {t('Coupled Trailer')}
                 </p>
                 <p
@@ -292,7 +292,7 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
                 </p>
               </div>
               <div>
-                <p className="font-semibold text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="font-semibold text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                   {t('Reporting Driver')}
                 </p>
                 <p className="font-semibold text-xs mt-0.5" style={{ color: 'var(--color-ink)' }}>
@@ -300,7 +300,7 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
                 </p>
               </div>
               <div>
-                <p className="font-semibold text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="font-semibold text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                   {t('Lead Mechanic')}
                 </p>
                 <p className="font-semibold text-xs mt-0.5" style={{ color: 'var(--color-ink)' }}>
@@ -358,7 +358,7 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
                     }}
                   >
                     <p
-                      className="text-[11px] font-semibold"
+                      className="text-[12px] font-semibold"
                       style={{ color: 'var(--color-text-muted)' }}
                     >
                       {c.label}
@@ -382,7 +382,7 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
                   }}
                 >
                   <p
-                    className="text-[11px] font-semibold"
+                    className="text-[12px] font-semibold"
                     style={{ color: 'var(--color-ink)' }}
                   >
                     {t('TOTAL COST')}
@@ -630,7 +630,7 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
                 <p className="font-semibold" style={{ color: 'var(--color-ink)' }}>
                   {t('Before Repair Photo')}
                 </p>
-                <p className="text-[11px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="text-[12px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
                   {t('Uploaded upon work order creation')}
                 </p>
               </div>
@@ -649,7 +649,7 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
                 <p className="font-semibold" style={{ color: 'var(--color-ink)' }}>
                   {t('After Repair Photo')}
                 </p>
-                <p className="text-[11px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="text-[12px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
                   {t('Uploaded upon QC inspection')}
                 </p>
               </div>

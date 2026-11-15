@@ -61,10 +61,10 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
   const totalFleetCount = vehicles.length;
 
   const fleetStatusData = [
-    { name: isRTL ? 'متاح' : 'Available', value: availableCount, color: EDITORIAL_STATUS.green.stripe },
-    { name: isRTL ? 'في رحلة' : 'On Trip', value: onTripCount, color: EDITORIAL_STATUS.blue.stripe },
-    { name: isRTL ? 'في الورشة' : 'In Workshop', value: inWorkshopCount, color: EDITORIAL_STATUS.amber.stripe },
-    { name: isRTL ? 'خارج الخدمة' : 'Out of Service', value: outOfServiceCount, color: EDITORIAL_STATUS.red.stripe },
+    { name: isRTL ? 'ظ…طھط§ط­' : 'Available', value: availableCount, color: EDITORIAL_STATUS.green.stripe },
+    { name: isRTL ? 'ظپظٹ ط±ط­ظ„ط©' : 'On Trip', value: onTripCount, color: EDITORIAL_STATUS.blue.stripe },
+    { name: isRTL ? 'ظپظٹ ط§ظ„ظˆط±ط´ط©' : 'In Workshop', value: inWorkshopCount, color: EDITORIAL_STATUS.amber.stripe },
+    { name: isRTL ? 'ط®ط§ط±ط¬ ط§ظ„ط®ط¯ظ…ط©' : 'Out of Service', value: outOfServiceCount, color: EDITORIAL_STATUS.red.stripe },
   ].filter(item => item.value > 0);
 
   const woStatusCounts: Record<string, number> = {};
@@ -115,16 +115,16 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
       {/* 1. Fleet Status Overview */}
       <div style={CHART_CARD_STYLE}>
         <h4 style={CHART_TITLE_STYLE}>
-          {isRTL ? 'حالة الأسطول التشغيلية' : 'Fleet Operational Status'}
+          {isRTL ? 'ط­ط§ظ„ط© ط§ظ„ط£ط³ط·ظˆظ„ ط§ظ„طھط´ط؛ظٹظ„ظٹط©' : 'Fleet Operational Status'}
         </h4>
         <div className="h-64 w-full flex items-center justify-center">
           {totalFleetCount === 0 || fleetStatusData.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 12.5 }}>
               <p style={{ margin: 0, fontWeight: 600, color: 'var(--color-text-secondary)' }}>
-                {isRTL ? 'لا توجد مركبات نشطة في الأسطول' : 'No active vehicles in fleet'}
+                {isRTL ? 'ظ„ط§ طھظˆط¬ط¯ ظ…ط±ظƒط¨ط§طھ ظ†ط´ط·ط© ظپظٹ ط§ظ„ط£ط³ط·ظˆظ„' : 'No active vehicles in fleet'}
               </p>
-              <p style={{ margin: '4px 0 0', fontSize: 11.5 }}>
-                {isRTL ? 'أضف مركبات لعرض توزيع الحالات المباشر' : 'Add vehicles to view live status distribution'}
+              <p style={{ margin: '4px 0 0', fontSize: 12.5 }}>
+                {isRTL ? 'ط£ط¶ظپ ظ…ط±ظƒط¨ط§طھ ظ„ط¹ط±ط¶ طھظˆط²ظٹط¹ ط§ظ„ط­ط§ظ„ط§طھ ط§ظ„ظ…ط¨ط§ط´ط±' : 'Add vehicles to view live status distribution'}
               </p>
             </div>
           ) : (
@@ -154,16 +154,16 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
       {/* 2. Monthly Maintenance Cost Breakdown */}
       <div style={CHART_CARD_STYLE} className="lg:col-span-2">
         <h4 style={CHART_TITLE_STYLE}>
-          {isRTL ? 'اتجاه مصروفات الصيانة الشهرية (ر.س)' : 'Monthly Maintenance Expense Trend (SAR)'}
+          {isRTL ? 'ط§طھط¬ط§ظ‡ ظ…طµط±ظˆظپط§طھ ط§ظ„طµظٹط§ظ†ط© ط§ظ„ط´ظ‡ط±ظٹط© (ط±.ط³)' : 'Monthly Maintenance Expense Trend (SAR)'}
         </h4>
         <div className="h-64 w-full flex items-center justify-center">
           {monthlyCostData.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 12.5 }}>
               <p style={{ margin: 0, fontWeight: 600, color: 'var(--color-text-secondary)' }}>
-                {isRTL ? 'لم تُسجل مصروفات صيانة بعد' : 'No maintenance expenditure recorded'}
+                {isRTL ? 'ظ„ظ… طھظڈط³ط¬ظ„ ظ…طµط±ظˆظپط§طھ طµظٹط§ظ†ط© ط¨ط¹ط¯' : 'No maintenance expenditure recorded'}
               </p>
-              <p style={{ margin: '4px 0 0', fontSize: 11.5 }}>
-                {isRTL ? 'ستظهر المصروفات تلقائياً عند إكمال أوامر العمل' : 'Expenses will plot dynamically as work orders are completed'}
+              <p style={{ margin: '4px 0 0', fontSize: 12.5 }}>
+                {isRTL ? 'ط³طھط¸ظ‡ط± ط§ظ„ظ…طµط±ظˆظپط§طھ طھظ„ظ‚ط§ط¦ظٹط§ظ‹ ط¹ظ†ط¯ ط¥ظƒظ…ط§ظ„ ط£ظˆط§ظ…ط± ط§ظ„ط¹ظ…ظ„' : 'Expenses will plot dynamically as work orders are completed'}
               </p>
             </div>
           ) : (
@@ -173,9 +173,9 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
                 <YAxis stroke="#6B665C" fontSize={12} />
                 <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
                 <Legend />
-                <Area type="monotone" dataKey="parts" stackId="1" stroke="#B45309" fill="#B45309" fillOpacity={0.32} name={isRTL ? 'تكلفة قطع الغيار' : 'Parts Cost'} />
-                <Area type="monotone" dataKey="labor" stackId="1" stroke="#1E40AF" fill="#1E40AF" fillOpacity={0.32} name={isRTL ? 'تكلفة العمالة' : 'Labor Cost'} />
-                <Area type="monotone" dataKey="external" stackId="1" stroke="#0F5C4D" fill="#0F5C4D" fillOpacity={0.32} name={isRTL ? 'أعمال خارجية' : 'External Service'} />
+                <Area type="monotone" dataKey="parts" stackId="1" stroke="#B45309" fill="#B45309" fillOpacity={0.32} name={isRTL ? 'طھظƒظ„ظپط© ظ‚ط·ط¹ ط§ظ„ط؛ظٹط§ط±' : 'Parts Cost'} />
+                <Area type="monotone" dataKey="labor" stackId="1" stroke="#1E40AF" fill="#1E40AF" fillOpacity={0.32} name={isRTL ? 'طھظƒظ„ظپط© ط§ظ„ط¹ظ…ط§ظ„ط©' : 'Labor Cost'} />
+                <Area type="monotone" dataKey="external" stackId="1" stroke="#0F5C4D" fill="#0F5C4D" fillOpacity={0.32} name={isRTL ? 'ط£ط¹ظ…ط§ظ„ ط®ط§ط±ط¬ظٹط©' : 'External Service'} />
               </AreaChart>
             </ResponsiveContainer>
           )}
@@ -185,16 +185,16 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
       {/* 3. Workshop Work Order Pipeline */}
       <div style={CHART_CARD_STYLE} className="lg:col-span-2">
         <h4 style={CHART_TITLE_STYLE}>
-          {isRTL ? 'مراحل خط عمل الورشة' : 'Workshop Work Order Pipeline'}
+          {isRTL ? 'ظ…ط±ط§ط­ظ„ ط®ط· ط¹ظ…ظ„ ط§ظ„ظˆط±ط´ط©' : 'Workshop Work Order Pipeline'}
         </h4>
         <div className="h-64 w-full flex items-center justify-center">
           {woJobStatusData.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 12.5 }}>
               <p style={{ margin: 0, fontWeight: 600, color: 'var(--color-text-secondary)' }}>
-                {isRTL ? 'لا توجد بطاقات عمل نشطة في الورشة' : 'No active job cards in workshop'}
+                {isRTL ? 'ظ„ط§ طھظˆط¬ط¯ ط¨ط·ط§ظ‚ط§طھ ط¹ظ…ظ„ ظ†ط´ط·ط© ظپظٹ ط§ظ„ظˆط±ط´ط©' : 'No active job cards in workshop'}
               </p>
-              <p style={{ margin: '4px 0 0', fontSize: 11.5 }}>
-                {isRTL ? 'ستظهر أوامر العمل المفتوحة مصنفة حسب المرحلة هنا' : 'Open work orders will be categorized by stage here'}
+              <p style={{ margin: '4px 0 0', fontSize: 12.5 }}>
+                {isRTL ? 'ط³طھط¸ظ‡ط± ط£ظˆط§ظ…ط± ط§ظ„ط¹ظ…ظ„ ط§ظ„ظ…ظپطھظˆط­ط© ظ…طµظ†ظپط© ط­ط³ط¨ ط§ظ„ظ…ط±ط­ظ„ط© ظ‡ظ†ط§' : 'Open work orders will be categorized by stage here'}
               </p>
             </div>
           ) : (
@@ -203,7 +203,7 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
                 <XAxis dataKey="status" stroke="#6B665C" fontSize={10} interval={0} angle={-15} textAnchor="end" />
                 <YAxis stroke="#6B665C" fontSize={12} />
                 <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-                <Bar dataKey="count" fill="#0F5C4D" radius={[3, 3, 0, 0]} name={isRTL ? 'الأعمال النشطة' : 'Active Jobs'} />
+                <Bar dataKey="count" fill="#0F5C4D" radius={[3, 3, 0, 0]} name={isRTL ? 'ط§ظ„ط£ط¹ظ…ط§ظ„ ط§ظ„ظ†ط´ط·ط©' : 'Active Jobs'} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -213,16 +213,16 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
       {/* 4. Maintenance Cost by Vehicle */}
       <div style={CHART_CARD_STYLE}>
         <h4 style={CHART_TITLE_STYLE}>
-          {isRTL ? 'الشاحنات الأعلى تكلفة في الإصلاح (ر.س)' : 'Highest Repair Cost Vehicles (SAR)'}
+          {isRTL ? 'ط§ظ„ط´ط§ط­ظ†ط§طھ ط§ظ„ط£ط¹ظ„ظ‰ طھظƒظ„ظپط© ظپظٹ ط§ظ„ط¥طµظ„ط§ط­ (ط±.ط³)' : 'Highest Repair Cost Vehicles (SAR)'}
         </h4>
         <div className="h-64 w-full flex items-center justify-center">
           {costByVehicle.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 12.5 }}>
               <p style={{ margin: 0, fontWeight: 600, color: 'var(--color-text-secondary)' }}>
-                {isRTL ? 'لا توجد بيانات تكاليف إصلاح بعد' : 'No repair cost data yet'}
+                {isRTL ? 'ظ„ط§ طھظˆط¬ط¯ ط¨ظٹط§ظ†ط§طھ طھظƒط§ظ„ظٹظپ ط¥طµظ„ط§ط­ ط¨ط¹ط¯' : 'No repair cost data yet'}
               </p>
-              <p style={{ margin: '4px 0 0', fontSize: 11.5 }}>
-                {isRTL ? 'سيتم ترتيب المركبات الأعلى تكلفة تلقائياً' : 'Costs will rank highest-maintenance vehicles'}
+              <p style={{ margin: '4px 0 0', fontSize: 12.5 }}>
+                {isRTL ? 'ط³ظٹطھظ… طھط±طھظٹط¨ ط§ظ„ظ…ط±ظƒط¨ط§طھ ط§ظ„ط£ط¹ظ„ظ‰ طھظƒظ„ظپط© طھظ„ظ‚ط§ط¦ظٹط§ظ‹' : 'Costs will rank highest-maintenance vehicles'}
               </p>
             </div>
           ) : (
@@ -231,7 +231,7 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
                 <XAxis type="number" stroke="#6B665C" fontSize={10} />
                 <YAxis dataKey="vehicleId" type="category" stroke="#6B665C" fontSize={12} />
                 <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-                <Bar dataKey="cost" fill="#991B1B" radius={[0, 3, 3, 0]} name={isRTL ? 'إجمالي التكلفة (ر.س)' : 'Total Cost (SAR)'} />
+                <Bar dataKey="cost" fill="#991B1B" radius={[0, 3, 3, 0]} name={isRTL ? 'ط¥ط¬ظ…ط§ظ„ظٹ ط§ظ„طھظƒظ„ظپط© (ط±.ط³)' : 'Total Cost (SAR)'} />
               </BarChart>
             </ResponsiveContainer>
           )}

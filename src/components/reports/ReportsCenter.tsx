@@ -267,8 +267,8 @@ export const ReportsCenter: React.FC = () => {
           s.title,
           veh ? `${veh.vehicle_id} (${veh.plate_number})` : trl ? `${trl.trailer_id} (${trl.plate_number})` : t('Unassigned'),
           s.frequency_type === 'MILEAGE'
-            ? (isRTL ? `كل ${(s.interval_value || 0).toLocaleString()} كم` : `Every ${(s.interval_value || 0).toLocaleString()} KM`)
-            : (isRTL ? `كل ${s.interval_value || 0} يوم` : `Every ${s.interval_value || 0} Days`),
+            ? (isRTL ? `ظƒظ„ ${(s.interval_value || 0).toLocaleString()} ظƒظ…` : `Every ${(s.interval_value || 0).toLocaleString()} KM`)
+            : (isRTL ? `ظƒظ„ ${s.interval_value || 0} ظٹظˆظ…` : `Every ${s.interval_value || 0} Days`),
           s.last_service_mileage ? `${(s.last_service_mileage || 0).toLocaleString()} ${t('KM')}` : t('N/A'),
           s.next_due_mileage ? `${(s.next_due_mileage || 0).toLocaleString()} ${t('KM')}` : t('N/A'),
           s.next_due_date || t('N/A'),
@@ -348,37 +348,37 @@ export const ReportsCenter: React.FC = () => {
   const reportMeta: Record<string, { category: 'FLEET' | 'MAINTENANCE' | 'COMPLIANCE'; moduleLabel: string; records: number; stripe: string }> = {
     'fleet-summary': {
       category: 'FLEET',
-      moduleLabel: isRTL ? 'الأسطول والمقطورات' : 'Fleet & Trailers',
+      moduleLabel: isRTL ? 'ط§ظ„ط£ط³ط·ظˆظ„ ظˆط§ظ„ظ…ظ‚ط·ظˆط±ط§طھ' : 'Fleet & Trailers',
       records: vehicles.length + trailers.length,
       stripe: EDITORIAL_STATUS.green.stripe,
     },
     'workshop-summary': {
       category: 'MAINTENANCE',
-      moduleLabel: isRTL ? 'الورشة وأوامر العمل' : 'Workshop & WOs',
+      moduleLabel: isRTL ? 'ط§ظ„ظˆط±ط´ط© ظˆط£ظˆط§ظ…ط± ط§ظ„ط¹ظ…ظ„' : 'Workshop & WOs',
       records: workOrders.length,
       stripe: EDITORIAL_STATUS.amber.stripe,
     },
     'parts-consumption': {
       category: 'COMPLIANCE',
-      moduleLabel: isRTL ? 'المخزن وقطع الغيار' : 'Spare Parts Store',
+      moduleLabel: isRTL ? 'ط§ظ„ظ…ط®ط²ظ† ظˆظ‚ط·ط¹ ط§ظ„ط؛ظٹط§ط±' : 'Spare Parts Store',
       records: parts.length,
       stripe: EDITORIAL_STATUS.blue.stripe,
     },
     'document-expiry': {
       category: 'COMPLIANCE',
-      moduleLabel: isRTL ? 'التصاريح والوثائق' : 'Permits & Documents',
+      moduleLabel: isRTL ? 'ط§ظ„طھطµط§ط±ظٹط­ ظˆط§ظ„ظˆط«ط§ط¦ظ‚' : 'Permits & Documents',
       records: documents.length,
       stripe: EDITORIAL_STATUS.red.stripe,
     },
     'pm-audit': {
       category: 'MAINTENANCE',
-      moduleLabel: isRTL ? 'الصيانة الوقائية' : 'Preventive Maint.',
+      moduleLabel: isRTL ? 'ط§ظ„طµظٹط§ظ†ط© ط§ظ„ظˆظ‚ط§ط¦ظٹط©' : 'Preventive Maint.',
       records: schedules.length,
       stripe: EDITORIAL_STATUS.amber.stripe,
     },
     'trips-fuel': {
       category: 'FLEET',
-      moduleLabel: isRTL ? 'الرحلات والوقود' : 'Trips & Fuel',
+      moduleLabel: isRTL ? 'ط§ظ„ط±ط­ظ„ط§طھ ظˆط§ظ„ظˆظ‚ظˆط¯' : 'Trips & Fuel',
       records: fuelTransactions.length,
       stripe: EDITORIAL_STATUS.blue.stripe,
     },
@@ -410,16 +410,16 @@ export const ReportsCenter: React.FC = () => {
       <PageHeader
         title={
           <>
-            {isRTL ? 'التقارير التنفيذية' : 'Enterprise Reports'}
+            {isRTL ? 'ط§ظ„طھظ‚ط§ط±ظٹط± ط§ظ„طھظ†ظپظٹط°ظٹط©' : 'Enterprise Reports'}
             <br />
-            {isRTL ? 'ومركز التصدير' : '& Export Center'}
+            {isRTL ? 'ظˆظ…ط±ظƒط² ط§ظ„طھطµط¯ظٹط±' : '& Export Center'}
           </>
         }
         subtitle={t('Generate official executive management reports with company header branding, timestamps, and export to PDF or Print.')}
         actions={
           <>
             <GhostButton onClick={() => handleGeneratePDF('fleet-summary')}>
-              {isRTL ? 'تقرير PDF' : 'PDF report'}
+              {isRTL ? 'طھظ‚ط±ظٹط± PDF' : 'PDF report'}
             </GhostButton>
             <PrimaryButton onClick={triggerPrint}>
               {t('Print Active View')}
@@ -430,22 +430,22 @@ export const ReportsCenter: React.FC = () => {
 
       <StatusTabs
         tabs={[
-          { key: 'ALL', label: isRTL ? 'الكل' : 'All', count: reportCards.length },
+          { key: 'ALL', label: isRTL ? 'ط§ظ„ظƒظ„' : 'All', count: reportCards.length },
           {
             key: 'FLEET',
-            label: isRTL ? 'الأسطول والرحلات' : 'Fleet & trips',
+            label: isRTL ? 'ط§ظ„ط£ط³ط·ظˆظ„ ظˆط§ظ„ط±ط­ظ„ط§طھ' : 'Fleet & trips',
             count: reportCards.filter(r => reportMeta[r.id]?.category === 'FLEET').length,
             stripe: EDITORIAL_STATUS.green.stripe,
           },
           {
             key: 'MAINTENANCE',
-            label: isRTL ? 'الورشة والصيانة' : 'Maintenance',
+            label: isRTL ? 'ط§ظ„ظˆط±ط´ط© ظˆط§ظ„طµظٹط§ظ†ط©' : 'Maintenance',
             count: reportCards.filter(r => reportMeta[r.id]?.category === 'MAINTENANCE').length,
             stripe: EDITORIAL_STATUS.amber.stripe,
           },
           {
             key: 'COMPLIANCE',
-            label: isRTL ? 'المخزن والوثائق' : 'Inventory & permits',
+            label: isRTL ? 'ط§ظ„ظ…ط®ط²ظ† ظˆط§ظ„ظˆط«ط§ط¦ظ‚' : 'Inventory & permits',
             count: reportCards.filter(r => reportMeta[r.id]?.category === 'COMPLIANCE').length,
             stripe: EDITORIAL_STATUS.blue.stripe,
           },
@@ -454,19 +454,19 @@ export const ReportsCenter: React.FC = () => {
         onChange={k => setCategoryFilter(k as 'ALL' | 'FLEET' | 'MAINTENANCE' | 'COMPLIANCE')}
         searchValue={search}
         onSearchChange={setSearch}
-        searchPlaceholder={isRTL ? 'بحث في التقارير...' : 'Search report title, module, scope...'}
+        searchPlaceholder={isRTL ? 'ط¨ط­ط« ظپظٹ ط§ظ„طھظ‚ط§ط±ظٹط±...' : 'Search report title, module, scope...'}
       />
 
       <DataTable
         columns={[
-          { label: isRTL ? 'اسم التقرير' : 'Report title', align: 'start', width: '26%' },
-          { label: isRTL ? 'القسم' : 'Module', align: 'start', width: '16%' },
-          { label: isRTL ? 'النطاق والوصف' : 'Scope and description', align: 'start', width: '34%' },
-          { label: isRTL ? 'عدد السجلات' : 'Records', align: 'start', width: '12%' },
-          { label: isRTL ? 'الصيغة' : 'Format', align: 'start', width: '12%' },
+          { label: isRTL ? 'ط§ط³ظ… ط§ظ„طھظ‚ط±ظٹط±' : 'Report title', align: 'start', width: '26%' },
+          { label: isRTL ? 'ط§ظ„ظ‚ط³ظ…' : 'Module', align: 'start', width: '16%' },
+          { label: isRTL ? 'ط§ظ„ظ†ط·ط§ظ‚ ظˆط§ظ„ظˆطµظپ' : 'Scope and description', align: 'start', width: '34%' },
+          { label: isRTL ? 'ط¹ط¯ط¯ ط§ظ„ط³ط¬ظ„ط§طھ' : 'Records', align: 'start', width: '12%' },
+          { label: isRTL ? 'ط§ظ„طµظٹط؛ط©' : 'Format', align: 'start', width: '12%' },
         ]}
         isEmpty={filteredReports.length === 0}
-        emptyMessage={isRTL ? 'لا توجد تقارير مطابقة للبحث' : 'No reports match query'}
+        emptyMessage={isRTL ? 'ظ„ط§ طھظˆط¬ط¯ طھظ‚ط§ط±ظٹط± ظ…ط·ط§ط¨ظ‚ط© ظ„ظ„ط¨ط­ط«' : 'No reports match query'}
         onClearFilters={() => {
           setSearch('');
           setCategoryFilter('ALL');
@@ -501,7 +501,7 @@ export const ReportsCenter: React.FC = () => {
             >
               <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
                 <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-ink)' }}>{card.title}</div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, color: 'var(--color-text-muted)', marginTop: 2 }} dir="ltr">
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12.5, color: 'var(--color-text-muted)', marginTop: 2 }} dir="ltr">
                   {card.id}
                 </div>
               </td>
@@ -515,7 +515,7 @@ export const ReportsCenter: React.FC = () => {
                 <span dir="ltr">{meta.records.toLocaleString()}</span>
               </td>
               <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
-                <StatusText label={isRTL ? 'PDF معتمد' : 'PDF report'} color={EDITORIAL_STATUS.green.text} />
+                <StatusText label={isRTL ? 'PDF ظ…ط¹طھظ…ط¯' : 'PDF report'} color={EDITORIAL_STATUS.green.text} />
               </td>
             </DataRow>
           );
@@ -525,7 +525,7 @@ export const ReportsCenter: React.FC = () => {
       <TableFooter
         summaryText={
           isRTL
-            ? `${filteredReports.length} من ${reportCards.length} تقارير`
+            ? `${filteredReports.length} ظ…ظ† ${reportCards.length} طھظ‚ط§ط±ظٹط±`
             : `${filteredReports.length} of ${reportCards.length} reports`
         }
         page={page}

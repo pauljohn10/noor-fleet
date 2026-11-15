@@ -160,7 +160,7 @@ export const TankTestFormModal: React.FC<TankTestFormModalProps> = ({
     } catch (err: any) {
       alert(
         isRTL
-          ? `تعذر رفع شهادة الفحص: ${err?.message || 'خطأ غير معروف'}`
+          ? `طھط¹ط°ط± ط±ظپط¹ ط´ظ‡ط§ط¯ط© ط§ظ„ظپط­طµ: ${err?.message || 'ط®ط·ط£ ط؛ظٹط± ظ…ط¹ط±ظˆظپ'}`
           : `Failed to upload certificate attachment: ${err?.message || 'Unknown error'}`
       );
     } finally {
@@ -184,7 +184,7 @@ export const TankTestFormModal: React.FC<TankTestFormModalProps> = ({
     if (testStatus !== 'NOT TESTED' && !testDate) {
       alert(
         isRTL
-          ? 'يرجى تحديد تاريخ الفحص.'
+          ? 'ظٹط±ط¬ظ‰ طھط­ط¯ظٹط¯ طھط§ط±ظٹط® ط§ظ„ظپط­طµ.'
           : 'Please provide the Test Date.'
       );
       return;
@@ -219,7 +219,7 @@ export const TankTestFormModal: React.FC<TankTestFormModalProps> = ({
     } catch (err: any) {
       alert(
         isRTL
-          ? `فشل حفظ سجل فحص الصهريج: ${err?.message || 'خطأ غير معروف'}`
+          ? `ظپط´ظ„ ط­ظپط¸ ط³ط¬ظ„ ظپط­طµ ط§ظ„طµظ‡ط±ظٹط¬: ${err?.message || 'ط®ط·ط£ ط؛ظٹط± ظ…ط¹ط±ظˆظپ'}`
           : `Failed to save tank test record: ${err?.message || 'Unknown error'}`
       );
     } finally {
@@ -233,25 +233,25 @@ export const TankTestFormModal: React.FC<TankTestFormModalProps> = ({
   > = {
     PASS: {
       labelEn: 'PASS',
-      labelAr: 'ناجح (PASS)',
+      labelAr: 'ظ†ط§ط¬ط­ (PASS)',
       stripe: EDITORIAL_STATUS.green.stripe,
       text: EDITORIAL_STATUS.green.text,
     },
     FAIL: {
       labelEn: 'FAIL',
-      labelAr: 'راسب (FAIL)',
+      labelAr: 'ط±ط§ط³ط¨ (FAIL)',
       stripe: EDITORIAL_STATUS.red.stripe,
       text: EDITORIAL_STATUS.red.text,
     },
     PENDING: {
       labelEn: 'PENDING',
-      labelAr: 'قيد الانتظار (PENDING)',
+      labelAr: 'ظ‚ظٹط¯ ط§ظ„ط§ظ†طھط¸ط§ط± (PENDING)',
       stripe: EDITORIAL_STATUS.amber.stripe,
       text: EDITORIAL_STATUS.amber.text,
     },
     'NOT TESTED': {
       labelEn: 'NOT TESTED',
-      labelAr: 'غير مفحوص (NOT TESTED)',
+      labelAr: 'ط؛ظٹط± ظ…ظپط­ظˆطµ (NOT TESTED)',
       stripe: EDITORIAL_STATUS.muted.stripe,
       text: EDITORIAL_STATUS.muted.text,
     },
@@ -260,11 +260,11 @@ export const TankTestFormModal: React.FC<TankTestFormModalProps> = ({
   const getTestTypeLabel = (type: TankTestType) => {
     switch (type) {
       case 'Hydrostatic Test':
-        return isRTL ? 'الاختبار الهيدروستاتيكي (Hydrostatic Test)' : 'Hydrostatic Test';
+        return isRTL ? 'ط§ظ„ط§ط®طھط¨ط§ط± ط§ظ„ظ‡ظٹط¯ط±ظˆط³طھط§طھظٹظƒظٹ (Hydrostatic Test)' : 'Hydrostatic Test';
       case 'Pneumatic Test':
-        return isRTL ? 'الاختبار الهوائي (Pneumatic Test)' : 'Pneumatic Test';
+        return isRTL ? 'ط§ظ„ط§ط®طھط¨ط§ط± ط§ظ„ظ‡ظˆط§ط¦ظٹ (Pneumatic Test)' : 'Pneumatic Test';
       case 'Vacuum Test':
-        return isRTL ? 'اختبار التفريغ (Vacuum Test)' : 'Vacuum Test';
+        return isRTL ? 'ط§ط®طھط¨ط§ط± ط§ظ„طھظپط±ظٹط؛ (Vacuum Test)' : 'Vacuum Test';
     }
   };
 
@@ -278,7 +278,7 @@ export const TankTestFormModal: React.FC<TankTestFormModalProps> = ({
             ? `${t('Tank Test Certificate Details')}: ${getTestTypeLabel(testType)}`
             : editingRecord
             ? `${t('Edit Tank Test Record')}: ${getTestTypeLabel(testType)}`
-            : `${t('Add New Tank Test Record')} — ${trailer.trailer_id} (${trailer.plate_number})`
+            : `${t('Add New Tank Test Record')} â€” ${trailer.trailer_id} (${trailer.plate_number})`
         }
         subtitle={
           isReadOnly
@@ -346,7 +346,7 @@ export const TankTestFormModal: React.FC<TankTestFormModalProps> = ({
                         type="button"
                         disabled={isReadOnly}
                         onClick={() => setTestStatus(st)}
-                        className="py-2 px-2.5 text-[11px] font-semibold flex items-center gap-2 transition-colors"
+                        className="py-2 px-2.5 text-[12px] font-semibold flex items-center gap-2 transition-colors"
                         style={{
                           background: active ? 'var(--color-ink)' : 'var(--color-page-bg)',
                           color: active ? 'var(--color-surface)' : 'var(--color-ink)',
@@ -396,7 +396,7 @@ export const TankTestFormModal: React.FC<TankTestFormModalProps> = ({
                   <button
                     type="button"
                     onClick={() => applyQuickDueOffset(6)}
-                    className="px-2 py-1 text-[11px] font-medium"
+                    className="px-2 py-1 text-[12px] font-medium"
                     style={{
                       background: 'var(--color-page-bg)',
                       border: '1px solid var(--color-border)',
@@ -405,12 +405,12 @@ export const TankTestFormModal: React.FC<TankTestFormModalProps> = ({
                       cursor: 'pointer',
                     }}
                   >
-                    {isRTL ? '+ 6 أشهر' : '+ 6 Months'}
+                    {isRTL ? '+ 6 ط£ط´ظ‡ط±' : '+ 6 Months'}
                   </button>
                   <button
                     type="button"
                     onClick={() => applyQuickDueOffset(12)}
-                    className="px-2 py-1 text-[11px] font-medium"
+                    className="px-2 py-1 text-[12px] font-medium"
                     style={{
                       background: 'var(--color-page-bg)',
                       border: '1px solid var(--color-border)',
@@ -419,7 +419,7 @@ export const TankTestFormModal: React.FC<TankTestFormModalProps> = ({
                       cursor: 'pointer',
                     }}
                   >
-                    {isRTL ? '+ سنة واحدة' : '+ 1 Year'}
+                    {isRTL ? '+ ط³ظ†ط© ظˆط§ط­ط¯ط©' : '+ 1 Year'}
                   </button>
                 </div>
               )}
@@ -487,7 +487,7 @@ export const TankTestFormModal: React.FC<TankTestFormModalProps> = ({
                 <input
                   disabled={isReadOnly}
                   type="text"
-                  placeholder={isRTL ? 'اسم الفاحص المعتمد' : 'e.g. Eng. Khalid Al-Harbi'}
+                  placeholder={isRTL ? 'ط§ط³ظ… ط§ظ„ظپط§ط­طµ ط§ظ„ظ…ط¹طھظ…ط¯' : 'e.g. Eng. Khalid Al-Harbi'}
                   value={inspectorName}
                   onChange={(e) => setInspectorName(e.target.value)}
                   style={fieldStyle}
@@ -507,7 +507,7 @@ export const TankTestFormModal: React.FC<TankTestFormModalProps> = ({
                 <input
                   disabled={isReadOnly}
                   type="text"
-                  placeholder={isRTL ? 'مركز الفحص المعتمد (مثل TÜV / SGS)' : 'e.g. TÜV Rheinland / SGS Dammam'}
+                  placeholder={isRTL ? 'ظ…ط±ظƒط² ط§ظ„ظپط­طµ ط§ظ„ظ…ط¹طھظ…ط¯ (ظ…ط«ظ„ TأœV / SGS)' : 'e.g. TأœV Rheinland / SGS Dammam'}
                   value={inspectionCenter}
                   onChange={(e) => setInspectionCenter(e.target.value)}
                   style={fieldStyle}
@@ -587,7 +587,7 @@ export const TankTestFormModal: React.FC<TankTestFormModalProps> = ({
                             ? t('Attached Certificate File')
                             : t('Upload Inspection Certificate Scan'))}
                     </p>
-                    <p className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                    <p className="text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                       {t('PDF, JPG, PNG up to 10 MB')}
                     </p>
                   </div>
@@ -645,7 +645,7 @@ export const TankTestFormModal: React.FC<TankTestFormModalProps> = ({
                         t('Attached Certificate')}
                     </span>
                     <span
-                      className="text-[10px]"
+                      className="text-[12px]"
                       style={{
                         color: 'var(--color-text-muted)',
                         fontFamily: 'var(--font-mono)',
@@ -660,7 +660,7 @@ export const TankTestFormModal: React.FC<TankTestFormModalProps> = ({
                   <SecondaryButton
                     type="button"
                     onClick={() => setIsPreviewOpen(true)}
-                    style={{ height: 30, fontSize: 11.5 }}
+                    style={{ height: 30, fontSize: 12.5 }}
                   >
                     <Eye className="w-3.5 h-3.5" />
                     <span>{t('Preview')}</span>
@@ -678,7 +678,7 @@ export const TankTestFormModal: React.FC<TankTestFormModalProps> = ({
                           )
                       )
                     }
-                    style={{ height: 30, fontSize: 11.5 }}
+                    style={{ height: 30, fontSize: 12.5 }}
                   >
                     <Download className="w-3.5 h-3.5" />
                     <span>{t('Download')}</span>
@@ -699,7 +699,7 @@ export const TankTestFormModal: React.FC<TankTestFormModalProps> = ({
                 rows={3}
                 placeholder={
                   isRTL
-                    ? 'ملاحظات الفحص، ضغط الاختبار بالبار (Bar/PSI)، أو التوصيات الفنية...'
+                    ? 'ظ…ظ„ط§ط­ط¸ط§طھ ط§ظ„ظپط­طµطŒ ط¶ط؛ط· ط§ظ„ط§ط®طھط¨ط§ط± ط¨ط§ظ„ط¨ط§ط± (Bar/PSI)طŒ ط£ظˆ ط§ظ„طھظˆطµظٹط§طھ ط§ظ„ظپظ†ظٹط©...'
                     : 'e.g. Tested at 0.35 bar hydrostatic pressure for 30 minutes; zero pressure drop or shell weepage observed.'
                 }
                 value={remarks}
@@ -740,7 +740,7 @@ export const TankTestFormModal: React.FC<TankTestFormModalProps> = ({
           attachmentUrl={attachmentUrl}
           documentNumber={certificateNumber || `${trailer.trailer_id}-${testType}`}
           documentType={testType}
-          assetLabel={`${trailer.trailer_id} · ${trailer.plate_number}`}
+          assetLabel={`${trailer.trailer_id} آ· ${trailer.plate_number}`}
           issueDate={testDate}
           expiryDate={nextTestDueDate}
         />

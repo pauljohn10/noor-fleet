@@ -244,7 +244,7 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
                     border: '1px solid #3E3A34',
                     color: '#CDEBE3',
                     fontFamily: 'var(--font-mono)',
-                    fontSize: 11,
+                    fontSize: 12,
                   }}
                 >
                   {reportNumber}
@@ -252,7 +252,7 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
               )}
             </div>
             {(subtitle || createdAt) && (
-              <p className="text-[11px] text-[#B8B2A6] truncate mt-0.5">
+              <p className="text-[12px] text-[#B8B2A6] truncate mt-0.5">
                 {subtitle} {createdAt && `• ${new Date(createdAt).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}`}
               </p>
             )}
@@ -370,7 +370,7 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
         />
 
         {scale > 1 && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded bg-[#1F1D1A] text-[11px] font-medium text-[#F4F1EA] border border-[#35322C] pointer-events-none">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded bg-[#1F1D1A] text-[12px] font-medium text-[#F4F1EA] border border-[#35322C] pointer-events-none">
             {t('Drag to pan around • Scroll or buttons to zoom', 'Drag to pan around • Scroll or buttons to zoom')}
           </div>
         )}
@@ -391,7 +391,7 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
           <span>{t('Return to Previous Screen', 'Return to Previous Screen')}</span>
         </button>
 
-        <span className="hidden sm:inline text-[11px] text-[#B8B2A6]">
+        <span className="hidden sm:inline text-[12px] text-[#B8B2A6]">
           {t('Use mouse wheel or + / - to zoom • Esc or Click Background to close', 'Use mouse wheel or + / - to zoom • Esc or Click Background to close')}
         </span>
 

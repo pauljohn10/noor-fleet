@@ -37,6 +37,7 @@ export const GpsSyncStatusView: React.FC = () => {
     gpsSyncLogs,
     vehicles,
     simulateGpsSync,
+    testGpsConnection,
     deleteGpsDevice,
     isGpsProviderConnected,
   } = useFleet();
@@ -58,18 +59,25 @@ export const GpsSyncStatusView: React.FC = () => {
 
   const canManage = hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER']);
 
-  const handleTestConnection = () => {
+  const handleTestConnection = async () => {
     setIsTesting(true);
     setTestResult(null);
+    const res = await testGpsConnection();
+    setIsTesting(false);
+    setTestResult(res);
+  };
 
-    setTimeout(() => {
-      setIsTesting(false);
-      setTestResult({
-        success: true,
-        message: t('Mock Telematics Adapter responded successfully (Deno Edge Function Handshake Simulation)'),
-        latency_ms: 42,
-      });
-    }, 600);
+  const handleRunSync = async () => {
+    setIsTesting(true);
+    setTestResult(null);
+    const start = performance.now();
+    const res = await simulateGpsSync();
+    setIsTesting(false);
+    setTestResult({
+      success: res.success,
+      message: res.message,
+      latency_ms: Math.round(performance.now() - start),
+    });
   };
 
   const filteredDevices = gpsDevices.filter(dev => {
@@ -129,29 +137,31 @@ export const GpsSyncStatusView: React.FC = () => {
       <PageHeader
         title={
           <>
-            {isRTL ? 'مزامنة GPS' : 'GPS Sync &'}
+            {isRTL ? 'ظ…ط²ط§ظ…ظ†ط© GPS' : 'GPS Sync &'}
             <br />
-            {isRTL ? 'وتشخيص الأجهزة' : 'Hardware Diagnostics'}
+            {isRTL ? 'ظˆطھط´ط®ظٹطµ ط§ظ„ط£ط¬ظ‡ط²ط©' : 'Hardware Diagnostics'}
           </>
         }
         subtitle={t('Server-side Edge Function telemetry ingestion status, hardware IMEI registry, and execution logs.')}
         actions={
           <>
-            <SecondaryButton onClick={handleTestConnection} disabled={isTesting}>
-              <span>{t('Test Handshake')}</span>
-            </SecondaryButton>
-            <SecondaryButton onClick={simulateGpsSync}>
-              <span>{t('Run Sync Ingestion')}</span>
-            </SecondaryButton>
             {canManage && (
-              <PrimaryButton
-                onClick={() => {
-                  setEditingDevice(undefined);
-                  setIsFormOpen(true);
-                }}
-              >
-                {isRTL ? `+ ${t('Add GPS Device')}` : '+ Add GPS device'}
-              </PrimaryButton>
+              <>
+                <SecondaryButton onClick={handleTestConnection} disabled={isTesting}>
+                  <span>{t('Test Handshake')}</span>
+                </SecondaryButton>
+                <SecondaryButton onClick={handleRunSync} disabled={isTesting}>
+                  <span>{t('Run Sync Ingestion')}</span>
+                </SecondaryButton>
+                <PrimaryButton
+                  onClick={() => {
+                    setEditingDevice(undefined);
+                    setIsFormOpen(true);
+                  }}
+                >
+                  {isRTL ? `+ ${t('Add GPS Device')}` : '+ Add GPS device'}
+                </PrimaryButton>
+              </>
             )}
           </>
         }
@@ -207,14 +217,14 @@ export const GpsSyncStatusView: React.FC = () => {
             label: t('Hardware Registry'),
             value: `${gpsDevices.length} ${t('Registered Trackers')}`,
             subtext: isRTL
-              ? `${pairedCount} مقترن، ${unassignedCount} احتياطي`
+              ? `${pairedCount} ظ…ظ‚طھط±ظ†طŒ ${unassignedCount} ط§ط­طھظٹط§ط·ظٹ`
               : `${pairedCount} paired, ${unassignedCount} unassigned spare`,
             mono: true,
           },
           {
             label: t('Telemetry Validation Filter'),
             value: t('Speed & Jitter Filter Active'),
-            subtext: t('Variance Threshold: ±5% verification'),
+            subtext: t('Variance Threshold: آ±5% verification'),
             valueColor: EDITORIAL_STATUS.green.text,
           },
         ]}
@@ -293,7 +303,7 @@ export const GpsSyncStatusView: React.FC = () => {
                         if (
                           confirm(
                             isRTL
-                              ? `هل أنت متأكد من إزالة جهاز التتبع ${dev.device_imei} من سجل الأسطول؟`
+                              ? `ظ‡ظ„ ط£ظ†طھ ظ…طھط£ظƒط¯ ظ…ظ† ط¥ط²ط§ظ„ط© ط¬ظ‡ط§ط² ط§ظ„طھطھط¨ط¹ ${dev.device_imei} ظ…ظ† ط³ط¬ظ„ ط§ظ„ط£ط³ط·ظˆظ„طں`
                               : `Are you sure you want to remove tracker unit ${dev.device_imei} from the fleet registry?`
                           )
                         ) {
@@ -311,7 +321,7 @@ export const GpsSyncStatusView: React.FC = () => {
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}>{dev.device_model}</div>
                 {dev.serial_number && (
-                  <div style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)', marginTop: 2 }} dir="ltr">
+                  <div style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)', marginTop: 2 }} dir="ltr">
                     SN: {dev.serial_number}
                   </div>
                 )}
@@ -340,7 +350,7 @@ export const GpsSyncStatusView: React.FC = () => {
                   label={isGpsProviderConnected ? t('Online (Active Feed)') : t('Awaiting Feed')}
                   color={isGpsProviderConnected ? EDITORIAL_STATUS.green.text : 'var(--color-text-muted)'}
                   subtext={`${dev.battery_level_percent !== undefined ? `${t('Batt')}: ${dev.battery_level_percent}%` : `${t('Batt')}: --`
-                    } • ${dev.signal_strength_csq !== undefined ? `CSQ: ${dev.signal_strength_csq}/31` : `${t('Signal')}: --`}`}
+                    } â€¢ ${dev.signal_strength_csq !== undefined ? `CSQ: ${dev.signal_strength_csq}/31` : `${t('Signal')}: --`}`}
                   monoSubtext
                 />
               </td>
@@ -353,7 +363,7 @@ export const GpsSyncStatusView: React.FC = () => {
                   {dev.sim_phone_number || t('No SIM Line')}
                 </div>
                 {dev.sim_iccid && (
-                  <div className="truncate max-w-[150px]" style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }} title={dev.sim_iccid} dir="ltr">
+                  <div className="truncate max-w-[150px]" style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }} title={dev.sim_iccid} dir="ltr">
                     ICCID: {dev.sim_iccid}
                   </div>
                 )}
@@ -363,7 +373,7 @@ export const GpsSyncStatusView: React.FC = () => {
                 <div style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--color-ink)' }} dir={dev.installation_date ? 'ltr' : undefined}>
                   {dev.installation_date || t('N/A')}
                 </div>
-                <div style={{ fontSize: 11.5, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>
+                <div style={{ fontSize: 12.5, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>
                   {t('Odo')}: <span dir="ltr">{(dev.installation_odometer || 0).toLocaleString()}</span> {t('KM')}
                 </div>
               </td>
@@ -388,7 +398,7 @@ export const GpsSyncStatusView: React.FC = () => {
       <EditorialSection
         title={t('Recent Ingestion Logs')}
         subtitle={t('Historical sync attempts, latencies, and packet insertion results.')}
-        action={<span style={{ fontSize: 11.5, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>{t('Retaining last 50 events')}</span>}
+        action={<span style={{ fontSize: 12.5, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>{t('Retaining last 50 events')}</span>}
       >
         <DataTable
           columns={[

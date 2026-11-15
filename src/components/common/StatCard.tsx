@@ -95,7 +95,7 @@ export const StatCard: React.FC<StatCardProps> = ({
           style={{
             display: 'inline-block',
             marginTop: 6,
-            fontSize: 11.5,
+            fontSize: 12,
             fontWeight: 500,
             color: trend.isPositive
               ? DESIGN_TOKENS.colors.status.availableText

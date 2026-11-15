@@ -159,7 +159,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
             </div>
           </div>
           <div className="text-end">
-            <p className="text-[11px] font-semibold" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-[12px] font-semibold" style={{ color: 'var(--color-text-muted)' }}>
               {t('Total Repair Expense')}
             </p>
             <p
@@ -188,7 +188,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
               }}
             >
               <div>
-                <p className="font-semibold text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="font-semibold text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                   {t('Odometer Reading')}
                 </p>
                 <p
@@ -200,7 +200,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                 </p>
               </div>
               <div>
-                <p className="font-semibold text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="font-semibold text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                   {t('Model Year')}
                 </p>
                 <p
@@ -212,7 +212,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                 </p>
               </div>
               <div>
-                <p className="font-semibold text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="font-semibold text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                   {t('Department')}
                 </p>
                 <p
@@ -224,7 +224,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                 </p>
               </div>
               <div>
-                <p className="font-semibold text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="font-semibold text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                   {t('Color / Livery')}
                 </p>
                 <p className="font-medium text-xs mt-0.5" style={{ color: 'var(--color-ink)' }}>
@@ -232,7 +232,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                 </p>
               </div>
               <div>
-                <p className="font-semibold text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="font-semibold text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                   {t('Current Location')}
                 </p>
                 <p className="font-medium text-xs mt-0.5" style={{ color: 'var(--color-ink)' }}>
@@ -240,7 +240,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                 </p>
               </div>
               <div>
-                <p className="font-semibold text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="font-semibold text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                   {t('Purchase Cost')}
                 </p>
                 <p
@@ -275,7 +275,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                     <p className="font-semibold" style={{ color: 'var(--color-ink)' }}>
                       {assignedDriver.full_name}
                     </p>
-                    <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                    <p className="text-[12px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
                       {t('Emp ID')}:{' '}
                       <span style={{ fontFamily: 'var(--font-mono)' }} dir="ltr">
                         {assignedDriver.employee_id}
@@ -286,7 +286,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                       </span>
                     </p>
                     <p
-                      className="text-[11px] font-medium mt-1"
+                      className="text-[12px] font-medium mt-1"
                       style={{ color: 'var(--color-text-secondary)' }}
                     >
                       {t('Phone')}:{' '}
@@ -326,11 +326,11 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                     >
                       {assignedTrailer.trailer_id} ({assignedTrailer.plate_number})
                     </p>
-                    <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                    <p className="text-[12px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
                       {(assignedTrailer.tank_capacity_liters || 0).toLocaleString()} {t('L')} -{' '}
                       {assignedTrailer.number_of_compartments} {t('Compartments')}
                     </p>
-                    <p className="text-[11px] mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+                    <p className="text-[12px] mt-1" style={{ color: 'var(--color-text-secondary)' }}>
                       {t(assignedTrailer.tank_type)}
                     </p>
                   </div>
@@ -393,7 +393,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                     <p className="mt-1 font-medium" style={{ color: 'var(--color-text-secondary)' }}>
                       {wo.problem_description}
                     </p>
-                    <p className="text-[11px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                    <p className="text-[12px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
                       {t('Date')}:{' '}
                       {new Date(wo.date_reported).toLocaleDateString(
                         isRTL ? 'ar-SA-u-ca-gregory' : 'en-US'
@@ -457,14 +457,14 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                     >
                       {i.inspection_number}
                     </span>
-                    <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                    <p className="text-[12px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
                       {t('Odometer')}:{' '}
                       <span style={{ fontFamily: 'var(--font-mono)' }} dir="ltr">
                         {(i.odometer_reading || 0).toLocaleString()}
                       </span>{' '}
                       {t('KM')}
                     </p>
-                    <p className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                    <p className="text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                       {new Date(i.inspection_date).toLocaleString(
                         isRTL ? 'ar-SA-u-ca-gregory' : 'en-US'
                       )}
@@ -516,11 +516,11 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                     <p className="font-semibold" style={{ color: 'var(--color-ink)' }}>
                       {s.title}
                     </p>
-                    <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                    <p className="text-[12px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
                       {t('Interval')}: {s.interval_value} {t(s.frequency_type)}
                     </p>
                     {s.next_due_date && (
-                      <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>
+                      <p className="text-[12px] mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>
                         {t('Next Due')}:{' '}
                         <span style={{ fontFamily: 'var(--font-mono)' }} dir="ltr">
                           {s.next_due_date}
@@ -552,7 +552,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                 <span className="font-semibold text-xs" style={{ color: 'var(--color-ink)' }}>
                   {t('Compliance & Regulatory Documents')}
                 </span>
-                <p className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                   {t('Istimara, Insurance, Aramco Gate Permits, and Testing Certificates')}
                 </p>
               </div>
@@ -586,7 +586,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                 <p className="font-semibold" style={{ color: 'var(--color-ink)' }}>
                   {t('No documents registered for this vehicle.')}
                 </p>
-                <p className="text-[11px]">
+                <p className="text-[12px]">
                   {t('Register the vehicle Istimara or insurance policy to track expiration alerts.')}
                 </p>
               </div>
@@ -622,23 +622,23 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                         {isExpired ? (
                           <Badge variant="danger">
                             {isRTL
-                              ? `منتهي (منذ ${Math.abs(diffDays)} يوم)`
+                              ? `ظ…ظ†طھظ‡ظٹ (ظ…ظ†ط° ${Math.abs(diffDays)} ظٹظˆظ…)`
                               : `EXPIRED (${Math.abs(diffDays)}d ago)`}
                           </Badge>
                         ) : isExpiringSoon ? (
                           <Badge variant="amber">
                             {isRTL
-                              ? `قريب الانتهاء (متبقي ${diffDays} يوم)`
+                              ? `ظ‚ط±ظٹط¨ ط§ظ„ط§ظ†طھظ‡ط§ط، (ظ…طھط¨ظ‚ظٹ ${diffDays} ظٹظˆظ…)`
                               : `EXPIRING SOON (${diffDays}d left)`}
                           </Badge>
                         ) : (
                           <Badge variant="success">
-                            {isRTL ? `ساري (متبقي ${diffDays} يوم)` : `VALID (${diffDays}d left)`}
+                            {isRTL ? `ط³ط§ط±ظٹ (ظ…طھط¨ظ‚ظٹ ${diffDays} ظٹظˆظ…)` : `VALID (${diffDays}d left)`}
                           </Badge>
                         )}
                       </div>
                       <div
-                        className="flex items-center gap-3 text-[11px] flex-wrap"
+                        className="flex items-center gap-3 text-[12px] flex-wrap"
                         style={{ color: 'var(--color-text-muted)' }}
                       >
                         <span>
@@ -650,7 +650,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                             {d.document_number}
                           </strong>
                         </span>
-                        <span>•</span>
+                        <span>â€¢</span>
                         <span>
                           {t('Authority')}:{' '}
                           <strong style={{ color: 'var(--color-text-secondary)' }}>
@@ -659,7 +659,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                         </span>
                       </div>
                       <div
-                        className="flex items-center gap-3 text-[11px] flex-wrap pt-0.5"
+                        className="flex items-center gap-3 text-[12px] flex-wrap pt-0.5"
                         style={{ color: 'var(--color-text-secondary)' }}
                       >
                         {d.issue_date && (
@@ -670,7 +670,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                             </span>
                           </span>
                         )}
-                        {d.issue_date && <span>•</span>}
+                        {d.issue_date && <span>â€¢</span>}
                         <span className="font-semibold">
                           {t('Expiry Date')}:{' '}
                           <span
@@ -690,7 +690,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                       </div>
                       {d.updated_at && (
                         <div
-                          className="text-[11px] flex items-center gap-1.5 pt-0.5"
+                          className="text-[12px] flex items-center gap-1.5 pt-0.5"
                           style={{ color: 'var(--color-text-muted)' }}
                         >
                           <Clock className="w-3 h-3" />
@@ -790,7 +790,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
           attachmentUrl={previewDoc.attachment_url}
           documentNumber={previewDoc.document_number}
           documentType={previewDoc.document_type}
-          assetLabel={`${vehicle.vehicle_id} · ${vehicle.plate_number}`}
+          assetLabel={`${vehicle.vehicle_id} آ· ${vehicle.plate_number}`}
           issueDate={previewDoc.issue_date}
           expiryDate={previewDoc.expiry_date}
         />

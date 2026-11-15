@@ -76,7 +76,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ activeTab, onSelectTab }) 
               background: isActive ? 'var(--color-row-hover)' : 'transparent',
               color: isActive ? 'var(--color-ink)' : 'var(--color-text-muted)',
               fontWeight: isActive ? 600 : 400,
-              fontSize: 11,
+              fontSize: 12,
               cursor: 'pointer',
             }}
           >

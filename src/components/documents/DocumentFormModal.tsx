@@ -327,7 +327,7 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
 
   const modalFooter = (
     <>
-      <span className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+      <span className="text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
         {t('Permit status and dashboard compliance indicators refresh automatically upon saving.')}
       </span>
       <div className="flex items-center gap-2.5">
@@ -409,7 +409,7 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
                 <span>{t('Renewal Status Verification')}</span>
               </div>
               <div
-                className="flex flex-wrap items-center gap-4 text-[11px]"
+                className="flex flex-wrap items-center gap-4 text-[12px]"
                 style={{ color: 'var(--color-text-secondary)' }}
               >
                 <span>
@@ -430,7 +430,7 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
                     }}
                     dir="ltr"
                   >
-                    {expiryDate || '—'}
+                    {expiryDate || 'â€”'}
                   </strong>
                 </span>
               </div>
@@ -439,7 +439,7 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
             {!effectiveReadOnly && (
               <div className="flex flex-wrap items-center gap-1.5 shrink-0">
                 <span
-                  className="text-[11px] font-medium me-1"
+                  className="text-[12px] font-medium me-1"
                   style={{ color: 'var(--color-text-muted)' }}
                 >
                   {t('Extend')}:
@@ -476,7 +476,7 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
               style={{ color: 'var(--color-ink)' }}
             >
               <span
-                className="w-5 h-5 flex items-center justify-center font-bold text-[11px]"
+                className="w-5 h-5 flex items-center justify-center font-bold text-[12px]"
                 style={{
                   background: 'var(--color-page-bg)',
                   border: '1px solid var(--color-border)',
@@ -491,7 +491,7 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
             </div>
             {!effectiveReadOnly && (
               <span
-                className="text-[11px] font-semibold"
+                className="text-[12px] font-semibold"
                 style={{ color: 'var(--color-brand-accent)' }}
               >
                 {t('* Required fields')}
@@ -570,7 +570,7 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
             }}
           >
             <span
-              className="w-5 h-5 flex items-center justify-center font-bold text-[11px]"
+              className="w-5 h-5 flex items-center justify-center font-bold text-[12px]"
               style={{
                 background: 'var(--color-page-bg)',
                 border: '1px solid var(--color-border)',
@@ -638,7 +638,7 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
                     <option value="">{t('-- Select Tractor Truck --')}</option>
                     {vehicles.map((v) => (
                       <option key={v.id} value={v.id}>
-                        {v.vehicle_id} — {v.plate_number} ({v.make})
+                        {v.vehicle_id} â€” {v.plate_number} ({v.make})
                       </option>
                     ))}
                   </select>
@@ -663,7 +663,7 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
                     <option value="">{t('-- Select Tanker Trailer --')}</option>
                     {trailers.map((tr) => (
                       <option key={tr.id} value={tr.id}>
-                        {tr.trailer_id} — {tr.plate_number} ({tr.tank_capacity_liters.toLocaleString()} L)
+                        {tr.trailer_id} â€” {tr.plate_number} ({tr.tank_capacity_liters.toLocaleString()} L)
                       </option>
                     ))}
                   </select>
@@ -726,7 +726,7 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
               style={{ color: 'var(--color-ink)' }}
             >
               <span
-                className="w-5 h-5 flex items-center justify-center font-bold text-[11px]"
+                className="w-5 h-5 flex items-center justify-center font-bold text-[12px]"
                 style={{
                   background: 'var(--color-page-bg)',
                   border: '1px solid var(--color-border)',
@@ -816,7 +816,7 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
             }}
           >
             <span
-              className="w-5 h-5 flex items-center justify-center font-bold text-[11px]"
+              className="w-5 h-5 flex items-center justify-center font-bold text-[12px]"
               style={{
                 background: 'var(--color-page-bg)',
                 border: '1px solid var(--color-border)',
@@ -862,7 +862,7 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
                         ? t('Uploading document scan to storage...')
                         : attachmentName || t('Upload scanned PDF or certificate photo')}
                     </div>
-                    <div className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                    <div className="text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
                       {t('PDF, JPG, PNG up to 10 MB')}
                     </div>
                   </div>
@@ -1050,7 +1050,7 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
         {/* Bottom Audit Bar for Existing Records */}
         {initialDoc && (
           <div
-            className="px-3.5 py-2.5 flex flex-wrap items-center justify-between gap-2 text-[11px]"
+            className="px-3.5 py-2.5 flex flex-wrap items-center justify-between gap-2 text-[12px]"
             style={{
               background: 'var(--color-page-bg)',
               border: '1px solid var(--color-border)',
@@ -1074,7 +1074,7 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
                   ? new Date(initialDoc.updated_at).toLocaleDateString(dateLocale)
                   : new Date(initialDoc.created_at).toLocaleDateString(dateLocale)}
               </strong>
-              {initialDoc.updated_by ? ` — ${initialDoc.updated_by}` : ''}
+              {initialDoc.updated_by ? ` â€” ${initialDoc.updated_by}` : ''}
             </div>
           </div>
         )}
@@ -1091,12 +1091,12 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
             unitCategory === 'VEHICLE'
               ? (() => {
                   const v = vehicles.find((x) => x.id === selectedVehicleId);
-                  return v ? `${v.vehicle_id} · ${v.plate_number}` : undefined;
+                  return v ? `${v.vehicle_id} آ· ${v.plate_number}` : undefined;
                 })()
               : unitCategory === 'TRAILER'
               ? (() => {
                   const tr = trailers.find((x) => x.id === selectedTrailerId);
-                  return tr ? `${tr.trailer_id} · ${tr.plate_number}` : undefined;
+                  return tr ? `${tr.trailer_id} آ· ${tr.plate_number}` : undefined;
                 })()
               : t('General Fleet')
           }

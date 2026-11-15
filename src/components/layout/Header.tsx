@@ -141,7 +141,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', onOpenS
             {isRTL ? 'ابحث عن أي شيء' : 'Search anything'}
           </span>
           <kbd style={{
-            fontSize: 11,
+            fontSize: 12,
             fontFamily: 'var(--font-mono)',
             color: 'var(--color-text-muted)',
             background: 'var(--color-page-bg)',
@@ -214,8 +214,8 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', onOpenS
             }}>
               <div style={{ padding: '8px 10px 10px', borderBottom: '1px solid var(--color-border)', marginBottom: 6 }}>
                 <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>{currentProfile.full_name}</div>
-                <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2, fontFamily: 'var(--font-mono)' }}>{currentProfile.email}</div>
-                <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 4 }}>{roleLabel(activeRole, isRTL)}</div>
+                <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2, fontFamily: 'var(--font-mono)' }}>{currentProfile.email}</div>
+                <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 4 }}>{roleLabel(activeRole, isRTL)}</div>
               </div>
 
               {activeRole === 'SUPER_ADMIN' && (

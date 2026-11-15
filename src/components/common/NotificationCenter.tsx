@@ -57,7 +57,7 @@ export const NotificationCenter: React.FC = () => {
               background: DESIGN_TOKENS.colors.status.outOfServiceStripe,
               color: 'var(--color-surface)',
               fontFamily: 'var(--font-mono)',
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: 600,
               display: 'inline-flex',
               alignItems: 'center',
@@ -106,7 +106,7 @@ export const NotificationCenter: React.FC = () => {
                   <span
                     style={{
                       fontFamily: 'var(--font-mono)',
-                      fontSize: 11,
+                      fontSize: 12,
                       color: DESIGN_TOKENS.colors.status.outOfServiceText,
                       fontWeight: 600,
                     }}
@@ -184,7 +184,7 @@ export const NotificationCenter: React.FC = () => {
                         style={{
                           display: 'block',
                           marginTop: 4,
-                          fontSize: 11,
+                          fontSize: 12,
                           fontFamily: 'var(--font-mono)',
                           color: 'var(--color-text-muted)',
                         }}

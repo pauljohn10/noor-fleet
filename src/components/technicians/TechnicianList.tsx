@@ -52,22 +52,22 @@ export const TechnicianList: React.FC = () => {
   return (
     <PageContainer>
       <PageHeader
-        title={isRTL ? 'سجل الفنيين والميكانيكيين' : 'Workshop Technicians\n& Mechanics Roster'}
+        title={isRTL ? 'ط³ط¬ظ„ ط§ظ„ظپظ†ظٹظٹظ† ظˆط§ظ„ظ…ظٹظƒط§ظ†ظٹظƒظٹظٹظ†' : 'Workshop Technicians\n& Mechanics Roster'}
         subtitle={t('Track mechanic specializations, assigned work orders, repair completion rate, and hourly rates.')}
       />
 
       <StatusTabs
         tabs={[
-          { key: 'ALL', label: isRTL ? 'الكل' : 'All', count: technicians.length },
+          { key: 'ALL', label: isRTL ? 'ط§ظ„ظƒظ„' : 'All', count: technicians.length },
           {
             key: 'ACTIVE',
-            label: isRTL ? 'نشط' : 'Active',
+            label: isRTL ? 'ظ†ط´ط·' : 'Active',
             count: activeCount,
             stripe: DESIGN_TOKENS.colors.status.availableStripe,
           },
           {
             key: 'INACTIVE',
-            label: isRTL ? 'غير نشط' : 'Inactive',
+            label: isRTL ? 'ط؛ظٹط± ظ†ط´ط·' : 'Inactive',
             count: inactiveCount,
             stripe: DESIGN_TOKENS.colors.status.outOfServiceStripe,
           },
@@ -76,18 +76,18 @@ export const TechnicianList: React.FC = () => {
         onChange={k => setStatusFilter(k as 'ALL' | 'ACTIVE' | 'INACTIVE')}
         searchValue={search}
         onSearchChange={setSearch}
-        searchPlaceholder={isRTL ? 'بحث بالاسم، الرقم، التخصص...' : 'Search name, ID, specialization...'}
+        searchPlaceholder={isRTL ? 'ط¨ط­ط« ط¨ط§ظ„ط§ط³ظ…طŒ ط§ظ„ط±ظ‚ظ…طŒ ط§ظ„طھط®طµطµ...' : 'Search name, ID, specialization...'}
       />
 
       <DataTable
         columns={[
-          { label: isRTL ? 'الفني' : 'Technician', align: 'start' },
-          { label: isRTL ? 'الرقم الوظيفي' : 'Employee ID', align: 'start' },
-          { label: isRTL ? 'التخصص والقسم' : 'Specialization', align: 'start' },
-          { label: isRTL ? 'التكلفة بالساعة' : 'Hourly rate', align: 'end' },
-          { label: isRTL ? 'مهام نشطة' : 'Active jobs', align: 'end' },
-          { label: isRTL ? 'مهام مكتملة' : 'Completed', align: 'end' },
-          { label: isRTL ? 'الحالة' : 'Status', align: 'start' },
+          { label: isRTL ? 'ط§ظ„ظپظ†ظٹ' : 'Technician', align: 'start' },
+          { label: isRTL ? 'ط§ظ„ط±ظ‚ظ… ط§ظ„ظˆط¸ظٹظپظٹ' : 'Employee ID', align: 'start' },
+          { label: isRTL ? 'ط§ظ„طھط®طµطµ ظˆط§ظ„ظ‚ط³ظ…' : 'Specialization', align: 'start' },
+          { label: isRTL ? 'ط§ظ„طھظƒظ„ظپط© ط¨ط§ظ„ط³ط§ط¹ط©' : 'Hourly rate', align: 'end' },
+          { label: isRTL ? 'ظ…ظ‡ط§ظ… ظ†ط´ط·ط©' : 'Active jobs', align: 'end' },
+          { label: isRTL ? 'ظ…ظ‡ط§ظ… ظ…ظƒطھظ…ظ„ط©' : 'Completed', align: 'end' },
+          { label: isRTL ? 'ط§ظ„ط­ط§ظ„ط©' : 'Status', align: 'start' },
         ]}
         hasActionsColumn={false}
         isEmpty={filtered.length === 0}
@@ -143,7 +143,7 @@ export const TechnicianList: React.FC = () => {
                     {tech.phone && (
                       <div
                         dir="ltr"
-                        style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, color: 'var(--color-text-muted)' }}
+                        style={{ fontFamily: 'var(--font-mono)', fontSize: 12.5, color: 'var(--color-text-muted)' }}
                       >
                         {tech.phone}
                       </div>
@@ -202,7 +202,7 @@ export const TechnicianList: React.FC = () => {
               </td>
               <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
                 <StatusText
-                  label={isActive ? (isRTL ? 'نشط' : 'Active') : (isRTL ? 'غير نشط' : 'Inactive')}
+                  label={isActive ? (isRTL ? 'ظ†ط´ط·' : 'Active') : (isRTL ? 'ط؛ظٹط± ظ†ط´ط·' : 'Inactive')}
                   color={
                     isActive
                       ? DESIGN_TOKENS.colors.status.availableText
@@ -218,7 +218,7 @@ export const TechnicianList: React.FC = () => {
       <TableFooter
         summaryText={
           isRTL
-            ? `${filtered.length} من ${technicians.length} فني`
+            ? `${filtered.length} ظ…ظ† ${technicians.length} ظپظ†ظٹ`
             : `${filtered.length} of ${technicians.length} technicians`
         }
         page={page}

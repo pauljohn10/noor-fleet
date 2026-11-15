@@ -878,6 +878,50 @@ export async function fetchGpsDevices(): Promise<GpsDevice[]> {
   })) as GpsDevice[];
 }
 
+export async function fetchLatestVehicleGpsPings(): Promise<VehicleGpsPing[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase
+    .from('vehicle_gps_pings')
+    .select('*')
+    .eq('data_source', 'LIVE_PROVIDER')
+    .eq('is_valid_point', true)
+    .order('gps_timestamp', { ascending: false })
+    .limit(500);
+  if (error) {
+    console.warn('[SupabaseFleet] Could not fetch GPS pings:', error.message);
+    return [];
+  }
+  const latestByVehicle = new Map<string, VehicleGpsPing>();
+  for (const row of data || []) {
+    if (!row?.vehicle_id || latestByVehicle.has(row.vehicle_id)) continue;
+    latestByVehicle.set(row.vehicle_id, {
+      ...row,
+      latitude: Number(row.latitude),
+      longitude: Number(row.longitude),
+      speed_kmh: Number(row.speed_kmh) || 0,
+      heading_degrees: Number(row.heading_degrees) || 0,
+      altitude_meters: row.altitude_meters !== null && row.altitude_meters !== undefined ? Number(row.altitude_meters) : undefined,
+      odometer_km: row.odometer_km !== null && row.odometer_km !== undefined ? Number(row.odometer_km) : undefined,
+      accuracy_meters: row.accuracy_meters !== null && row.accuracy_meters !== undefined ? Number(row.accuracy_meters) : undefined,
+    } as VehicleGpsPing);
+  }
+  return Array.from(latestByVehicle.values());
+}
+
+export async function fetchGpsSyncLogs(): Promise<GpsSyncLog[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await supabase
+    .from('gps_sync_logs')
+    .select('*')
+    .order('sync_started_at', { ascending: false })
+    .limit(50);
+  if (error) {
+    console.warn('[SupabaseFleet] Could not fetch GPS sync logs:', error.message);
+    return [];
+  }
+  return (data || []) as GpsSyncLog[];
+}
+
 export async function fetchFuelTransactions(): Promise<FuelTransaction[]> {
   if (!isSupabaseConfigured) return [];
   const { data, error } = await supabase

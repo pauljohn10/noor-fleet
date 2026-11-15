@@ -214,7 +214,7 @@ export const FuelMonitoringView: React.FC = () => {
           { label: t('Active Tab'), value: activeTabLabel },
           {
             label: t('Export Scope'),
-            value: isRTL ? `${filteredTransactions.length} معاملة مدرجة` : `${filteredTransactions.length} transactions listed`,
+            value: isRTL ? `${filteredTransactions.length} ظ…ط¹ط§ظ…ظ„ط© ظ…ط¯ط±ط¬ط©` : `${filteredTransactions.length} transactions listed`,
           },
         ],
       }
@@ -226,9 +226,9 @@ export const FuelMonitoringView: React.FC = () => {
       <PageHeader
         title={
           <>
-            {isRTL ? 'استهلاك الوقود' : 'Fuel Consumption'}
+            {isRTL ? 'ط§ط³طھظ‡ظ„ط§ظƒ ط§ظ„ظˆظ‚ظˆط¯' : 'Fuel Consumption'}
             <br />
-            {isRTL ? 'ومراجعة الفروقات' : '& Variance Audit'}
+            {isRTL ? 'ظˆظ…ط±ط§ط¬ط¹ط© ط§ظ„ظپط±ظˆظ‚ط§طھ' : '& Variance Audit'}
           </>
         }
         subtitle={t('Audit fuel dispensing transactions, monitor consumption benchmarks, and reconcile GPS road distance.')}
@@ -238,7 +238,7 @@ export const FuelMonitoringView: React.FC = () => {
               {t('Excel')}
             </GhostButton>
             <GhostButton onClick={handleExportPDF} title={t('Export to PDF')}>
-              {isRTL ? 'تقرير PDF' : 'PDF report'}
+              {isRTL ? 'طھظ‚ط±ظٹط± PDF' : 'PDF report'}
             </GhostButton>
             <PrimaryButton onClick={() => setIsModalOpen(true)}>
               {isRTL ? `+ ${t('Log Fuel Dispense')}` : '+ Log fuel dispense'}
@@ -289,7 +289,7 @@ export const FuelMonitoringView: React.FC = () => {
                     <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }} dir="ltr">
                       {tx.transaction_number}
                     </div>
-                    <div style={{ fontSize: 11.5, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)', marginTop: 2 }} dir="ltr">
+                    <div style={{ fontSize: 12.5, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)', marginTop: 2 }} dir="ltr">
                       {new Date(tx.transaction_date).toLocaleDateString(isRTL ? 'ar-SA-u-ca-gregory' : 'en-US')}
                     </div>
                   </td>
@@ -300,7 +300,7 @@ export const FuelMonitoringView: React.FC = () => {
                         <PlateChip plate={veh.plate_number} accentColor={EDITORIAL_STATUS.green.stripe} />
                       ) : null}
                       <span style={{ fontWeight: 600, fontSize: 12.5, color: 'var(--color-ink)' }} dir="ltr">
-                        {veh?.vehicle_id || '—'}
+                        {veh?.vehicle_id || 'â€”'}
                       </span>
                     </div>
                   </td>
@@ -316,7 +316,7 @@ export const FuelMonitoringView: React.FC = () => {
 
                   <td style={{ padding: '14px 16px', verticalAlign: 'middle', fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>
                     <span dir="ltr">{tx.total_cost.toFixed(2)}</span> {t('SAR')}
-                    <div style={{ fontSize: 11.5, color: 'var(--color-text-muted)', fontWeight: 400 }} dir="ltr">
+                    <div style={{ fontSize: 12.5, color: 'var(--color-text-muted)', fontWeight: 400 }} dir="ltr">
                       @{tx.unit_cost.toFixed(2)} /{t('L')}
                     </div>
                   </td>
@@ -445,12 +445,12 @@ export const FuelMonitoringView: React.FC = () => {
         <div>
           <DataTable
             columns={[
-              { label: isRTL ? 'الصنع والموديل' : 'Make and model', align: 'start' },
-              { label: isRTL ? 'الفئة' : 'Configuration', align: 'start' },
-              { label: isRTL ? 'العودة فارغة' : 'Empty return', align: 'start' },
-              { label: isRTL ? 'محمل بالوقود' : 'Loaded tanker', align: 'start' },
-              { label: isRTL ? 'مضخة PTO' : 'PTO pump', align: 'start' },
-              { label: isRTL ? 'معامل التكييف الصيفي' : 'Summer A/C penalty', align: 'start' },
+              { label: isRTL ? 'ط§ظ„طµظ†ط¹ ظˆط§ظ„ظ…ظˆط¯ظٹظ„' : 'Make and model', align: 'start' },
+              { label: isRTL ? 'ط§ظ„ظپط¦ط©' : 'Configuration', align: 'start' },
+              { label: isRTL ? 'ط§ظ„ط¹ظˆط¯ط© ظپط§ط±ط؛ط©' : 'Empty return', align: 'start' },
+              { label: isRTL ? 'ظ…ط­ظ…ظ„ ط¨ط§ظ„ظˆظ‚ظˆط¯' : 'Loaded tanker', align: 'start' },
+              { label: isRTL ? 'ظ…ط¶ط®ط© PTO' : 'PTO pump', align: 'start' },
+              { label: isRTL ? 'ظ…ط¹ط§ظ…ظ„ ط§ظ„طھظƒظٹظٹظپ ط§ظ„طµظٹظپظٹ' : 'Summer A/C penalty', align: 'start' },
             ]}
             isEmpty={fuelBenchmarks.length === 0}
             emptyMessage={t('No benchmarks configured')}
@@ -506,10 +506,10 @@ export const FuelMonitoringView: React.FC = () => {
             <div style={{ padding: 14, borderRadius: 4, background: 'var(--color-surface)', border: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 8, borderBottom: '1px solid var(--color-row-divider)' }}>
                 <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--color-ink)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ width: 20, height: 20, borderRadius: 4, background: 'var(--color-ink)', color: 'var(--color-page-bg)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600 }}>1</span>
+                  <span style={{ width: 20, height: 20, borderRadius: 4, background: 'var(--color-ink)', color: 'var(--color-page-bg)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600 }}>1</span>
                   {t('Vehicle, Driver & Station Details')}
                 </span>
-                <span style={{ fontSize: 11.5, color: 'var(--color-text-muted)' }}>{t('* Required fields')}</span>
+                <span style={{ fontSize: 12.5, color: 'var(--color-text-muted)' }}>{t('* Required fields')}</span>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
@@ -580,7 +580,7 @@ export const FuelMonitoringView: React.FC = () => {
             <div style={{ padding: 14, borderRadius: 4, background: 'var(--color-surface)', border: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 8, borderBottom: '1px solid var(--color-row-divider)' }}>
                 <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--color-ink)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ width: 20, height: 20, borderRadius: 4, background: 'var(--color-ink)', color: 'var(--color-page-bg)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600 }}>2</span>
+                  <span style={{ width: 20, height: 20, borderRadius: 4, background: 'var(--color-ink)', color: 'var(--color-page-bg)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600 }}>2</span>
                   {t('Pump Meter, Volume & Billing')}
                 </span>
                 <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', fontWeight: 600, color: EDITORIAL_STATUS.green.text }}>

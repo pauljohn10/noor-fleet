@@ -364,9 +364,9 @@ export const MaintenanceScheduleList: React.FC = () => {
       <PageHeader
         title={
           <>
-            {isRTL ? 'جداول الصيانة' : 'Preventive'}
+            {isRTL ? 'ط¬ط¯ط§ظˆظ„ ط§ظ„طµظٹط§ظ†ط©' : 'Preventive'}
             <br />
-            {isRTL ? 'الوقائية الدورية' : 'Maintenance'}
+            {isRTL ? 'ط§ظ„ظˆظ‚ط§ط¦ظٹط© ط§ظ„ط¯ظˆط±ظٹط©' : 'Maintenance'}
           </>
         }
         subtitle={t('Automated maintenance intervals triggered by Odometer Mileage (KM), Engine Hours, or Calendar Days.')}
@@ -376,7 +376,7 @@ export const MaintenanceScheduleList: React.FC = () => {
               {t('Excel')}
             </GhostButton>
             <GhostButton onClick={handleExportPDF}>
-              {isRTL ? 'تقرير PDF' : 'PDF report'}
+              {isRTL ? 'طھظ‚ط±ظٹط± PDF' : 'PDF report'}
             </GhostButton>
             {canManageStatus && (
               <PrimaryButton onClick={() => setIsCreateModalOpen(true)}>
@@ -434,34 +434,34 @@ export const MaintenanceScheduleList: React.FC = () => {
 
       <StatusTabs
         tabs={[
-          { key: 'ALL', label: isRTL ? 'الكل' : 'All', count: schedules.length },
+          { key: 'ALL', label: isRTL ? 'ط§ظ„ظƒظ„' : 'All', count: schedules.length },
           {
             key: 'UPCOMING',
-            label: isRTL ? 'مجدولة' : 'Upcoming',
+            label: isRTL ? 'ظ…ط¬ط¯ظˆظ„ط©' : 'Upcoming',
             count: countByStatus('UPCOMING'),
             stripe: DESIGN_TOKENS.colors.status.onTripStripe,
           },
           {
             key: 'DUE_SOON',
-            label: isRTL ? 'مستحقة قريباً' : 'Due soon',
+            label: isRTL ? 'ظ…ط³طھط­ظ‚ط© ظ‚ط±ظٹط¨ط§ظ‹' : 'Due soon',
             count: countByStatus('DUE_SOON'),
             stripe: DESIGN_TOKENS.colors.status.workshopStripe,
           },
           {
             key: 'DUE',
-            label: isRTL ? 'مستحقة الآن' : 'Due now',
+            label: isRTL ? 'ظ…ط³طھط­ظ‚ط© ط§ظ„ط¢ظ†' : 'Due now',
             count: countByStatus('DUE'),
             stripe: DESIGN_TOKENS.colors.status.workshopStripe,
           },
           {
             key: 'OVERDUE',
-            label: isRTL ? 'متأخرة' : 'Overdue',
+            label: isRTL ? 'ظ…طھط£ط®ط±ط©' : 'Overdue',
             count: countByStatus('OVERDUE'),
             stripe: DESIGN_TOKENS.colors.status.outOfServiceStripe,
           },
           {
             key: 'COMPLETED',
-            label: isRTL ? 'مكتملة' : 'Completed',
+            label: isRTL ? 'ظ…ظƒطھظ…ظ„ط©' : 'Completed',
             count: countByStatus('COMPLETED'),
             stripe: DESIGN_TOKENS.colors.status.availableStripe,
           },
@@ -481,12 +481,12 @@ export const MaintenanceScheduleList: React.FC = () => {
 
       <DataTable
         columns={[
-          { label: isRTL ? 'مهمة الصيانة' : 'Service task', align: 'start' },
-          { label: isRTL ? 'المركبة / المقطورة' : 'Assigned unit', align: 'start' },
-          { label: isRTL ? 'التكرار' : 'Frequency', align: 'start' },
-          { label: isRTL ? 'الفاصل' : 'Interval', align: 'end' },
-          { label: isRTL ? 'موعد الصيانة القادم' : 'Next due target', align: 'start' },
-          { label: isRTL ? 'الحالة' : 'Status', align: 'start' },
+          { label: isRTL ? 'ظ…ظ‡ظ…ط© ط§ظ„طµظٹط§ظ†ط©' : 'Service task', align: 'start' },
+          { label: isRTL ? 'ط§ظ„ظ…ط±ظƒط¨ط© / ط§ظ„ظ…ظ‚ط·ظˆط±ط©' : 'Assigned unit', align: 'start' },
+          { label: isRTL ? 'ط§ظ„طھظƒط±ط§ط±' : 'Frequency', align: 'start' },
+          { label: isRTL ? 'ط§ظ„ظپط§طµظ„' : 'Interval', align: 'end' },
+          { label: isRTL ? 'ظ…ظˆط¹ط¯ ط§ظ„طµظٹط§ظ†ط© ط§ظ„ظ‚ط§ط¯ظ…' : 'Next due target', align: 'start' },
+          { label: isRTL ? 'ط§ظ„ط­ط§ظ„ط©' : 'Status', align: 'start' },
         ]}
         hasActionsColumn={canManageStatus}
         isEmpty={pagedSchedules.length === 0}
@@ -551,7 +551,7 @@ export const MaintenanceScheduleList: React.FC = () => {
                     </div>
                     <div
                       dir="ltr"
-                      style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, color: 'var(--color-text-muted)', marginTop: 2 }}
+                      style={{ fontFamily: 'var(--font-mono)', fontSize: 12.5, color: 'var(--color-text-muted)', marginTop: 2 }}
                     >
                       {veh.plate_number}
                     </div>
@@ -566,7 +566,7 @@ export const MaintenanceScheduleList: React.FC = () => {
                     </div>
                     <div
                       dir="ltr"
-                      style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, color: 'var(--color-text-muted)', marginTop: 2 }}
+                      style={{ fontFamily: 'var(--font-mono)', fontSize: 12.5, color: 'var(--color-text-muted)', marginTop: 2 }}
                     >
                       {trl.plate_number}
                     </div>
@@ -596,7 +596,7 @@ export const MaintenanceScheduleList: React.FC = () => {
                 {(s.next_due_mileage || 0) > 0 && (
                   <div
                     dir="ltr"
-                    style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, color: 'var(--color-text-muted)', marginTop: 2 }}
+                    style={{ fontFamily: 'var(--font-mono)', fontSize: 12.5, color: 'var(--color-text-muted)', marginTop: 2 }}
                   >
                     {(s.next_due_mileage || 0).toLocaleString()} {t('KM')}
                   </div>
@@ -614,7 +614,7 @@ export const MaintenanceScheduleList: React.FC = () => {
       <TableFooter
         summaryText={
           isRTL
-            ? `${filteredSchedules.length} من ${schedules.length} جدول صيانة`
+            ? `${filteredSchedules.length} ظ…ظ† ${schedules.length} ط¬ط¯ظˆظ„ طµظٹط§ظ†ط©`
             : `${filteredSchedules.length} of ${schedules.length} schedules`
         }
         page={page}
@@ -645,7 +645,7 @@ export const MaintenanceScheduleList: React.FC = () => {
                 borderRadius: 4,
               }}
             >
-              <div style={{ fontSize: 11.5, color: 'var(--color-text-muted)' }}>
+              <div style={{ fontSize: 12.5, color: 'var(--color-text-muted)' }}>
                 {t('Maintenance Schedule Record')}
               </div>
               <h4 style={{ margin: '4px 0 0', fontSize: 15, fontWeight: 600, color: 'var(--color-ink)' }}>
@@ -680,7 +680,7 @@ export const MaintenanceScheduleList: React.FC = () => {
                       <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}>
                         {t(option.label)}
                       </div>
-                      <p style={{ margin: '4px 0 0', fontSize: 11.5, color: 'var(--color-text-muted)' }}>
+                      <p style={{ margin: '4px 0 0', fontSize: 12.5, color: 'var(--color-text-muted)' }}>
                         {t(option.description)}
                       </p>
                     </button>

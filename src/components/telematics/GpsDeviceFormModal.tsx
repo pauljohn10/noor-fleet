@@ -119,7 +119,7 @@ export const GpsDeviceFormModal: React.FC<GpsDeviceFormModalProps> = ({
     if (isDuplicate) {
       setErrorMessage(
         isRTL
-          ? `تم رفض رقم IMEI المكرر: يوجد جهاز مسجل مسبقاً برقم "${cleanImei}".`
+          ? `طھظ… ط±ظپط¶ ط±ظ‚ظ… IMEI ط§ظ„ظ…ظƒط±ط±: ظٹظˆط¬ط¯ ط¬ظ‡ط§ط² ظ…ط³ط¬ظ„ ظ…ط³ط¨ظ‚ط§ظ‹ ط¨ط±ظ‚ظ… "${cleanImei}".`
           : `Duplicate IMEI rejected: An existing device is already registered with IMEI "${cleanImei}".`
       );
       return;
@@ -176,8 +176,8 @@ export const GpsDeviceFormModal: React.FC<GpsDeviceFormModalProps> = ({
         <span>
           {isRTL ? (
             <>
-              تبدأ الحالة بـ <strong style={{ color: 'var(--color-ink)' }}>بانتظار ربط البيانات</strong> حتى تصل
-              الإحداثيات الحية.
+              طھط¨ط¯ط£ ط§ظ„ط­ط§ظ„ط© ط¨ظ€ <strong style={{ color: 'var(--color-ink)' }}>ط¨ط§ظ†طھط¸ط§ط± ط±ط¨ط· ط§ظ„ط¨ظٹط§ظ†ط§طھ</strong> ط­طھظ‰ طھطµظ„
+              ط§ظ„ط¥ط­ط¯ط§ط«ظٹط§طھ ط§ظ„ط­ظٹط©.
             </>
           ) : (
             <>
@@ -249,7 +249,7 @@ export const GpsDeviceFormModal: React.FC<GpsDeviceFormModalProps> = ({
               style={{ color: 'var(--color-ink)' }}
             >
               <span
-                className="w-5 h-5 flex items-center justify-center font-bold text-[11px]"
+                className="w-5 h-5 flex items-center justify-center font-bold text-[12px]"
                 style={{
                   background: 'var(--color-page-bg)',
                   border: '1px solid var(--color-border)',
@@ -262,7 +262,7 @@ export const GpsDeviceFormModal: React.FC<GpsDeviceFormModalProps> = ({
               <Cpu className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
               <span>{t('Hardware Identification')}</span>
             </div>
-            <span className="text-[11px] font-semibold" style={{ color: 'var(--color-brand-accent)' }}>
+            <span className="text-[12px] font-semibold" style={{ color: 'var(--color-brand-accent)' }}>
               {t('* 15-Digit Unique IMEI Required')}
             </span>
           </div>
@@ -368,7 +368,7 @@ export const GpsDeviceFormModal: React.FC<GpsDeviceFormModalProps> = ({
               style={{ color: 'var(--color-ink)' }}
             >
               <span
-                className="w-5 h-5 flex items-center justify-center font-bold text-[11px]"
+                className="w-5 h-5 flex items-center justify-center font-bold text-[12px]"
                 style={{
                   background: 'var(--color-page-bg)',
                   border: '1px solid var(--color-border)',
@@ -381,7 +381,7 @@ export const GpsDeviceFormModal: React.FC<GpsDeviceFormModalProps> = ({
               <Truck className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
               <span>{t('Tractor Truck Assignment')}</span>
             </div>
-            <span className="text-[11px] font-medium" style={{ color: 'var(--color-text-muted)' }}>
+            <span className="text-[12px] font-medium" style={{ color: 'var(--color-text-muted)' }}>
               {selectedVehicle
                 ? `${t('Paired to')} ${selectedVehicle.vehicle_id}`
                 : t('Standby Spare Inventory')}
@@ -404,7 +404,7 @@ export const GpsDeviceFormModal: React.FC<GpsDeviceFormModalProps> = ({
                 <option value="">{t('-- Unassigned / Standby Spare Unit --')}</option>
                 {vehicles.map((v) => (
                   <option key={v.id} value={v.id}>
-                    {v.vehicle_id} — {v.plate_number} ({v.make} {v.model})
+                    {v.vehicle_id} â€” {v.plate_number} ({v.make} {v.model})
                   </option>
                 ))}
               </select>
@@ -448,14 +448,14 @@ export const GpsDeviceFormModal: React.FC<GpsDeviceFormModalProps> = ({
                   </span>
                   <PlateChip plate={selectedVehicle.plate_number} />
                   <span
-                    className="text-[11px] font-semibold"
+                    className="text-[12px] font-semibold"
                     style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)' }}
                   >
                     {selectedVehicle.make} {selectedVehicle.model}
                   </span>
                 </div>
                 <span
-                  className="text-[11px] font-medium px-2 py-0.5"
+                  className="text-[12px] font-medium px-2 py-0.5"
                   style={{
                     background: 'var(--color-surface)',
                     border: '1px solid var(--color-border)',
@@ -464,13 +464,13 @@ export const GpsDeviceFormModal: React.FC<GpsDeviceFormModalProps> = ({
                   }}
                 >
                   <span dir="ltr">{(selectedVehicle.current_mileage || 0).toLocaleString()}</span>{' '}
-                  {t('KM')} • {selectedVehicle.station_location}
+                  {t('KM')} â€¢ {selectedVehicle.station_location}
                 </span>
               </div>
 
               {existingDeviceForTruck && (
                 <div
-                  className="p-2 text-[11px] flex items-center gap-2"
+                  className="p-2 text-[12px] flex items-center gap-2"
                   style={{
                     background: 'var(--color-surface)',
                     border: '1px solid var(--color-border)',
@@ -483,12 +483,12 @@ export const GpsDeviceFormModal: React.FC<GpsDeviceFormModalProps> = ({
                   <span>
                     {isRTL ? (
                       <>
-                        ملاحظة: الشاحنة <strong dir="ltr">{selectedVehicle.vehicle_id}</strong> مرتبطة حالياً
-                        بجهاز IMEI{' '}
+                        ظ…ظ„ط§ط­ط¸ط©: ط§ظ„ط´ط§ط­ظ†ط© <strong dir="ltr">{selectedVehicle.vehicle_id}</strong> ظ…ط±طھط¨ط·ط© ط­ط§ظ„ظٹط§ظ‹
+                        ط¨ط¬ظ‡ط§ط² IMEI{' '}
                         <code style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }} dir="ltr">
                           {existingDeviceForTruck.device_imei}
                         </code>
-                        . الحفظ سيعيد تعيينها.
+                        . ط§ظ„ط­ظپط¸ ط³ظٹط¹ظٹط¯ طھط¹ظٹظٹظ†ظ‡ط§.
                       </>
                     ) : (
                       <>
@@ -505,7 +505,7 @@ export const GpsDeviceFormModal: React.FC<GpsDeviceFormModalProps> = ({
             </div>
           ) : (
             <div
-              className="px-3 py-2 text-[11px] flex items-center gap-2"
+              className="px-3 py-2 text-[12px] flex items-center gap-2"
               style={{
                 background: 'var(--color-page-bg)',
                 border: '1px solid var(--color-border)',
@@ -539,7 +539,7 @@ export const GpsDeviceFormModal: React.FC<GpsDeviceFormModalProps> = ({
               style={{ color: 'var(--color-ink)' }}
             >
               <span
-                className="w-5 h-5 flex items-center justify-center font-bold text-[11px]"
+                className="w-5 h-5 flex items-center justify-center font-bold text-[12px]"
                 style={{
                   background: 'var(--color-page-bg)',
                   border: '1px solid var(--color-border)',

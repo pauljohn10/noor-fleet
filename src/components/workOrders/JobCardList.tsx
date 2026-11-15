@@ -21,6 +21,7 @@ import {
   RowAction,
   StatusText,
   TableFooter,
+  EmptyDash,
 } from '../common/EditorialUI';
 
 const WO_STATUS_META = (status: WOStatus, isRTL: boolean) => {
@@ -30,42 +31,42 @@ const WO_STATUS_META = (status: WOStatus, isRTL: boolean) => {
       return {
         stripe: DESIGN_TOKENS.colors.status.availableStripe,
         text: DESIGN_TOKENS.colors.status.availableText,
-        label: status === 'RELEASED' ? (isRTL ? 'تم التسليم' : 'Released') : (isRTL ? 'مكتمل' : 'Completed'),
+        label: status === 'RELEASED' ? (isRTL ? 'طھظ… ط§ظ„طھط³ظ„ظٹظ…' : 'Released') : (isRTL ? 'ظ…ظƒطھظ…ظ„' : 'Completed'),
       };
     case 'IN_PROGRESS':
     case 'ASSIGNED':
       return {
         stripe: DESIGN_TOKENS.colors.status.onTripStripe,
         text: DESIGN_TOKENS.colors.status.onTripText,
-        label: status === 'ASSIGNED' ? (isRTL ? 'مُكلَّف' : 'Assigned') : (isRTL ? 'قيد التنفيذ' : 'In progress'),
+        label: status === 'ASSIGNED' ? (isRTL ? 'ظ…ظڈظƒظ„ظژظ‘ظپ' : 'Assigned') : (isRTL ? 'ظ‚ظٹط¯ ط§ظ„طھظ†ظپظٹط°' : 'In progress'),
       };
     case 'WAITING_FOR_PARTS':
     case 'WAITING_FOR_APPROVAL':
       return {
         stripe: DESIGN_TOKENS.colors.status.outOfServiceStripe,
         text: DESIGN_TOKENS.colors.status.outOfServiceText,
-        label: status === 'WAITING_FOR_PARTS' ? (isRTL ? 'بانتظار قطع غيار' : 'Waiting parts') : (isRTL ? 'بانتظار الموافقة' : 'Waiting approval'),
+        label: status === 'WAITING_FOR_PARTS' ? (isRTL ? 'ط¨ط§ظ†طھط¸ط§ط± ظ‚ط·ط¹ ط؛ظٹط§ط±' : 'Waiting parts') : (isRTL ? 'ط¨ط§ظ†طھط¸ط§ط± ط§ظ„ظ…ظˆط§ظپظ‚ط©' : 'Waiting approval'),
       };
     case 'CANCELLED':
       return {
         stripe: '#6B665C',
         text: '#5B574F',
-        label: isRTL ? 'ملغى' : 'Cancelled',
+        label: isRTL ? 'ظ…ظ„ط؛ظ‰' : 'Cancelled',
       };
     default:
       return {
         stripe: DESIGN_TOKENS.colors.status.workshopStripe,
         text: DESIGN_TOKENS.colors.status.workshopText,
-        label: status === 'INSPECTION' ? (isRTL ? 'فحص' : 'Inspection') : (isRTL ? 'مبلّغ عنه' : 'Reported'),
+        label: status === 'INSPECTION' ? (isRTL ? 'ظپط­طµ' : 'Inspection') : (isRTL ? 'ظ…ط¨ظ„ظ‘ط؛ ط¹ظ†ظ‡' : 'Reported'),
       };
   }
 };
 
 const PRIORITY_COLOR: Record<WOPriority, { color: string; label: string; labelAr: string }> = {
-  CRITICAL: { color: DESIGN_TOKENS.colors.status.outOfServiceText, label: 'Critical', labelAr: 'حرجة' },
-  HIGH: { color: DESIGN_TOKENS.colors.status.workshopText, label: 'High', labelAr: 'عالية' },
-  MEDIUM: { color: DESIGN_TOKENS.colors.status.onTripText, label: 'Medium', labelAr: 'متوسطة' },
-  LOW: { color: '#5B574F', label: 'Low', labelAr: 'منخفضة' },
+  CRITICAL: { color: DESIGN_TOKENS.colors.status.outOfServiceText, label: 'Critical', labelAr: 'ط­ط±ط¬ط©' },
+  HIGH: { color: DESIGN_TOKENS.colors.status.workshopText, label: 'High', labelAr: 'ط¹ط§ظ„ظٹط©' },
+  MEDIUM: { color: DESIGN_TOKENS.colors.status.onTripText, label: 'Medium', labelAr: 'ظ…طھظˆط³ط·ط©' },
+  LOW: { color: '#5B574F', label: 'Low', labelAr: 'ظ…ظ†ط®ظپط¶ط©' },
 };
 
 export const JobCardList: React.FC = () => {
@@ -200,9 +201,9 @@ export const JobCardList: React.FC = () => {
       <PageHeader
         title={
           <>
-            {isRTL ? 'بطاقات العمل' : 'Job Cards &'}
+            {isRTL ? 'ط¨ط·ط§ظ‚ط§طھ ط§ظ„ط¹ظ…ظ„' : 'Job Cards &'}
             <br />
-            {isRTL ? 'وأوامر الصيانة' : 'Repair Orders'}
+            {isRTL ? 'ظˆط£ظˆط§ظ…ط± ط§ظ„طµظٹط§ظ†ط©' : 'Repair Orders'}
           </>
         }
         subtitle={t('Repair job cards, technician task logs, spare parts issuance deductions, labor hours, and QC release authorization.')}
@@ -212,7 +213,7 @@ export const JobCardList: React.FC = () => {
               {t('Excel')}
             </GhostButton>
             <GhostButton onClick={handleExportPDF}>
-              {isRTL ? 'تقرير PDF' : 'PDF report'}
+              {isRTL ? 'طھظ‚ط±ظٹط± PDF' : 'PDF report'}
             </GhostButton>
             {hasPermission(['SUPER_ADMIN', 'WORKSHOP_MANAGER', 'WORKSHOP_STAFF']) && (
               <PrimaryButton onClick={() => setIsFormOpen(true)}>
@@ -225,28 +226,28 @@ export const JobCardList: React.FC = () => {
 
       <StatusTabs
         tabs={[
-          { key: 'ALL', label: isRTL ? 'الكل' : 'All', count: workOrders.length },
+          { key: 'ALL', label: isRTL ? 'ط§ظ„ظƒظ„' : 'All', count: workOrders.length },
           {
             key: 'PENDING',
-            label: isRTL ? 'قيد الانتظار' : 'Pending',
+            label: isRTL ? 'ظ‚ظٹط¯ ط§ظ„ط§ظ†طھط¸ط§ط±' : 'Pending',
             count: workOrders.filter(w => isBucket(w, 'PENDING')).length,
             stripe: DESIGN_TOKENS.colors.status.workshopStripe,
           },
           {
             key: 'IN_PROGRESS',
-            label: isRTL ? 'قيد التنفيذ' : 'In progress',
+            label: isRTL ? 'ظ‚ظٹط¯ ط§ظ„طھظ†ظپظٹط°' : 'In progress',
             count: workOrders.filter(w => isBucket(w, 'IN_PROGRESS')).length,
             stripe: DESIGN_TOKENS.colors.status.onTripStripe,
           },
           {
             key: 'WAITING_FOR_PARTS',
-            label: isRTL ? 'بانتظار قطع غيار' : 'Waiting parts',
+            label: isRTL ? 'ط¨ط§ظ†طھط¸ط§ط± ظ‚ط·ط¹ ط؛ظٹط§ط±' : 'Waiting parts',
             count: workOrders.filter(w => isBucket(w, 'WAITING_FOR_PARTS')).length,
             stripe: DESIGN_TOKENS.colors.status.outOfServiceStripe,
           },
           {
             key: 'COMPLETED',
-            label: isRTL ? 'مكتمل' : 'Completed',
+            label: isRTL ? 'ظ…ظƒطھظ…ظ„' : 'Completed',
             count: workOrders.filter(w => isBucket(w, 'COMPLETED')).length,
             stripe: DESIGN_TOKENS.colors.status.availableStripe,
           },
@@ -271,23 +272,23 @@ export const JobCardList: React.FC = () => {
             }}
           >
             <option value="ALL">{t('All Priorities')}</option>
-            <option value="LOW">{isRTL ? 'منخفضة' : 'Low'}</option>
-            <option value="MEDIUM">{isRTL ? 'متوسطة' : 'Medium'}</option>
-            <option value="HIGH">{isRTL ? 'عالية' : 'High'}</option>
-            <option value="CRITICAL">{isRTL ? 'حرجة' : 'Critical'}</option>
+            <option value="LOW">{isRTL ? 'ظ…ظ†ط®ظپط¶ط©' : 'Low'}</option>
+            <option value="MEDIUM">{isRTL ? 'ظ…طھظˆط³ط·ط©' : 'Medium'}</option>
+            <option value="HIGH">{isRTL ? 'ط¹ط§ظ„ظٹط©' : 'High'}</option>
+            <option value="CRITICAL">{isRTL ? 'ط­ط±ط¬ط©' : 'Critical'}</option>
           </EditorialSelect>
         }
       />
 
       <DataTable
         columns={[
-          { label: isRTL ? 'رقم أمر العمل' : 'Work order #', align: 'start' },
-          { label: isRTL ? 'المركبة' : 'Vehicle / Unit', align: 'start' },
-          { label: isRTL ? 'وصف المشكلة' : 'Problem description', align: 'start' },
-          { label: isRTL ? 'الأولوية' : 'Priority', align: 'start' },
-          { label: isRTL ? 'الفني المسؤول' : 'Lead technician', align: 'start' },
-          { label: isRTL ? 'إجمالي التكلفة' : 'Total cost', align: 'end' },
-          { label: isRTL ? 'الحالة' : 'Status', align: 'start' },
+          { label: isRTL ? 'ط±ظ‚ظ… ط£ظ…ط± ط§ظ„ط¹ظ…ظ„' : 'Work order #', align: 'start' },
+          { label: isRTL ? 'ط§ظ„ظ…ط±ظƒط¨ط©' : 'Vehicle / Unit', align: 'start' },
+          { label: isRTL ? 'ظˆطµظپ ط§ظ„ظ…ط´ظƒظ„ط©' : 'Problem description', align: 'start' },
+          { label: isRTL ? 'ط§ظ„ط£ظˆظ„ظˆظٹط©' : 'Priority', align: 'start' },
+          { label: isRTL ? 'ط§ظ„ظپظ†ظٹ ط§ظ„ظ…ط³ط¤ظˆظ„' : 'Lead technician', align: 'start' },
+          { label: isRTL ? 'ط¥ط¬ظ…ط§ظ„ظٹ ط§ظ„طھظƒظ„ظپط©' : 'Total cost', align: 'end' },
+          { label: isRTL ? 'ط§ظ„ط­ط§ظ„ط©' : 'Status', align: 'start' },
         ]}
         isEmpty={pagedWOs.length === 0}
         emptyMessage={t('No work order job cards found matching filter.')}
@@ -333,7 +334,7 @@ export const JobCardList: React.FC = () => {
                   dir="ltr"
                   style={{
                     fontFamily: 'var(--font-mono)',
-                    fontSize: 11.5,
+                    fontSize: 12.5,
                     color: 'var(--color-text-muted)',
                     marginTop: 2,
                   }}
@@ -362,7 +363,7 @@ export const JobCardList: React.FC = () => {
                       dir="ltr"
                       style={{
                         fontFamily: 'var(--font-mono)',
-                        fontSize: 11.5,
+                        fontSize: 12.5,
                         color: 'var(--color-text-muted)',
                         marginTop: 2,
                       }}
@@ -371,7 +372,7 @@ export const JobCardList: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <span style={{ color: 'var(--color-text-muted)' }}>—</span>
+                  <span style={{ color: 'var(--color-text-muted)' }}>â€”</span>
                 )}
               </td>
 
@@ -399,9 +400,7 @@ export const JobCardList: React.FC = () => {
                     {tech.full_name}
                   </span>
                 ) : (
-                  <span style={{ fontSize: 13, color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
-                    {t('Unassigned')}
-                  </span>
+                  <EmptyDash label={t('Unassigned')} />
                 )}
               </td>
 
@@ -430,7 +429,7 @@ export const JobCardList: React.FC = () => {
       <TableFooter
         summaryText={
           isRTL
-            ? `${filteredWOs.length} من ${workOrders.length} أمر عمل`
+            ? `${filteredWOs.length} ظ…ظ† ${workOrders.length} ط£ظ…ط± ط¹ظ…ظ„`
             : `${filteredWOs.length} of ${workOrders.length} work orders`
         }
         page={page}

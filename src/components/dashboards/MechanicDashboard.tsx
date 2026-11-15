@@ -99,15 +99,15 @@ export const MechanicDashboard: React.FC<MechanicDashboardProps> = ({ onNavigate
   return (
     <PageContainer>
       <PageHeader
-        title={isRTL ? `صباح الخير، ${currentProfile.full_name}` : `Good Morning, ${currentProfile.full_name}`}
+        title={isRTL ? `طµط¨ط§ط­ ط§ظ„ط®ظٹط±طŒ ${currentProfile.full_name}` : `Good Morning, ${currentProfile.full_name}`}
         subtitle={
           isRTL
-            ? 'منصة عمل فني الشاحنات الثقيلة والصهاريج'
+            ? 'ظ…ظ†طµط© ط¹ظ…ظ„ ظپظ†ظٹ ط§ظ„ط´ط§ط­ظ†ط§طھ ط§ظ„ط«ظ‚ظٹظ„ط© ظˆط§ظ„طµظ‡ط§ط±ظٹط¬'
             : 'Heavy Diesel & Tanker Mechanic Workbench'
         }
         badge={
           <Badge variant="info" size="sm">
-            {isRTL ? 'منصة الفني' : 'Workbench'}
+            {isRTL ? 'ظ…ظ†طµط© ط§ظ„ظپظ†ظٹ' : 'Workbench'}
           </Badge>
         }
       />
@@ -115,30 +115,30 @@ export const MechanicDashboard: React.FC<MechanicDashboardProps> = ({ onNavigate
       {/* Mechanic KPIs - Simple & Mobile Focused */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <StatCard
-          title={isRTL ? 'أعمالي المفتوحة' : 'My open jobs'}
+          title={isRTL ? 'ط£ط¹ظ…ط§ظ„ظٹ ط§ظ„ظ…ظپطھظˆط­ط©' : 'My open jobs'}
           value={myOpenJobs.length}
-          subtitle={isRTL ? 'مسندة لي' : 'Assigned to Me'}
+          subtitle={isRTL ? 'ظ…ط³ظ†ط¯ط© ظ„ظٹ' : 'Assigned to Me'}
           icon={<Wrench className="w-4 h-4" />}
           color="amber"
         />
         <StatCard
-          title={isRTL ? 'قيد التنفيذ' : 'In progress'}
+          title={isRTL ? 'ظ‚ظٹط¯ ط§ظ„طھظ†ظپظٹط°' : 'In progress'}
           value={inProgressJobs.length}
-          subtitle={isRTL ? 'حارة نشطة' : 'Active Bay'}
+          subtitle={isRTL ? 'ط­ط§ط±ط© ظ†ط´ط·ط©' : 'Active Bay'}
           icon={<Clock className="w-4 h-4" />}
           color="blue"
         />
         <StatCard
-          title={isRTL ? 'بانتظار القطع' : 'Waiting parts'}
+          title={isRTL ? 'ط¨ط§ظ†طھط¸ط§ط± ط§ظ„ظ‚ط·ط¹' : 'Waiting parts'}
           value={waitingPartsJobs.length}
-          subtitle={isRTL ? 'طلب مخزن' : 'Store Request'}
+          subtitle={isRTL ? 'ط·ظ„ط¨ ظ…ط®ط²ظ†' : 'Store Request'}
           icon={<Package className="w-4 h-4" />}
           color="rose"
         />
         <StatCard
-          title={isRTL ? 'مكتمل اليوم' : 'Completed today'}
+          title={isRTL ? 'ظ…ظƒطھظ…ظ„ ط§ظ„ظٹظˆظ…' : 'Completed today'}
           value={completedTodayJobs.length}
-          subtitle={isRTL ? 'منجز' : 'Finished'}
+          subtitle={isRTL ? 'ظ…ظ†ط¬ط²' : 'Finished'}
           icon={<CheckCircle2 className="w-4 h-4" />}
           color="emerald"
         />
@@ -146,22 +146,22 @@ export const MechanicDashboard: React.FC<MechanicDashboardProps> = ({ onNavigate
 
       {/* Main Section: MY ASSIGNED JOBS */}
       <EditorialSection
-        title={isRTL ? 'أوامر العمل المكلف بها' : 'My Assigned Work Orders'}
+        title={isRTL ? 'ط£ظˆط§ظ…ط± ط§ظ„ط¹ظ…ظ„ ط§ظ„ظ…ظƒظ„ظپ ط¨ظ‡ط§' : 'My Assigned Work Orders'}
         marginTop={0}
       >
         <DataTable
           showPagination
           columns={[
-            { label: isRTL ? 'أمر العمل' : 'Work order' },
-            { label: isRTL ? 'المركبة والمقطورة' : 'Vehicle & trailer' },
-            { label: isRTL ? 'وصف العطل' : 'Problem description' },
-            { label: isRTL ? 'تاريخ البلاغ' : 'Reported' },
-            { label: isRTL ? 'الحالة' : 'Status', align: 'end' },
+            { label: isRTL ? 'ط£ظ…ط± ط§ظ„ط¹ظ…ظ„' : 'Work order' },
+            { label: isRTL ? 'ط§ظ„ظ…ط±ظƒط¨ط© ظˆط§ظ„ظ…ظ‚ط·ظˆط±ط©' : 'Vehicle & trailer' },
+            { label: isRTL ? 'ظˆطµظپ ط§ظ„ط¹ط·ظ„' : 'Problem description' },
+            { label: isRTL ? 'طھط§ط±ظٹط® ط§ظ„ط¨ظ„ط§ط؛' : 'Reported' },
+            { label: isRTL ? 'ط§ظ„ط­ط§ظ„ط©' : 'Status', align: 'end' },
           ]}
           isEmpty={myAssignedJobs.length === 0}
           emptyMessage={
             isRTL
-              ? 'لا توجد أوامر إصلاح مفتوحة مكلف بها حالياً.'
+              ? 'ظ„ط§ طھظˆط¬ط¯ ط£ظˆط§ظ…ط± ط¥طµظ„ط§ط­ ظ…ظپطھظˆط­ط© ظ…ظƒظ„ظپ ط¨ظ‡ط§ ط­ط§ظ„ظٹط§ظ‹.'
               : 'You currently have no open repair jobs assigned.'
           }
         >
@@ -185,7 +185,7 @@ export const MechanicDashboard: React.FC<MechanicDashboardProps> = ({ onNavigate
                 actions={
                   <RowAction
                     icon={<ChevronRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />}
-                    title={isRTL ? 'فتح مساحة العمل' : 'Open Job Workbench'}
+                    title={isRTL ? 'ظپطھط­ ظ…ط³ط§ط­ط© ط§ظ„ط¹ظ…ظ„' : 'Open Job Workbench'}
                     onClick={(e) => {
                       e.stopPropagation();
                       openWorkbench(wo);
@@ -218,12 +218,12 @@ export const MechanicDashboard: React.FC<MechanicDashboardProps> = ({ onNavigate
                       </span>
                       {veh?.plate_number && <PlateChip plate={veh.plate_number} />}
                     </div>
-                    <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
+                    <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
                       {veh?.make} {veh?.model}
                     </span>
                     {trl && (
-                      <span style={{ fontSize: 11, color: EDITORIAL_STATUS.blue.text }}>
-                        {isRTL ? 'المقطورة:' : 'Trailer:'} {trl.trailer_id} ({trl.plate_number})
+                      <span style={{ fontSize: 12, color: EDITORIAL_STATUS.blue.text }}>
+                        {isRTL ? 'ط§ظ„ظ…ظ‚ط·ظˆط±ط©:' : 'Trailer:'} {trl.trailer_id} ({trl.plate_number})
                       </span>
                     )}
                   </div>
@@ -232,7 +232,7 @@ export const MechanicDashboard: React.FC<MechanicDashboardProps> = ({ onNavigate
                   <p style={{ fontSize: 13, color: 'var(--color-ink)' }}>{wo.problem_description}</p>
                 </td>
                 <td className="py-3 pe-3 whitespace-nowrap">
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-text-muted)' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-text-muted)' }}>
                     {isRTL
                       ? new Date(wo.date_reported).toLocaleDateString('ar-SA')
                       : new Date(wo.date_reported).toLocaleDateString()}
@@ -256,12 +256,12 @@ export const MechanicDashboard: React.FC<MechanicDashboardProps> = ({ onNavigate
           onClose={() => setSelectedWO(null)}
           title={
             isRTL
-              ? `منصة عمل الفني: ${selectedWO.work_order_number}`
+              ? `ظ…ظ†طµط© ط¹ظ…ظ„ ط§ظ„ظپظ†ظٹ: ${selectedWO.work_order_number}`
               : `Mechanic Workbench: ${selectedWO.work_order_number}`
           }
           subtitle={
             isRTL
-              ? 'إجراءات الإصلاح السريعة وتسجيل ساعات العمل والقطع.'
+              ? 'ط¥ط¬ط±ط§ط،ط§طھ ط§ظ„ط¥طµظ„ط§ط­ ط§ظ„ط³ط±ظٹط¹ط© ظˆطھط³ط¬ظٹظ„ ط³ط§ط¹ط§طھ ط§ظ„ط¹ظ…ظ„ ظˆط§ظ„ظ‚ط·ط¹.'
               : 'Simple mobile-optimized repair actions and labor logging.'
           }
           width="3xl"
@@ -278,17 +278,17 @@ export const MechanicDashboard: React.FC<MechanicDashboardProps> = ({ onNavigate
             >
               <SecondaryButton onClick={() => handleStartJob(selectedWO.id)}>
                 <Play className="w-3.5 h-3.5" style={{ color: EDITORIAL_STATUS.green.text }} />{' '}
-                {isRTL ? 'بدء العمل' : 'Start Job'}
+                {isRTL ? 'ط¨ط¯ط، ط§ظ„ط¹ظ…ظ„' : 'Start Job'}
               </SecondaryButton>
               <SecondaryButton onClick={() => handlePauseJob(selectedWO.id)}>
                 <Pause className="w-3.5 h-3.5" style={{ color: EDITORIAL_STATUS.red.text }} />{' '}
-                {isRTL ? 'طلب قطع غيار (إيقاف مؤقت)' : 'Request Parts (Pause)'}
+                {isRTL ? 'ط·ظ„ط¨ ظ‚ط·ط¹ ط؛ظٹط§ط± (ط¥ظٹظ‚ط§ظپ ظ…ط¤ظ‚طھ)' : 'Request Parts (Pause)'}
               </SecondaryButton>
               <PrimaryButton
                 onClick={() => handleCompleteJob(selectedWO.id)}
                 style={{ marginInlineStart: 'auto' }}
               >
-                <CheckCircle2 className="w-4 h-4" /> {isRTL ? 'إكمال الإصلاح' : 'Complete Repair'}
+                <CheckCircle2 className="w-4 h-4" /> {isRTL ? 'ط¥ظƒظ…ط§ظ„ ط§ظ„ط¥طµظ„ط§ط­' : 'Complete Repair'}
               </PrimaryButton>
             </div>
 
@@ -303,13 +303,13 @@ export const MechanicDashboard: React.FC<MechanicDashboardProps> = ({ onNavigate
                 }}
               >
                 <label className="font-semibold block" style={{ color: 'var(--color-ink)' }}>
-                  {isRTL ? 'إضافة نتائج التشخيص' : 'Add Diagnostic Finding'}
+                  {isRTL ? 'ط¥ط¶ط§ظپط© ظ†طھط§ط¦ط¬ ط§ظ„طھط´ط®ظٹطµ' : 'Add Diagnostic Finding'}
                 </label>
                 <textarea
                   rows={2}
                   placeholder={
                     isRTL
-                      ? 'سجل السبب الجذري للعطل...'
+                      ? 'ط³ط¬ظ„ ط§ظ„ط³ط¨ط¨ ط§ظ„ط¬ط°ط±ظٹ ظ„ظ„ط¹ط·ظ„...'
                       : 'Record root cause diagnosis (e.g. Civacon API seal leak under 4 bar pressure)...'
                   }
                   value={diagnosisText}
@@ -330,7 +330,7 @@ export const MechanicDashboard: React.FC<MechanicDashboardProps> = ({ onNavigate
               >
                 <h4 className="font-semibold flex items-center gap-1.5" style={{ color: 'var(--color-ink)' }}>
                   <Package className="w-4 h-4" style={{ color: 'var(--color-brand-accent)' }} />{' '}
-                  {isRTL ? 'طلب قطعة غيار من المخزن' : 'Request Part Used from Store'}
+                  {isRTL ? 'ط·ظ„ط¨ ظ‚ط·ط¹ط© ط؛ظٹط§ط± ظ…ظ† ط§ظ„ظ…ط®ط²ظ†' : 'Request Part Used from Store'}
                 </h4>
                 <div className="flex flex-wrap sm:flex-nowrap gap-2">
                   <select
@@ -339,10 +339,10 @@ export const MechanicDashboard: React.FC<MechanicDashboardProps> = ({ onNavigate
                     onChange={(e) => setSelectedPartId(e.target.value)}
                     className="nf-field flex-1"
                   >
-                    <option value="">{isRTL ? '-- اختر قطعة الغيار --' : '-- Select Spare Part --'}</option>
+                    <option value="">{isRTL ? '-- ط§ط®طھط± ظ‚ط·ط¹ط© ط§ظ„ط؛ظٹط§ط± --' : '-- Select Spare Part --'}</option>
                     {parts.map((p) => (
                       <option key={p.id} value={p.id}>
-                        {p.part_number} - {p.part_name} ({isRTL ? 'المخزون:' : 'Stock:'} {p.current_stock})
+                        {p.part_number} - {p.part_name} ({isRTL ? 'ط§ظ„ظ…ط®ط²ظˆظ†:' : 'Stock:'} {p.current_stock})
                       </option>
                     ))}
                   </select>
@@ -354,7 +354,7 @@ export const MechanicDashboard: React.FC<MechanicDashboardProps> = ({ onNavigate
                     className="nf-field w-20 text-center font-semibold"
                     style={{ fontFamily: 'var(--font-mono)' }}
                   />
-                  <PrimaryButton type="submit">{isRTL ? 'صرف القطعة' : 'Use Part'}</PrimaryButton>
+                  <PrimaryButton type="submit">{isRTL ? 'طµط±ظپ ط§ظ„ظ‚ط·ط¹ط©' : 'Use Part'}</PrimaryButton>
                 </div>
               </form>
 
@@ -370,7 +370,7 @@ export const MechanicDashboard: React.FC<MechanicDashboardProps> = ({ onNavigate
               >
                 <h4 className="font-semibold flex items-center gap-1.5" style={{ color: 'var(--color-ink)' }}>
                   <Clock className="w-4 h-4" style={{ color: EDITORIAL_STATUS.blue.text }} />{' '}
-                  {isRTL ? 'تسجيل ساعات العمل المنجزة' : 'Log Labor Hours Worked'}
+                  {isRTL ? 'طھط³ط¬ظٹظ„ ط³ط§ط¹ط§طھ ط§ظ„ط¹ظ…ظ„ ط§ظ„ظ…ظ†ط¬ط²ط©' : 'Log Labor Hours Worked'}
                 </h4>
                 <div className="flex gap-2">
                   <input
@@ -381,7 +381,7 @@ export const MechanicDashboard: React.FC<MechanicDashboardProps> = ({ onNavigate
                     className="nf-field w-28 font-semibold"
                     style={{ fontFamily: 'var(--font-mono)' }}
                   />
-                  <PrimaryButton type="submit">{isRTL ? 'تسجيل الساعات' : 'Log Hours'}</PrimaryButton>
+                  <PrimaryButton type="submit">{isRTL ? 'طھط³ط¬ظٹظ„ ط§ظ„ط³ط§ط¹ط§طھ' : 'Log Hours'}</PrimaryButton>
                 </div>
               </form>
             </div>

@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import {
   Truck,
   Radio,
   Search,
-  Settings,
+  RefreshCw,
   ArrowRight,
 } from 'lucide-react';
 import { useFleet } from '../../context/FleetContext';
+import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
 import { VehicleGpsPing } from '../../types';
 import { Modal } from '../common/Modal';
@@ -20,86 +23,123 @@ import {
   EDITORIAL_STATUS,
 } from '../common/EditorialUI';
 
-export type GpsTelemetryStatus = 'LIVE' | 'LAST_KNOWN' | 'STALE' | 'UNAVAILABLE';
+export type GpsTelemetryStatus = 'ONLINE' | 'OUTDATED' | 'OFFLINE' | 'UNAVAILABLE';
+
+const DEFAULT_SAUDI_CENTER: [number, number] = [25.6, 48.5];
+const DEFAULT_ZOOM = 6;
 
 export const LiveFleetMap: React.FC = () => {
-  const { vehicles, drivers, trailers, gpsDevices, gpsPings, isGpsProviderConnected } = useFleet();
+  const {
+    vehicles,
+    drivers,
+    trailers,
+    gpsDevices,
+    gpsPings,
+    gpsSyncLogs,
+    isGpsProviderConnected,
+    simulateGpsSync,
+  } = useFleet();
+  const { hasPermission } = useAuth();
   const { t, isRTL } = useI18n();
 
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>(vehicles[0]?.id || '');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'LIVE' | 'LAST_KNOWN' | 'STALE' | 'UNAVAILABLE'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ONLINE' | 'OUTDATED' | 'OFFLINE'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [showSetupModal, setShowSetupModal] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncNotice, setSyncNotice] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const markersLayerRef = useRef<L.LayerGroup | null>(null);
+
+  const canSync = hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER']);
 
   const getVehicleTelemetryStatus = (ping?: VehicleGpsPing): {
     status: GpsTelemetryStatus;
     label: string;
     tone: 'muted' | 'green' | 'amber' | 'red';
     lastSeenText: string;
+    exactTimestamp: string | null;
   } => {
-    if (!ping || !ping.is_valid_point || ping.data_source === 'SIMULATED_MOCK_FOR_DEV_ONLY') {
+    if (!ping || !ping.is_valid_point || ping.data_source !== 'LIVE_PROVIDER') {
       return {
-        status: 'UNAVAILABLE',
-        label: t('No GPS Feed'),
+        status: 'OFFLINE',
+        label: t('Offline'),
         tone: 'muted',
-        lastSeenText: t('Never (Awaiting Feed)'),
+        lastSeenText: t('No GPS Data'),
+        exactTimestamp: null,
       };
     }
 
-    const pingTime = new Date(ping.gps_timestamp).getTime();
-    const now = Date.now();
-    const ageMinutes = (now - pingTime) / 60000;
+    const pingDate = new Date(ping.gps_timestamp);
+    const ageMinutes = (Date.now() - pingDate.getTime()) / 60000;
+    const exactTimestamp = pingDate.toLocaleString(isRTL ? 'ar-SA' : 'en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
 
-    if (ageMinutes <= 5) {
-      const secs = Math.round(ageMinutes * 60);
-      return {
-        status: 'LIVE',
-        label: ping.speed_kmh > 0 ? t('Live (Moving)') : t('Live (Stationary)'),
-        tone: 'green',
-        lastSeenText: isRTL ? `منذ ${secs} ث` : `${secs}s ago`,
-      };
-    } else if (ageMinutes <= 1440) {
-      const hours = Math.round(ageMinutes / 60);
+    if (ageMinutes <= 15) {
+      const secs = Math.max(0, Math.round(ageMinutes * 60));
       const mins = Math.round(ageMinutes);
       return {
-        status: 'LAST_KNOWN',
-        label: t('Last Known'),
-        tone: 'amber',
-        lastSeenText: hours > 0
-          ? isRTL
-            ? `منذ ${hours} س`
-            : `${hours}h ago`
-          : isRTL
-            ? `منذ ${mins} د`
-            : `${mins}m ago`,
-      };
-    } else {
-      const days = Math.round(ageMinutes / 1440);
-      return {
-        status: 'STALE',
-        label: t('Stale Signal'),
-        tone: 'red',
-        lastSeenText: isRTL ? `منذ ${days} ي` : `${days}d ago`,
+        status: 'ONLINE',
+        label: ping.speed_kmh > 0 ? t('Online (Moving)') : t('Online'),
+        tone: 'green',
+        lastSeenText: mins >= 1
+          ? (isRTL ? `منذ ${mins} د` : `${mins}m ago`)
+          : (isRTL ? `منذ ${secs} ث` : `${secs}s ago`),
+        exactTimestamp,
       };
     }
+
+    if (ageMinutes <= 1440) {
+      const hours = Math.floor(ageMinutes / 60);
+      const mins = Math.round(ageMinutes);
+      return {
+        status: 'OUTDATED',
+        label: t('Last Updated'),
+        tone: 'amber',
+        lastSeenText: hours > 0
+          ? (isRTL ? `منذ ${hours} س` : `${hours}h ago`)
+          : (isRTL ? `منذ ${mins} د` : `${mins}m ago`),
+        exactTimestamp,
+      };
+    }
+
+    const days = Math.round(ageMinutes / 1440);
+    return {
+      status: 'OFFLINE',
+      label: t('Offline'),
+      tone: 'red',
+      lastSeenText: isRTL ? `منذ ${days} ي` : `${days}d ago`,
+      exactTimestamp,
+    };
   };
 
-  const enrichedVehicles = vehicles.map(v => {
-    const ping = gpsPings.find(p => p.vehicle_id === v.id && p.data_source === 'LIVE_PROVIDER');
-    const device = gpsDevices.find(d => d.installed_vehicle_id === v.id);
-    const driver = drivers.find(d => d.id === v.assigned_driver_id);
-    const trailer = trailers.find(tr => tr.id === v.assigned_trailer_id);
-    const telemetry = getVehicleTelemetryStatus(ping);
+  const enrichedVehicles = useMemo(() => {
+    return vehicles.map(v => {
+      const ping = gpsPings.find(
+        p => p.vehicle_id === v.id && p.is_valid_point && p.data_source === 'LIVE_PROVIDER',
+      );
+      const device = gpsDevices.find(d => d.installed_vehicle_id === v.id);
+      const driver = drivers.find(d => d.id === v.assigned_driver_id);
+      const trailer = trailers.find(tr => tr.id === v.assigned_trailer_id);
+      const telemetry = getVehicleTelemetryStatus(ping);
 
-    return {
-      ...v,
-      ping,
-      device,
-      driver,
-      trailer,
-      telemetry,
-    };
-  });
+      return {
+        ...v,
+        ping,
+        device,
+        driver,
+        trailer,
+        telemetry,
+      };
+    });
+  }, [vehicles, gpsPings, gpsDevices, drivers, trailers, isRTL]);
 
   const filteredVehicles = enrichedVehicles.filter(v => {
     if (statusFilter !== 'ALL' && v.telemetry.status !== statusFilter) return false;
@@ -115,6 +155,97 @@ export const LiveFleetMap: React.FC = () => {
   });
 
   const selectedVehicle = enrichedVehicles.find(v => v.id === selectedVehicleId) || enrichedVehicles[0];
+  const liveVehicleCount = enrichedVehicles.filter(v => Boolean(v.ping)).length;
+  const lastSyncLog = gpsSyncLogs.find(l => l.sync_status === 'SUCCESS' && !l.provider_name.toUpperCase().includes('MOCK'));
+
+  // Initialize Leaflet OpenStreetMap once
+  useEffect(() => {
+    if (!mapContainerRef.current || mapInstanceRef.current) return;
+
+    const map = L.map(mapContainerRef.current, {
+      center: DEFAULT_SAUDI_CENTER,
+      zoom: DEFAULT_ZOOM,
+      zoomControl: true,
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 18,
+    }).addTo(map);
+
+    markersLayerRef.current = L.layerGroup().addTo(map);
+    mapInstanceRef.current = map;
+
+    return () => {
+      map.remove();
+      mapInstanceRef.current = null;
+      markersLayerRef.current = null;
+    };
+  }, []);
+
+  // Update vehicle markers whenever live pings or selection change
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    const layer = markersLayerRef.current;
+    if (!map || !layer) return;
+
+    layer.clearLayers();
+    const bounds: [number, number][] = [];
+
+    for (const v of enrichedVehicles) {
+      if (!v.ping) continue;
+      const lat = Number(v.ping.latitude);
+      const lon = Number(v.ping.longitude);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+
+      const isSelected = v.id === selectedVehicle?.id;
+      const color =
+        v.telemetry.status === 'ONLINE'
+          ? '#0F5C4D'
+          : v.telemetry.status === 'OUTDATED'
+            ? '#B45309'
+            : '#991B1B';
+
+      const marker = L.circleMarker([lat, lon], {
+        radius: isSelected ? 10 : 7,
+        color: '#FFFDF8',
+        weight: isSelected ? 3 : 2,
+        fillColor: color,
+        fillOpacity: 0.95,
+      });
+
+      marker.bindPopup(
+        `<div style="font-family:var(--font-ui);font-size:12px;line-height:1.5">
+          <strong>${v.vehicle_id}</strong> (${v.plate_number})<br/>
+          ${t('Status')}: ${v.telemetry.label}<br/>
+          ${t('Speed')}: ${v.ping.speed_kmh} km/h<br/>
+          ${t('Last Updated')}: ${v.telemetry.exactTimestamp || '—'}
+        </div>`,
+      );
+
+      marker.on('click', () => setSelectedVehicleId(v.id));
+      marker.addTo(layer);
+      bounds.push([lat, lon]);
+    }
+
+    if (bounds.length > 0) {
+      if (selectedVehicle?.ping) {
+        map.setView([selectedVehicle.ping.latitude, selectedVehicle.ping.longitude], Math.max(map.getZoom(), 10), {
+          animate: true,
+        });
+      } else {
+        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
+      }
+    }
+  }, [enrichedVehicles, selectedVehicle?.id]);
+
+  const handleManualSync = async () => {
+    setIsSyncing(true);
+    setSyncNotice(null);
+    const res = await simulateGpsSync();
+    setIsSyncing(false);
+    setSyncNotice({ ok: res.success, text: res.message });
+  };
 
   return (
     <PageContainer>
@@ -127,16 +258,40 @@ export const LiveFleetMap: React.FC = () => {
           </>
         }
         subtitle={
-          isGpsProviderConnected
-            ? t('Receiving verified positions from external telematics provider.')
-            : t('GPS provider not connected — awaiting real vehicle telemetry feed.')
+          isGpsProviderConnected && liveVehicleCount > 0
+            ? t('Receiving verified positions from external telematics provider (auto-refresh active).')
+            : t('GPS provider not connected — awaiting authorized Sniper GPS telemetry feed.')
         }
         actions={
-          <SecondaryButton onClick={() => setShowSetupModal(true)}>
-            <span>{t('Provider Setup Guide')}</span>
-          </SecondaryButton>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            {canSync && (
+              <PrimaryButton onClick={handleManualSync} disabled={isSyncing}>
+                <RefreshCw style={{ width: 14, height: 14 }} className={isSyncing ? 'animate-spin' : ''} />
+                <span>{isSyncing ? t('Syncing...') : t('Refresh GPS')}</span>
+              </PrimaryButton>
+            )}
+            <SecondaryButton onClick={() => setShowSetupModal(true)}>
+              <span>{t('Provider Setup Guide')}</span>
+            </SecondaryButton>
+          </div>
         }
       />
+
+      {syncNotice && (
+        <div
+          style={{
+            marginBottom: 14,
+            padding: '10px 14px',
+            borderRadius: 4,
+            fontSize: 12.5,
+            border: `1px solid ${syncNotice.ok ? '#A7F3D0' : '#FECACA'}`,
+            background: syncNotice.ok ? '#ECFDF5' : '#FEF2F2',
+            color: syncNotice.ok ? '#065F46' : '#991B1B',
+          }}
+        >
+          {syncNotice.text}
+        </div>
+      )}
 
       {/* Split Roster + Map Container */}
       <div
@@ -182,7 +337,7 @@ export const LiveFleetMap: React.FC = () => {
             </div>
 
             <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border)', gap: 4 }}>
-              {(['ALL', 'LIVE', 'LAST_KNOWN', 'UNAVAILABLE'] as const).map(tab => {
+              {(['ALL', 'ONLINE', 'OUTDATED', 'OFFLINE'] as const).map(tab => {
                 const isActive = statusFilter === tab;
                 return (
                   <button
@@ -192,7 +347,7 @@ export const LiveFleetMap: React.FC = () => {
                     style={{
                       flex: 1,
                       padding: '6px 4px',
-                      fontSize: 11.5,
+                      fontSize: 12.5,
                       fontWeight: isActive ? 600 : 500,
                       color: isActive ? 'var(--color-ink)' : 'var(--color-text-muted)',
                       background: 'transparent',
@@ -201,7 +356,7 @@ export const LiveFleetMap: React.FC = () => {
                       cursor: 'pointer',
                     }}
                   >
-                    {tab === 'ALL' ? t('All') : tab === 'LAST_KNOWN' ? t('Last Seen') : tab === 'UNAVAILABLE' ? t('No Feed') : t('Live')}
+                    {tab === 'ALL' ? t('All') : tab === 'ONLINE' ? t('Online') : tab === 'OUTDATED' ? t('Outdated') : t('Offline')}
                   </button>
                 );
               })}
@@ -215,7 +370,7 @@ export const LiveFleetMap: React.FC = () => {
               </div>
             ) : (
               filteredVehicles.map(v => {
-                const isSelected = v.id === selectedVehicleId;
+                const isSelected = v.id === selectedVehicle?.id;
                 const { telemetry } = v;
                 const tone = EDITORIAL_STATUS[telemetry.tone];
 
@@ -240,7 +395,7 @@ export const LiveFleetMap: React.FC = () => {
                           dir="ltr"
                           style={{
                             fontFamily: 'var(--font-mono)',
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: 500,
                             color: 'var(--color-ink)',
                             background: 'var(--color-page-bg)',
@@ -255,11 +410,11 @@ export const LiveFleetMap: React.FC = () => {
                       <StatusText label={telemetry.label} color={tone.text} />
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11.5, color: 'var(--color-text-muted)', marginTop: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12.5, color: 'var(--color-text-muted)', marginTop: 6 }}>
                       <span className="truncate max-w-[160px]">
                         {v.driver ? v.driver.full_name : t('No driver')}
                       </span>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>
                         {telemetry.lastSeenText}
                       </span>
                     </div>
@@ -270,175 +425,95 @@ export const LiveFleetMap: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Vector Map & Inspector Panel */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 460 }}>
-          <div
-            style={{
-              flex: 1,
-              background: 'var(--color-page-bg)',
-              position: 'relative',
-              overflow: 'hidden',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: 24,
-            }}
-          >
-            <svg className="absolute inset-0 w-full h-full opacity-45" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <pattern id="roadGrid" width="60" height="60" patternUnits="userSpaceOnUse">
-                  <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#D9D4C8" strokeWidth="1" strokeDasharray="3 3" />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#roadGrid)" />
-              <line x1="15%" y1="20%" x2="85%" y2="75%" stroke="#B8B09E" strokeWidth="2.5" />
-              <line x1="85%" y1="75%" x2="40%" y2="85%" stroke="#B8B09E" strokeWidth="2" />
-              <line x1="20%" y1="15%" x2="25%" y2="90%" stroke="#B8B09E" strokeWidth="1.5" strokeDasharray="6 4" />
-            </svg>
+        {/* Right Real Leaflet Map & Inspector Panel */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 480 }}>
+          <div style={{ flex: 1, position: 'relative', minHeight: 400, background: 'var(--color-page-bg)' }}>
+            <div ref={mapContainerRef} style={{ width: '100%', height: '100%', minHeight: 400, zIndex: 1 }} />
 
-            <div
-              className="hidden sm:block"
-              style={{
-                position: 'absolute',
-                top: 20,
-                insetInlineStart: 24,
-                background: 'var(--color-surface)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 4,
-                padding: '5px 10px',
-                fontSize: 11.5,
-                fontWeight: 500,
-                color: 'var(--color-text-secondary)',
-              }}
-            >
-              {t('Dammam Central Fuel Terminal Depot')}
-            </div>
-            <div
-              className="hidden sm:block"
-              style={{
-                position: 'absolute',
-                top: 20,
-                insetInlineEnd: 24,
-                background: 'var(--color-surface)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 4,
-                padding: '5px 10px',
-                fontSize: 11.5,
-                fontWeight: 500,
-                color: 'var(--color-text-secondary)',
-              }}
-            >
-              {t('Ras Tanura Aramco Terminal')}
-            </div>
-            <div
-              className="hidden sm:block"
-              style={{
-                position: 'absolute',
-                bottom: 24,
-                insetInlineStart: 28,
-                background: 'var(--color-surface)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 4,
-                padding: '5px 10px',
-                fontSize: 11.5,
-                fontWeight: 500,
-                color: 'var(--color-text-secondary)',
-              }}
-            >
-              {t('Jubail Industrial Logistics Hub')}
-            </div>
-            <div
-              className="hidden sm:block"
-              style={{
-                position: 'absolute',
-                bottom: 24,
-                insetInlineEnd: 28,
-                background: 'var(--color-surface)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 4,
-                padding: '5px 10px',
-                fontSize: 11.5,
-                fontWeight: 500,
-                color: 'var(--color-text-secondary)',
-              }}
-            >
-              {t('Riyadh North Fuel Distribution Center')}
-            </div>
-
-            <div
-              style={{
-                position: 'relative',
-                zIndex: 10,
-                maxWidth: 480,
-                background: 'var(--color-surface)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 4,
-                padding: 24,
-                textAlign: 'center',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 16,
-              }}
-            >
+            {/* Honest Unavailable Overlay when zero live coordinates exist */}
+            {liveVehicleCount === 0 && (
               <div
                 style={{
-                  width: 44,
-                  height: 44,
-                  margin: '0 auto',
+                  position: 'absolute',
+                  top: 16,
+                  insetInlineStart: 56,
+                  insetInlineEnd: 16,
+                  zIndex: 500,
+                  maxWidth: 520,
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
                   borderRadius: 4,
-                  background: '#ECFDF5',
-                  border: '1px solid #A7F3D0',
+                  padding: '14px 16px',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#0F5C4D',
+                  alignItems: 'flex-start',
+                  gap: 12,
                 }}
               >
-                <Radio style={{ width: 22, height: 22 }} />
-              </div>
-
-              <div>
-                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: 'var(--color-ink)' }}>
-                  {t('GPS Provider Not Connected — Awaiting Real Vehicle Data')}
-                </h3>
-                <p style={{ margin: '6px 0 0', fontSize: 12.5, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
-                  {t('No verified coordinates are currently being received from external tracking hardware. Vehicles will render on this map automatically once your GPS provider is confirmed and connected.')}
-                </p>
-              </div>
-
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: 10,
-                  textAlign: 'start',
-                  paddingTop: 12,
-                  borderTop: '1px solid var(--color-row-divider)',
-                }}
-              >
-                <div style={{ padding: 10, background: 'var(--color-page-bg)', border: '1px solid var(--color-border)', borderRadius: 4 }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-muted)', display: 'block' }}>{t('STEP 1')}</span>
-                  <div style={{ fontWeight: 600, color: 'var(--color-ink)', fontSize: 12, marginTop: 2 }}>{t('Vendor API')}</div>
-                  <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{t('Confirm REST or webhook feed')}</span>
+                <div
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 4,
+                    background: '#ECFDF5',
+                    border: '1px solid #A7F3D0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#0F5C4D',
+                    flexShrink: 0,
+                  }}
+                >
+                  <Radio style={{ width: 18, height: 18 }} />
                 </div>
-                <div style={{ padding: 10, background: 'var(--color-page-bg)', border: '1px solid var(--color-border)', borderRadius: 4 }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-muted)', display: 'block' }}>{t('STEP 2')}</span>
-                  <div style={{ fontWeight: 600, color: 'var(--color-ink)', fontSize: 12, marginTop: 2 }}>{t('Server Secret')}</div>
-                  <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{t('Store API keys on backend')}</span>
-                </div>
-                <div style={{ padding: 10, background: 'var(--color-page-bg)', border: '1px solid var(--color-border)', borderRadius: 4 }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-muted)', display: 'block' }}>{t('STEP 3')}</span>
-                  <div style={{ fontWeight: 600, color: 'var(--color-ink)', fontSize: 12, marginTop: 2 }}>{t('Sync Active')}</div>
-                  <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{t('Positions update live')}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--color-ink)' }}>
+                    {t('Live GPS Data Unavailable — Awaiting Authorized Sniper Feed')}
+                  </div>
+                  <p style={{ margin: '4px 0 8px', fontSize: 12.5, color: 'var(--color-text-secondary)', lineHeight: 1.45 }}>
+                    {t('No verified GPS coordinates have been received from live tracking hardware yet. Mock coordinates are disabled in production.')}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowSetupModal(true)}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: '#0F5C4D',
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <span>{t('View Integration Requirements')}</span>
+                    <ArrowRight style={{ width: 13, height: 13 }} className={isRTL ? 'rotate-180' : ''} />
+                  </button>
                 </div>
               </div>
+            )}
 
-              <div>
-                <PrimaryButton onClick={() => setShowSetupModal(true)}>
-                  <span>{t('View Integration Instructions')}</span>
-                  <ArrowRight style={{ width: 14, height: 14 }} className={isRTL ? 'rotate-180' : ''} />
-                </PrimaryButton>
-              </div>
+            {/* Last Sync Status Pill */}
+            <div
+              style={{
+                position: 'absolute',
+                bottom: 12,
+                insetInlineStart: 12,
+                zIndex: 500,
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 4,
+                padding: '4px 10px',
+                fontSize: 12,
+                fontFamily: 'var(--font-mono)',
+                color: 'var(--color-text-secondary)',
+              }}
+            >
+              {lastSyncLog?.sync_completed_at
+                ? `${t('Last Sync')}: ${new Date(lastSyncLog.sync_completed_at).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}`
+                : `${t('Last Sync')}: ${t('Never')}`}
             </div>
           </div>
 
@@ -477,19 +552,35 @@ export const LiveFleetMap: React.FC = () => {
 
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 20, fontSize: 12 }}>
                 <div>
-                  <span style={{ color: 'var(--color-text-muted)', fontSize: 11, display: 'block' }}>{t('SPEED')}</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--color-ink)' }} dir="ltr">--</span>
+                  <span style={{ color: 'var(--color-text-muted)', fontSize: 12, display: 'block' }}>{t('COORDINATES')}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--color-ink)' }} dir="ltr">
+                    {selectedVehicle.ping
+                      ? `${selectedVehicle.ping.latitude.toFixed(5)}, ${selectedVehicle.ping.longitude.toFixed(5)}`
+                      : '—'}
+                  </span>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--color-text-muted)', fontSize: 11, display: 'block' }}>{t('IGNITION')}</span>
-                  <span style={{ fontWeight: 500, color: 'var(--color-text-secondary)' }}>{t('Unavailable')}</span>
+                  <span style={{ color: 'var(--color-text-muted)', fontSize: 12, display: 'block' }}>{t('SPEED')}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--color-ink)' }} dir="ltr">
+                    {selectedVehicle.ping ? `${selectedVehicle.ping.speed_kmh} km/h` : '--'}
+                  </span>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--color-text-muted)', fontSize: 11, display: 'block' }}>{t('LAST GPS SIGNAL')}</span>
-                  <span style={{ color: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)' }}>{t('Never (No Feed)')}</span>
+                  <span style={{ color: 'var(--color-text-muted)', fontSize: 12, display: 'block' }}>{t('IGNITION')}</span>
+                  <span style={{ fontWeight: 500, color: 'var(--color-text-secondary)' }}>
+                    {selectedVehicle.ping
+                      ? (selectedVehicle.ping.ignition_on ? t('ON') : t('OFF'))
+                      : t('Unavailable')}
+                  </span>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--color-text-muted)', fontSize: 11, display: 'block' }}>{t('HARDWARE UNIT')}</span>
+                  <span style={{ color: 'var(--color-text-muted)', fontSize: 12, display: 'block' }}>{t('LAST UPDATED')}</span>
+                  <span style={{ color: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)' }}>
+                    {selectedVehicle.telemetry.exactTimestamp || t('Never (No Feed)')}
+                  </span>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--color-text-muted)', fontSize: 12, display: 'block' }}>{t('HARDWARE UNIT')}</span>
                   <span
                     style={{ fontFamily: 'var(--font-mono)', fontWeight: 500, color: 'var(--color-ink)' }}
                     dir={selectedVehicle.device ? 'ltr' : undefined}
@@ -507,26 +598,26 @@ export const LiveFleetMap: React.FC = () => {
       <Modal
         isOpen={showSetupModal}
         onClose={() => setShowSetupModal(false)}
-        title={t('GPS PROVIDER INTEGRATION GUIDE')}
+        title={t('SNIPER GPS INTEGRATION GUIDE')}
         maxWidth="xl"
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, fontSize: 12.5 }}>
           <p style={{ margin: 0, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
-            {t('Your Noor Fleet ERP is architected to be vendor-agnostic. It accepts live coordinates from any modern fleet telematics hardware via standard REST polling or webhooks.')}
+            {t('Noor Fleet connects to Sniper GPS exclusively via the server-side sync-gps-positions Supabase Edge Function. Credentials are never stored in frontend code.')}
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div style={{ padding: 12, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 4 }}>
-              <div style={{ fontWeight: 600, color: 'var(--color-ink)', marginBottom: 4 }}>{t('1. Confirm Tracking Vendor')}</div>
+              <div style={{ fontWeight: 600, color: 'var(--color-ink)', marginBottom: 4 }}>{t('1. Confirm Official Sniper API Documentation')}</div>
               <p style={{ margin: 0, color: 'var(--color-text-secondary)', fontSize: 12 }}>
-                {t('Provide the API endpoint, authentication method (Bearer token, API key, or OAuth2), and JSON payload format.')}
+                {t('Obtain management authorization and official Sniper API base URL, endpoints, authentication headers, and rate limits.')}
               </p>
             </div>
 
             <div style={{ padding: 12, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 4 }}>
-              <div style={{ fontWeight: 600, color: 'var(--color-ink)', marginBottom: 4 }}>{t('2. Configure Supabase Secrets')}</div>
+              <div style={{ fontWeight: 600, color: 'var(--color-ink)', marginBottom: 4 }}>{t('2. Configure Supabase Secrets (Placeholder)')}</div>
               <p style={{ margin: 0, color: 'var(--color-text-secondary)', fontSize: 12 }}>
-                {t('Store credentials on the backend. No secrets are ever exposed in frontend code:')}
+                {t('Store credentials strictly in Supabase Secrets on the backend:')}
               </p>
               <code
                 dir="ltr"
@@ -536,19 +627,19 @@ export const LiveFleetMap: React.FC = () => {
                   color: '#CDEBE3',
                   padding: '8px 10px',
                   borderRadius: 4,
-                  fontSize: 11,
+                  fontSize: 12,
                   fontFamily: 'var(--font-mono)',
                   marginTop: 8,
                 }}
               >
-                supabase secrets set GPS_PROVIDER_BASE_URL="https://api.vendor.com/v1" GPS_PROVIDER_API_KEY="..."
+                supabase secrets set GPS_PROVIDER_TYPE="SNIPER" SNIPER_API_BASE_URL="https://api.sniper-provider.example/v1" SNIPER_API_KEY="YOUR_SECRET_KEY"
               </code>
             </div>
 
             <div style={{ padding: 12, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 4 }}>
-              <div style={{ fontWeight: 600, color: 'var(--color-ink)', marginBottom: 4 }}>{t('3. Activate Scheduled Sync or Webhook')}</div>
+              <div style={{ fontWeight: 600, color: 'var(--color-ink)', marginBottom: 4 }}>{t('3. Deploy Edge Function & Schedule Cron')}</div>
               <p style={{ margin: 0, color: 'var(--color-text-secondary)', fontSize: 12 }}>
-                {t('Deploy sync-gps-positions Edge Function to process coordinates with the active speed and stationary jitter filters.')}
+                {t('Deploy sync-gps-positions so live coordinates stream into vehicle_gps_pings and auto-refresh on this map.')}
               </p>
             </div>
           </div>

@@ -160,7 +160,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
             onClick={onClose}
             style={{
               padding: '3px 8px',
-              fontSize: 11,
+              fontSize: 12,
               fontFamily: 'var(--font-mono)',
               fontWeight: 500,
               background: 'var(--color-page-bg)',

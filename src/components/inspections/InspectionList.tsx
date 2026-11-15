@@ -29,6 +29,7 @@ import {
   StatusText,
   TableFooter,
   EDITORIAL_STATUS,
+  EmptyDash,
 } from '../common/EditorialUI';
 
 const REPORT_STATUS_OPTIONS: {
@@ -142,7 +143,7 @@ export const InspectionList: React.FC = () => {
 
   const handleShareWhatsApp = () => {
     const text = encodeURIComponent(
-      `${t('Noor Fleet — Report a Vehicle Issue (No Login Required)')}:\n${publicReportUrl}`
+      `${t('Noor Fleet â€” Report a Vehicle Issue (No Login Required)')}:\n${publicReportUrl}`
     );
     window.open(`https://wa.me/?text=${text}`, '_blank', 'noopener,noreferrer');
   };
@@ -258,7 +259,7 @@ export const InspectionList: React.FC = () => {
         internal_notes: internalNotes.trim(),
         fleet_manager_notes: internalNotes.trim(),
         assigned_maintenance_team: assignedTeam || undefined,
-        action_taken: `Reviewed by ${currentProfile.full_name} — Status: ${modalStatus}${
+        action_taken: `Reviewed by ${currentProfile.full_name} â€” Status: ${modalStatus}${
           assignedTeam ? `, Assigned Team: ${assignedTeam}` : ''
         }`,
       },
@@ -555,9 +556,9 @@ export const InspectionList: React.FC = () => {
       <PageHeader
         title={
           <>
-            {isRTL ? 'بلاغات السائقين' : 'Driver Reports &'}
+            {isRTL ? 'ط¨ظ„ط§ط؛ط§طھ ط§ظ„ط³ط§ط¦ظ‚ظٹظ†' : 'Driver Reports &'}
             <br />
-            {isRTL ? 'وفحوصات المركبات' : 'Inspections Inbox'}
+            {isRTL ? 'ظˆظپط­ظˆطµط§طھ ط§ظ„ظ…ط±ظƒط¨ط§طھ' : 'Inspections Inbox'}
           </>
         }
         subtitle={t('Driver issue reports, public reporting link, and digital pre-trip checklist logs.')}
@@ -567,10 +568,10 @@ export const InspectionList: React.FC = () => {
               {t('Excel')}
             </GhostButton>
             <GhostButton onClick={handleExportPDF}>
-              {isRTL ? 'تقرير PDF' : 'PDF report'}
+              {isRTL ? 'طھظ‚ط±ظٹط± PDF' : 'PDF report'}
             </GhostButton>
             <SecondaryButton onClick={handleCopyPublicLink}>
-              {copiedLink ? t('Copied Link!') : isRTL ? 'نسخ رابط البلاغات' : 'Copy public link'}
+              {copiedLink ? t('Copied Link!') : isRTL ? 'ظ†ط³ط® ط±ط§ط¨ط· ط§ظ„ط¨ظ„ط§ط؛ط§طھ' : 'Copy public link'}
             </SecondaryButton>
             {canManage && (
               <PrimaryButton onClick={() => setIsInspectionFormOpen(true)}>
@@ -626,36 +627,36 @@ export const InspectionList: React.FC = () => {
         tabs={[
           {
             key: 'ALL',
-            label: isRTL ? 'الكل' : 'All',
+            label: isRTL ? 'ط§ظ„ظƒظ„' : 'All',
             count: defectReports.length,
           },
           {
             key: 'NEW',
-            label: isRTL ? 'جديد' : 'New',
+            label: isRTL ? 'ط¬ط¯ظٹط¯' : 'New',
             count: defectReports.filter(r => normalizeStatus(r.status) === 'NEW').length,
             stripe: EDITORIAL_STATUS.amber.stripe,
           },
           {
             key: 'UNDER_REVIEW',
-            label: isRTL ? 'قيد المراجعة' : 'Under review',
+            label: isRTL ? 'ظ‚ظٹط¯ ط§ظ„ظ…ط±ط§ط¬ط¹ط©' : 'Under review',
             count: defectReports.filter(r => normalizeStatus(r.status) === 'UNDER_REVIEW').length,
             stripe: EDITORIAL_STATUS.blue.stripe,
           },
           {
             key: 'IN_PROGRESS',
-            label: isRTL ? 'قيد التنفيذ' : 'In progress',
+            label: isRTL ? 'ظ‚ظٹط¯ ط§ظ„طھظ†ظپظٹط°' : 'In progress',
             count: defectReports.filter(r => normalizeStatus(r.status) === 'IN_PROGRESS').length,
             stripe: EDITORIAL_STATUS.amber.stripe,
           },
           {
             key: 'RESOLVED',
-            label: isRTL ? 'تم الحل' : 'Resolved',
+            label: isRTL ? 'طھظ… ط§ظ„ط­ظ„' : 'Resolved',
             count: defectReports.filter(r => normalizeStatus(r.status) === 'RESOLVED').length,
             stripe: EDITORIAL_STATUS.green.stripe,
           },
           {
             key: 'CHECKLISTS',
-            label: isRTL ? 'فحوصات ما قبل الرحلة' : 'Pre-trip logs',
+            label: isRTL ? 'ظپط­ظˆطµط§طھ ظ…ط§ ظ‚ط¨ظ„ ط§ظ„ط±ط­ظ„ط©' : 'Pre-trip logs',
             count: inspections.length,
             stripe: EDITORIAL_STATUS.blue.stripe,
           },
@@ -745,7 +746,7 @@ export const InspectionList: React.FC = () => {
                           handleQuickStatusUpdate(rep, e.target.value as DefectReportStatus)
                         }
                         className="nf-field"
-                        style={{ height: 28, fontSize: 11.5, padding: '0 8px', width: 'auto' }}
+                        style={{ height: 28, fontSize: 12.5, padding: '0 8px', width: 'auto' }}
                       >
                         {REPORT_STATUS_OPTIONS.map(opt => (
                           <option key={opt.value} value={opt.value}>
@@ -782,7 +783,7 @@ export const InspectionList: React.FC = () => {
                             openLightbox(
                               rep.photo_url!,
                               `${t('Issue Photo')}: ${rep.report_number}`,
-                              `${t('Driver')}: ${rep.driver_name} • ${t('Plate')}: ${displayPlate}`,
+                              `${t('Driver')}: ${rep.driver_name} â€¢ ${t('Plate')}: ${displayPlate}`,
                               rep.report_number,
                               rep.created_at
                             );
@@ -797,7 +798,7 @@ export const InspectionList: React.FC = () => {
                             background: 'var(--color-page-bg)',
                             border: '1px solid var(--color-border)',
                             color: 'var(--color-brand-accent)',
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: 500,
                             cursor: 'pointer',
                           }}
@@ -819,9 +820,9 @@ export const InspectionList: React.FC = () => {
                       {veh && (
                         <span
                           dir="ltr"
-                          style={{ fontSize: 11.5, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}
+                          style={{ fontSize: 12.5, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}
                         >
-                          {veh.vehicle_id} • {veh.make}
+                          {veh.vehicle_id} â€¢ {veh.make}
                         </span>
                       )}
                     </div>
@@ -855,7 +856,7 @@ export const InspectionList: React.FC = () => {
                         {t(rep.assigned_maintenance_team)}
                       </span>
                     ) : (
-                      <span style={{ color: 'var(--color-text-muted)' }}>{t('Unassigned')}</span>
+                      <EmptyDash label={t('Unassigned')} />
                     )}
                   </td>
 
@@ -888,7 +889,7 @@ export const InspectionList: React.FC = () => {
           </DataTable>
 
           <TableFooter
-            summaryText={`${t('Showing')} ${filteredReports.length} ${t('of')} ${defectReports.length} ${t('driver issue reports')} · ${t('Public Portal Endpoint: Active')} (/driver-report)`}
+            summaryText={`${t('Showing')} ${filteredReports.length} ${t('of')} ${defectReports.length} ${t('driver issue reports')} آ· ${t('Public Portal Endpoint: Active')} (/driver-report)`}
             page={reportsPage}
             totalPages={reportsTotalPages}
             pageSize={reportsPageSize}
@@ -947,7 +948,7 @@ export const InspectionList: React.FC = () => {
                         <PlateChip plate={veh.plate_number} accentColor={stripe} />
                       ) : null}
                       <span dir="ltr" style={{ fontSize: 12, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
-                        {veh?.vehicle_id || '—'}
+                        {veh?.vehicle_id || 'â€”'}
                       </span>
                     </div>
                   </td>
@@ -1059,14 +1060,14 @@ export const InspectionList: React.FC = () => {
             >
               <div>
                 <div style={{ fontWeight: 600, color: 'var(--color-ink)', fontSize: 14 }}>
-                  <span dir="ltr">{selectedReport.report_number}</span> — {t(selectedReport.category)} {t('Issue')}
+                  <span dir="ltr">{selectedReport.report_number}</span> â€” {t(selectedReport.category)} {t('Issue')}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>
-                  {t('Driver')}: <strong style={{ color: 'var(--color-ink)' }}>{selectedReport.driver_name}</strong> • {t('Vehicle')}:{' '}
+                  {t('Driver')}: <strong style={{ color: 'var(--color-ink)' }}>{selectedReport.driver_name}</strong> â€¢ {t('Vehicle')}:{' '}
                   <strong dir="ltr" style={{ color: 'var(--color-ink)', fontFamily: 'var(--font-mono)' }}>
                     {selectedReport.plate_number || selectedReport.vehicle_id} ({selectedReport.vehicle_id})
                   </strong>{' '}
-                  • <span dir="ltr">{new Date(selectedReport.created_at).toLocaleString(isRTL ? 'ar-SA-u-ca-gregory' : 'en-US')}</span>
+                  â€¢ <span dir="ltr">{new Date(selectedReport.created_at).toLocaleString(isRTL ? 'ar-SA-u-ca-gregory' : 'en-US')}</span>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1151,7 +1152,7 @@ export const InspectionList: React.FC = () => {
                     borderRadius: 4,
                   }}
                 >
-                  <span style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>
+                  <span style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>
                     {t('Driver Issue Description')}
                   </span>
                   <p style={{ margin: 0, color: 'var(--color-ink)', fontWeight: 500, lineHeight: 1.6, fontSize: 13 }}>
@@ -1180,7 +1181,7 @@ export const InspectionList: React.FC = () => {
                         onClick={() => openLightbox(
                           selectedReport.photo_url!,
                           `${t('Issue Photo')}: ${selectedReport.report_number}`,
-                          `${t('Driver')}: ${selectedReport.driver_name} • ${t('Plate')}: ${selectedReport.plate_number}`,
+                          `${t('Driver')}: ${selectedReport.driver_name} â€¢ ${t('Plate')}: ${selectedReport.plate_number}`,
                           selectedReport.report_number,
                           selectedReport.created_at
                         )}
@@ -1194,7 +1195,7 @@ export const InspectionList: React.FC = () => {
                       onClick={() => openLightbox(
                         selectedReport.photo_url!,
                         `${t('Issue Photo')}: ${selectedReport.report_number}`,
-                        `${t('Driver')}: ${selectedReport.driver_name} • ${t('Plate')}: ${selectedReport.plate_number}`,
+                        `${t('Driver')}: ${selectedReport.driver_name} â€¢ ${t('Plate')}: ${selectedReport.plate_number}`,
                         selectedReport.report_number,
                         selectedReport.created_at
                       )}
@@ -1375,7 +1376,7 @@ export const InspectionList: React.FC = () => {
                       onClick={() => openLightbox(
                         selectedReport.photo_url!,
                         `${t('Issue Photo')}: ${selectedReport.report_number}`,
-                        `${t('Driver')}: ${selectedReport.driver_name} • ${t('Plate')}: ${selectedReport.plate_number}`,
+                        `${t('Driver')}: ${selectedReport.driver_name} â€¢ ${t('Plate')}: ${selectedReport.plate_number}`,
                         selectedReport.report_number,
                         selectedReport.created_at
                       )}
@@ -1403,7 +1404,7 @@ export const InspectionList: React.FC = () => {
                         onClick={() => openLightbox(
                           selectedReport.photo_url!,
                           `${t('Issue Photo')}: ${selectedReport.report_number}`,
-                          `${t('Driver')}: ${selectedReport.driver_name} • ${t('Plate')}: ${selectedReport.plate_number}`,
+                          `${t('Driver')}: ${selectedReport.driver_name} â€¢ ${t('Plate')}: ${selectedReport.plate_number}`,
                           selectedReport.report_number,
                           selectedReport.created_at
                         )}
