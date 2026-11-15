@@ -165,6 +165,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ onNavi
           }
         >
           <DataTable
+            showPagination
             columns={[
               { label: t('Actor') },
               { label: t('Action') },
@@ -174,7 +175,7 @@ export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ onNavi
             emptyMessage={isRTL ? 'لا توجد أحداث تدقيق بعد' : 'No audit events recorded'}
             hasActionsColumn={false}
           >
-            {auditLogs.slice(0, 5).map(log => (
+            {auditLogs.map(log => (
               <DataRow key={log.id} stripeColor={EDITORIAL_STATUS.blue.stripe}>
                 <td style={{ padding: '12px 16px', verticalAlign: 'middle' }}>
                   <div style={{ fontWeight: 500, fontSize: 13, color: 'var(--color-ink)' }}>{log.user_name}</div>

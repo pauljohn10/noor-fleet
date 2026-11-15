@@ -8,6 +8,7 @@ import { JobCardDetailView } from './JobCardDetailView';
 import { WorkOrder, WOStatus, WOPriority } from '../../types';
 import { exportToExcel, exportToPDFReport } from '../../lib/exportUtils';
 import { DESIGN_TOKENS } from '../../lib/designTokens';
+import { useTablePagination } from '../../lib/supabasePagination';
 import {
   PageContainer,
   PageHeader,
@@ -77,8 +78,6 @@ export const JobCardList: React.FC = () => {
   const [priorityFilter, setPriorityFilter] = useState<string>('ALL');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedWO, setSelectedWO] = useState<WorkOrder | null>(null);
-  const [page, setPage] = useState(1);
-  const PAGE_SIZE = 20;
 
   const isBucket = (w: WorkOrder, bucket: string) => {
     if (bucket === 'ALL') return true;
@@ -102,8 +101,21 @@ export const JobCardList: React.FC = () => {
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
-  const totalPages = Math.max(1, Math.ceil(filteredWOs.length / PAGE_SIZE));
-  const pagedWOs = filteredWOs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const {
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    pagedItems: pagedWOs,
+  } = useTablePagination(filteredWOs, [search, statusFilter, priorityFilter], {
+    table: 'work_orders',
+    orderBy: 'created_at',
+    ascending: false,
+    search,
+    searchColumns: ['work_order_number', 'problem_description'],
+    eqFilters: { priority: priorityFilter },
+  });
 
   const handleExportExcel = () => {
     const data = filteredWOs.map(w => ({
@@ -423,6 +435,10 @@ export const JobCardList: React.FC = () => {
         }
         page={page}
         totalPages={totalPages}
+        pageSize={pageSize}
+        totalRecords={filteredWOs.length}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
         onPrev={() => setPage(p => Math.max(1, p - 1))}
         onNext={() => setPage(p => Math.min(totalPages, p + 1))}
       />

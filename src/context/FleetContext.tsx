@@ -4,7 +4,7 @@ import {
   MaintenanceSchedule, PMStatus, VehicleInspection, VehicleDocument, 
   NotificationItem, AuditLog, WOStatus, DefectReport, DefectReportCategory, SeverityLevel,
   GpsDevice, VehicleGpsPing, GpsSyncLog, Trip, VehicleFuelBenchmark, FuelTransaction, TripFuelReconciliation,
-  SmallVehicle, SmallVehicleInput
+  SmallVehicle, SmallVehicleInput, TankerTestRecord, TankerTestRecordInput, TankTestType
 } from '../types';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { LocalStorageRepository } from '../lib/storage';
@@ -28,6 +28,7 @@ interface FleetContextType {
   schedules: MaintenanceSchedule[];
   inspections: VehicleInspection[];
   documents: VehicleDocument[];
+  tankerTestRecords: TankerTestRecord[];
   notifications: NotificationItem[];
   auditLogs: AuditLog[];
   defectReports: DefectReport[];
@@ -107,6 +108,13 @@ interface FleetContextType {
   addDocument: (doc: Omit<VehicleDocument, 'id' | 'created_at'>, addedBy?: string) => Promise<VehicleDocument>;
   updateDocument: (id: string, updates: Partial<VehicleDocument>, changedBy?: string) => Promise<boolean>;
   deleteDocument: (id: string, changedBy?: string) => Promise<boolean>;
+  addTankerTestRecord: (input: TankerTestRecordInput, addedBy?: string) => Promise<TankerTestRecord>;
+  updateTankerTestRecord: (id: string, updates: Partial<TankerTestRecordInput>, changedBy?: string) => Promise<TankerTestRecord>;
+  updateTrailerTankTestConfig: (
+    trailerId: string,
+    requiredTests: TankTestType[],
+    inspectionStandard?: string
+  ) => Promise<Trailer>;
   markNotificationRead: (id: string) => Promise<void>;
 
   // Telematics & Fuel Actions
@@ -135,6 +143,7 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [schedules, setSchedules] = useState<MaintenanceSchedule[]>([]);
   const [inspections, setInspections] = useState<VehicleInspection[]>([]);
   const [documents, setDocuments] = useState<VehicleDocument[]>([]);
+  const [tankerTestRecords, setTankerTestRecords] = useState<TankerTestRecord[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [defectReports, setDefectReports] = useState<DefectReport[]>([]);
@@ -179,7 +188,7 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const [
         vehList, smallVehList, trlList, drvList, techList, partList,
         woList, schedList, insList, docList, repList,
-        tripList, devList, fuelList, auditList, notifList
+        tripList, devList, fuelList, auditList, notifList, tankerTestsList
       ] = await Promise.all([
         dbService.fetchVehicles().catch(err => { console.warn('Vehicles fetch:', err); return []; }),
         dbService.fetchSmallVehicles().catch(err => { console.warn('SmallVehicles fetch:', err); return []; }),
@@ -196,7 +205,8 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         dbService.fetchGpsDevices().catch(err => { console.warn('GPS Devices fetch:', err); return []; }),
         dbService.fetchFuelTransactions().catch(err => { console.warn('Fuel fetch:', err); return []; }),
         dbService.fetchAuditLogs().catch(err => { console.warn('Audit fetch:', err); return []; }),
-        dbService.fetchNotifications().catch(err => { console.warn('Notifications fetch:', err); return []; })
+        dbService.fetchNotifications().catch(err => { console.warn('Notifications fetch:', err); return []; }),
+        dbService.fetchTankerTestRecords().catch(err => { console.warn('TankerTests fetch:', err); return []; })
       ]);
 
       setVehicles(vehList);
@@ -214,7 +224,75 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setGpsDevices(devList);
       setFuelTransactions(fuelList);
       setAuditLogs(auditList);
-      setNotifications(notifList);
+      setTankerTestRecords(tankerTestsList);
+
+      // Synthesize live Tank Testing & Inspection compliance notifications (Failed, Overdue, Expiring Soon, Pending)
+      const latestByTrailerAndType = new Map<string, TankerTestRecord>();
+      for (const rec of tankerTestsList) {
+        const key = `${rec.tanker_trailer_id}::${rec.test_type}`;
+        if (!latestByTrailerAndType.has(key)) {
+          latestByTrailerAndType.set(key, rec);
+        }
+      }
+      const tankTestAlerts: NotificationItem[] = [];
+      const todayMs = new Date().setHours(0, 0, 0, 0);
+      latestByTrailerAndType.forEach((rec) => {
+        const trl = trlList.find((t) => t.id === rec.tanker_trailer_id);
+        const trlLabel = trl ? `${trl.trailer_id} (${trl.plate_number})` : rec.tanker_trailer_id;
+        if (rec.test_status === 'FAIL') {
+          tankTestAlerts.push({
+            id: `tank-test-fail-${rec.id}`,
+            title: 'Tank Test Failed',
+            message: `${rec.test_type} FAILED for tanker ${trlLabel}${rec.certificate_number ? ` · Cert #${rec.certificate_number}` : ''}`,
+            category: 'INSPECTION',
+            reference_id: rec.id,
+            is_read: false,
+            created_at: rec.updated_at || rec.created_at,
+          });
+        } else if (rec.test_status === 'PENDING') {
+          tankTestAlerts.push({
+            id: `tank-test-pending-${rec.id}`,
+            title: 'Pending Tank Test Result',
+            message: `${rec.test_type} is PENDING verification for tanker ${trlLabel}`,
+            category: 'INSPECTION',
+            reference_id: rec.id,
+            is_read: false,
+            created_at: rec.updated_at || rec.created_at,
+          });
+        }
+        if (rec.next_test_due_date) {
+          const dueMs = new Date(rec.next_test_due_date).setHours(0, 0, 0, 0);
+          const diffDays = Math.ceil((dueMs - todayMs) / 86400000);
+          if (diffDays < 0) {
+            tankTestAlerts.push({
+              id: `tank-test-overdue-${rec.id}`,
+              title: 'Overdue Tank Inspection',
+              message: `${rec.test_type} for tanker ${trlLabel} is OVERDUE by ${Math.abs(diffDays)} day(s) (Due: ${rec.next_test_due_date})`,
+              category: 'INSPECTION',
+              reference_id: rec.id,
+              is_read: false,
+              created_at: rec.updated_at || rec.created_at,
+            });
+          } else if (diffDays <= 30) {
+            tankTestAlerts.push({
+              id: `tank-test-expiring-${rec.id}`,
+              title: 'Upcoming Tank Test Expiration',
+              message: `${rec.test_type} for tanker ${trlLabel} expires in ${diffDays} day(s) (Due: ${rec.next_test_due_date})`,
+              category: 'INSPECTION',
+              reference_id: rec.id,
+              is_read: false,
+              created_at: rec.updated_at || rec.created_at,
+            });
+          }
+        }
+      });
+
+      const existingIds = new Set(notifList.map((n) => n.id));
+      const mergedNotifs = [
+        ...tankTestAlerts.filter((a) => !existingIds.has(a.id)),
+        ...notifList,
+      ];
+      setNotifications(mergedNotifs);
     } catch (err: any) {
       console.error('[FleetContext] Exception querying Supabase:', err);
       setDatabaseError(err?.message || 'Failed to sync with Supabase database.');
@@ -814,8 +892,89 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return true;
   };
 
+  // ============================================================================
+  // ACTIONS: TANK TESTING & INSPECTION MANAGEMENT
+  // ============================================================================
+  const addTankerTestRecord = async (
+    input: TankerTestRecordInput,
+    addedBy: string = 'Compliance Inspector'
+  ): Promise<TankerTestRecord> => {
+    const created = await dbService.insertTankerTestRecord(input);
+    const trl = trailers.find((t) => t.id === input.tanker_trailer_id);
+    const trlCode = trl ? `${trl.trailer_id} (${trl.plate_number})` : input.tanker_trailer_id;
+
+    await dbService.insertAuditLog({
+      action: 'CREATE',
+      module: 'TANK_TESTING',
+      performed_by: addedBy,
+      target_id: created.certificate_number || `${trlCode}-${created.test_type}`,
+      details: created,
+    });
+
+    if (created.test_status === 'FAIL') {
+      await dbService.insertSystemNotification({
+        title: 'Tank Test Failed',
+        message: `${created.test_type} FAILED for tanker ${trlCode}${created.certificate_number ? ` (Cert #${created.certificate_number})` : ''}`,
+        category: 'INSPECTION',
+        reference_id: created.id,
+      });
+    } else if (created.test_status === 'PENDING') {
+      await dbService.insertSystemNotification({
+        title: 'Pending Tank Test Result',
+        message: `${created.test_type} recorded as PENDING for tanker ${trlCode}`,
+        category: 'INSPECTION',
+        reference_id: created.id,
+      });
+    }
+
+    await refreshData();
+    return created;
+  };
+
+  const updateTankerTestRecord = async (
+    id: string,
+    updates: Partial<TankerTestRecordInput>,
+    changedBy: string = 'Compliance Inspector'
+  ): Promise<TankerTestRecord> => {
+    const updated = await dbService.updateTankerTestRecord(id, updates);
+    await dbService.insertAuditLog({
+      action: 'UPDATE',
+      module: 'TANK_TESTING',
+      performed_by: changedBy,
+      target_id: updated.certificate_number || updated.id,
+      details: updates,
+    });
+    await refreshData();
+    return updated;
+  };
+
+  const updateTrailerTankTestConfig = async (
+    trailerId: string,
+    requiredTests: TankTestType[],
+    inspectionStandard?: string
+  ): Promise<Trailer> => {
+    const updates: Partial<Trailer> = {
+      required_tank_tests: requiredTests,
+    };
+    if (inspectionStandard !== undefined) {
+      updates.inspection_standard = inspectionStandard;
+    }
+    const updated = await dbService.updateTrailer(trailerId, updates);
+    await dbService.insertAuditLog({
+      action: 'UPDATE',
+      module: 'TANK_TESTING',
+      performed_by: 'Fleet Manager',
+      target_id: updated.trailer_id,
+      details: updates,
+    });
+    await refreshData();
+    return updated;
+  };
+
   const markNotificationRead = async (id: string): Promise<void> => {
-    await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+    if (!id.startsWith('tank-test-')) {
+      await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+    }
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
   };
 
@@ -882,6 +1041,7 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         schedules,
         inspections,
         documents,
+        tankerTestRecords,
         notifications,
         auditLogs,
         defectReports,
@@ -932,6 +1092,9 @@ export const FleetProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addDocument,
         updateDocument,
         deleteDocument,
+        addTankerTestRecord,
+        updateTankerTestRecord,
+        updateTrailerTankTestConfig,
         markNotificationRead,
         addGpsDevice,
         updateGpsDevice,

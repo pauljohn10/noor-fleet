@@ -7,6 +7,7 @@ import { Vehicle, VehicleStatus } from '../../types';
 import { VehicleFormModal } from './VehicleFormModal';
 import { VehicleDetailDrawer } from './VehicleDetailDrawer';
 import { exportToExcel, exportToPDFReport } from '../../lib/exportUtils';
+import { useTablePagination } from '../../lib/supabasePagination';
 import {
   PageContainer,
   PageHeader,
@@ -22,8 +23,6 @@ import {
   EditorialSelect,
   EDITORIAL_STATUS,
 } from '../common/EditorialUI';
-
-const PAGE_SIZE = 20;
 
 const STATUS_META: Record<
   string,
@@ -77,7 +76,6 @@ export const VehicleStatusMatrix: React.FC = () => {
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
-  const [page, setPage] = useState(1);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | undefined>();
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | undefined>();
@@ -118,9 +116,21 @@ export const VehicleStatusMatrix: React.FC = () => {
     });
   }, [tractorTrucks, search, statusFilter]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, totalPages);
-  const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const {
+    page: currentPage,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    pagedItems: paged,
+  } = useTablePagination(filtered, [search, statusFilter], {
+    table: 'vehicles',
+    orderBy: 'created_at',
+    ascending: false,
+    search,
+    searchColumns: ['vehicle_id', 'plate_number', 'fleet_number', 'vin', 'make', 'model'],
+    eqFilters: { status: statusFilter },
+  });
 
   const handleExportExcel = () => {
     const data = filtered.map(v => {
@@ -398,11 +408,15 @@ export const VehicleStatusMatrix: React.FC = () => {
       <TableFooter
         summaryText={
           isRTL
-            ? `${paged.length} من ${filtered.length} مركبة`
-            : `${paged.length} of ${filtered.length} vehicles`
+            ? `${filtered.length} من ${tractorTrucks.length} مركبة`
+            : `${filtered.length} of ${tractorTrucks.length} vehicles`
         }
         page={currentPage}
         totalPages={totalPages}
+        pageSize={pageSize}
+        totalRecords={filtered.length}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
         onPrev={() => setPage(p => Math.max(1, p - 1))}
         onNext={() => setPage(p => Math.min(totalPages, p + 1))}
       />

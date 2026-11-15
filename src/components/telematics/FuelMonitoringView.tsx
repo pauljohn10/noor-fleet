@@ -10,6 +10,7 @@ import { useFleet } from '../../context/FleetContext';
 import { useI18n } from '../../context/I18nContext';
 import { Modal } from '../common/Modal';
 import { exportToExcel, exportToPDFReport } from '../../lib/exportUtils';
+import { useTablePagination } from '../../lib/supabasePagination';
 import {
   PageContainer,
   PageHeader,
@@ -95,6 +96,47 @@ export const FuelMonitoringView: React.FC = () => {
       (veh && veh.plate_number.toLowerCase().includes(q)) ||
       (drv && drv.full_name.toLowerCase().includes(q))
     );
+  });
+
+  const {
+    page: txPage,
+    setPage: setTxPage,
+    pageSize: txPageSize,
+    setPageSize: setTxPageSize,
+    totalPages: txTotalPages,
+    pagedItems: pagedTransactions,
+  } = useTablePagination(filteredTransactions, [searchQuery, activeTab], {
+    table: 'fuel_transactions',
+    orderBy: 'created_at',
+    ascending: false,
+    search: searchQuery,
+    searchColumns: ['transaction_number', 'fuel_station_name'],
+  });
+
+  const {
+    page: recPage,
+    setPage: setRecPage,
+    pageSize: recPageSize,
+    setPageSize: setRecPageSize,
+    totalPages: recTotalPages,
+    pagedItems: pagedReconciliations,
+  } = useTablePagination(tripReconciliations, [activeTab], {
+    table: 'trip_fuel_reconciliations',
+    orderBy: 'created_at',
+    ascending: false,
+  });
+
+  const {
+    page: bmPage,
+    setPage: setBmPage,
+    pageSize: bmPageSize,
+    setPageSize: setBmPageSize,
+    totalPages: bmTotalPages,
+    pagedItems: pagedBenchmarks,
+  } = useTablePagination(fuelBenchmarks, [activeTab], {
+    table: 'vehicle_fuel_benchmarks',
+    orderBy: 'created_at',
+    ascending: false,
   });
 
   const handleExportExcel = () => {
@@ -238,7 +280,7 @@ export const FuelMonitoringView: React.FC = () => {
             clearFiltersLabel={t('Clear filters')}
             hasActionsColumn={false}
           >
-            {filteredTransactions.map(tx => {
+            {pagedTransactions.map(tx => {
               const veh = vehicles.find(v => v.id === tx.vehicle_id);
 
               return (
@@ -297,6 +339,14 @@ export const FuelMonitoringView: React.FC = () => {
 
           <TableFooter
             summaryText={`${t('Dispensing Receipts & Invoices')}: ${filteredTransactions.length} / ${fuelTransactions.length}`}
+            page={txPage}
+            totalPages={txTotalPages}
+            pageSize={txPageSize}
+            totalRecords={filteredTransactions.length}
+            onPageChange={setTxPage}
+            onPageSizeChange={setTxPageSize}
+            onPrev={() => setTxPage(p => Math.max(1, p - 1))}
+            onNext={() => setTxPage(p => Math.min(txTotalPages, p + 1))}
           />
         </div>
       )}
@@ -319,7 +369,7 @@ export const FuelMonitoringView: React.FC = () => {
             emptyMessage={t('No trip reconciliations recorded yet.')}
             hasActionsColumn={false}
           >
-            {tripReconciliations.map(rec => {
+            {pagedReconciliations.map(rec => {
               const veh = vehicles.find(v => v.id === rec.vehicle_id);
               const isApproved = rec.reconciliation_status === 'APPROVED';
               const tone = isApproved ? EDITORIAL_STATUS.green : EDITORIAL_STATUS.red;
@@ -378,6 +428,14 @@ export const FuelMonitoringView: React.FC = () => {
           </DataTable>
           <TableFooter
             summaryText={`${t('Trip Reconciliations')}: ${tripReconciliations.length}`}
+            page={recPage}
+            totalPages={recTotalPages}
+            pageSize={recPageSize}
+            totalRecords={tripReconciliations.length}
+            onPageChange={setRecPage}
+            onPageSizeChange={setRecPageSize}
+            onPrev={() => setRecPage(p => Math.max(1, p - 1))}
+            onNext={() => setRecPage(p => Math.min(recTotalPages, p + 1))}
           />
         </div>
       )}
@@ -398,7 +456,7 @@ export const FuelMonitoringView: React.FC = () => {
             emptyMessage={t('No benchmarks configured')}
             hasActionsColumn={false}
           >
-            {fuelBenchmarks.map(bm => (
+            {pagedBenchmarks.map(bm => (
               <DataRow key={bm.id} stripeColor={EDITORIAL_STATUS.amber.stripe}>
                 <td style={{ padding: '14px 16px', verticalAlign: 'middle', fontWeight: 600, fontSize: 14, color: 'var(--color-ink)' }}>
                   {bm.make} {bm.model}
@@ -423,6 +481,14 @@ export const FuelMonitoringView: React.FC = () => {
           </DataTable>
           <TableFooter
             summaryText={`${t('Vehicle Consumption Baselines')}: ${fuelBenchmarks.length}`}
+            page={bmPage}
+            totalPages={bmTotalPages}
+            pageSize={bmPageSize}
+            totalRecords={fuelBenchmarks.length}
+            onPageChange={setBmPage}
+            onPageSizeChange={setBmPageSize}
+            onPrev={() => setBmPage(p => Math.max(1, p - 1))}
+            onNext={() => setBmPage(p => Math.min(bmTotalPages, p + 1))}
           />
         </div>
       )}

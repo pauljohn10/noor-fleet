@@ -3,6 +3,7 @@ import { FileText, Download, Printer, Eye, Truck, Wrench, Package, CalendarCheck
 import { useFleet } from '../../context/FleetContext';
 import { useI18n } from '../../context/I18nContext';
 import { exportToPDFReport, triggerPrint } from '../../lib/exportUtils';
+import { useTablePagination } from '../../lib/supabasePagination';
 import { Modal } from '../common/Modal';
 import {
   PageContainer,
@@ -395,6 +396,15 @@ export const ReportsCenter: React.FC = () => {
     return matchesCategory && matchesSearch;
   });
 
+  const {
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    pagedItems: pagedReports,
+  } = useTablePagination(filteredReports, [search, categoryFilter]);
+
   return (
     <PageContainer>
       <PageHeader
@@ -462,7 +472,7 @@ export const ReportsCenter: React.FC = () => {
           setCategoryFilter('ALL');
         }}
       >
-        {filteredReports.map(card => {
+        {pagedReports.map(card => {
           const meta = reportMeta[card.id] || {
             category: 'FLEET',
             moduleLabel: 'Fleet',
@@ -518,6 +528,14 @@ export const ReportsCenter: React.FC = () => {
             ? `${filteredReports.length} من ${reportCards.length} تقارير`
             : `${filteredReports.length} of ${reportCards.length} reports`
         }
+        page={page}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        totalRecords={filteredReports.length}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+        onPrev={() => setPage(p => Math.max(1, p - 1))}
+        onNext={() => setPage(p => Math.min(totalPages, p + 1))}
       />
 
       {/* Preview Modal */}

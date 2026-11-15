@@ -6,12 +6,14 @@
 
 import { supabase, isSupabaseConfigured } from './supabase';
 import { resolveAttachmentUrl } from './attachmentUtils';
+export { fetchSupabasePaginated, DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS } from './supabasePagination';
 import { 
   Vehicle, Trailer, Driver, Technician, Part, WorkOrder, 
   MaintenanceSchedule, VehicleInspection, VehicleDocument, 
   DefectReport, Trip, GpsDevice, VehicleGpsPing, FuelTransaction, 
   VehicleFuelBenchmark, TripFuelReconciliation, GpsSyncLog, 
-  AuditLog, NotificationItem, PartCategory, SmallVehicle, SmallVehicleInput
+  AuditLog, NotificationItem, PartCategory, SmallVehicle, SmallVehicleInput,
+  TankerTestRecord, TankerTestRecordInput, TankTestType
 } from '../types';
 
 // ============================================================================
@@ -103,7 +105,11 @@ export async function fetchTrailers(): Promise<Trailer[]> {
     ...t,
     tank_capacity_liters: Number(t.tank_capacity_liters) || 0,
     number_of_compartments: Number(t.number_of_compartments) || 1,
-    year: Number(t.year) || new Date().getFullYear()
+    year: Number(t.year) || new Date().getFullYear(),
+    inspection_standard: t.inspection_standard || 'SASO 2288 / ADR / API RP 1110',
+    required_tank_tests: Array.isArray(t.required_tank_tests)
+      ? t.required_tank_tests
+      : ['Hydrostatic Test', 'Pneumatic Test', 'Vacuum Test'],
   })) as Trailer[];
 }
 
@@ -1034,4 +1040,151 @@ export async function deleteSmallVehicle(id: string): Promise<void> {
     .eq('id', id);
 
   if (error) throw error;
+}
+
+// ============================================================================
+// 13. TANK TESTING & INSPECTION MANAGEMENT (public.tanker_test_records)
+// ============================================================================
+export const ALL_TANK_TEST_TYPES: TankTestType[] = [
+  'Hydrostatic Test',
+  'Pneumatic Test',
+  'Vacuum Test',
+];
+
+export async function fetchTankerTestRecords(trailerId?: string): Promise<TankerTestRecord[]> {
+  if (!isSupabaseConfigured) return [];
+
+  let query = supabase
+    .from('tanker_test_records')
+    .select('*')
+    .order('test_date', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false });
+
+  if (trailerId) {
+    query = query.eq('tanker_trailer_id', trailerId);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    console.warn('[SupabaseFleet] Error fetching tanker_test_records:', error.message);
+    return [];
+  }
+
+  return (data || []).map((row: any) => ({
+    ...row,
+    attachment_url: resolveAttachmentUrl(row.attachment_url) || row.attachment_url || null,
+  })) as TankerTestRecord[];
+}
+
+export async function insertTankerTestRecord(
+  input: TankerTestRecordInput
+): Promise<TankerTestRecord> {
+  const payload: Record<string, any> = {
+    tanker_trailer_id: input.tanker_trailer_id,
+    test_type: input.test_type,
+    test_status: input.test_status,
+    test_date: input.test_date || null,
+    next_test_due_date: input.next_test_due_date || null,
+    inspector_name: input.inspector_name?.trim() || null,
+    inspection_center: input.inspection_center?.trim() || null,
+    certificate_number: input.certificate_number?.trim() || null,
+    attachment_url:
+      input.attachment_url && input.attachment_url.trim()
+        ? resolveAttachmentUrl(input.attachment_url) || input.attachment_url.trim()
+        : null,
+    remarks: input.remarks?.trim() || null,
+  };
+
+  const { data, error } = await supabase
+    .from('tanker_test_records')
+    .insert([payload])
+    .select('*')
+    .single();
+
+  if (error) {
+    console.error('[SupabaseFleet] Error inserting tanker_test_record:', error.message);
+    throw error;
+  }
+
+  return {
+    ...(data as TankerTestRecord),
+    attachment_url:
+      resolveAttachmentUrl((data as any)?.attachment_url) || (data as any)?.attachment_url || null,
+  };
+}
+
+export async function updateTankerTestRecord(
+  id: string,
+  updates: Partial<TankerTestRecordInput>
+): Promise<TankerTestRecord> {
+  // Fetch existing record to guarantee existing attachment_url is preserved if not replaced
+  const { data: existingRow } = await supabase
+    .from('tanker_test_records')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+
+  const payload: Record<string, any> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (updates.test_type !== undefined) payload.test_type = updates.test_type;
+  if (updates.test_status !== undefined) payload.test_status = updates.test_status;
+  if (updates.test_date !== undefined) payload.test_date = updates.test_date || null;
+  if (updates.next_test_due_date !== undefined)
+    payload.next_test_due_date = updates.next_test_due_date || null;
+  if (updates.inspector_name !== undefined)
+    payload.inspector_name = updates.inspector_name?.trim() || null;
+  if (updates.inspection_center !== undefined)
+    payload.inspection_center = updates.inspection_center?.trim() || null;
+  if (updates.certificate_number !== undefined)
+    payload.certificate_number = updates.certificate_number?.trim() || null;
+  if (updates.remarks !== undefined) payload.remarks = updates.remarks?.trim() || null;
+
+  if (updates.attachment_url && updates.attachment_url.trim()) {
+    payload.attachment_url =
+      resolveAttachmentUrl(updates.attachment_url) || updates.attachment_url.trim();
+  } else if (existingRow?.attachment_url) {
+    payload.attachment_url = existingRow.attachment_url;
+  }
+
+  const { data, error } = await supabase
+    .from('tanker_test_records')
+    .update(payload)
+    .eq('id', id)
+    .select('*')
+    .single();
+
+  if (error) {
+    console.error('[SupabaseFleet] Error updating tanker_test_record:', error.message);
+    throw error;
+  }
+
+  return {
+    ...(data as TankerTestRecord),
+    attachment_url:
+      resolveAttachmentUrl((data as any)?.attachment_url) || (data as any)?.attachment_url || null,
+  };
+}
+
+export async function insertSystemNotification(params: {
+  title: string;
+  message: string;
+  category: 'MAINTENANCE' | 'DOCUMENT' | 'STOCK' | 'WORK_ORDER' | 'INSPECTION';
+  reference_id?: string;
+}): Promise<void> {
+  if (!isSupabaseConfigured) return;
+  try {
+    await supabase.from('notifications').insert([
+      {
+        title: params.title,
+        message: params.message,
+        category: params.category,
+        reference_id: params.reference_id || null,
+        is_read: false,
+      },
+    ]);
+  } catch (err) {
+    console.warn('[SupabaseFleet] Non-fatal notification insert:', err);
+  }
 }

@@ -218,6 +218,7 @@ export const WorkshopSupervisorDashboard: React.FC<WorkshopSupervisorDashboardPr
           marginTop={0}
         >
           <DataTable
+            showPagination
             columns={[
               { label: isRTL ? 'الفني' : 'Technician' },
               { label: isRTL ? 'المهام النشطة' : 'Workload', align: 'end' },
@@ -268,6 +269,7 @@ export const WorkshopSupervisorDashboard: React.FC<WorkshopSupervisorDashboardPr
           marginTop={0}
         >
           <DataTable
+            showPagination
             columns={[
               { label: isRTL ? 'الأمر والمركبة' : 'Order & vehicle' },
               { label: isRTL ? 'الحالة' : 'Status', align: 'end' },

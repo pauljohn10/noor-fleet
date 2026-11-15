@@ -8,6 +8,7 @@ import { Part } from '../../types';
 import { exportToExcel, exportToPDFReport } from '../../lib/exportUtils';
 import { Modal } from '../common/Modal';
 import { DESIGN_TOKENS } from '../../lib/designTokens';
+import { useTablePagination } from '../../lib/supabasePagination';
 import {
   PageContainer,
   PageHeader,
@@ -33,8 +34,6 @@ export const PartsList: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedPart, setSelectedPart] = useState<Part | null>(null);
   const [editingPart, setEditingPart] = useState<Part | undefined>(undefined);
-  const [page, setPage] = useState(1);
-  const PAGE_SIZE = 20;
 
   // Stock Receive modal state
   const [isReceiveOpen, setIsReceiveOpen] = useState(false);
@@ -61,8 +60,20 @@ export const PartsList: React.FC = () => {
     return matchesSearch && matchesStock;
   });
 
-  const totalPages = Math.max(1, Math.ceil(filteredParts.length / PAGE_SIZE));
-  const pagedParts = filteredParts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const {
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    pagedItems: pagedParts,
+  } = useTablePagination(filteredParts, [search, stockFilter], {
+    table: 'parts',
+    orderBy: 'part_number',
+    ascending: true,
+    search,
+    searchColumns: ['part_number', 'part_name', 'location_rack'],
+  });
 
   const totalInventoryValue = parts.reduce((sum, p) => sum + p.current_stock * p.unit_cost, 0);
   const outStockCount = parts.filter(p => p.current_stock <= 0).length;
@@ -419,6 +430,10 @@ export const PartsList: React.FC = () => {
         }
         page={page}
         totalPages={totalPages}
+        pageSize={pageSize}
+        totalRecords={filteredParts.length}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
         onPrev={() => setPage(p => Math.max(1, p - 1))}
         onNext={() => setPage(p => Math.min(totalPages, p + 1))}
       />

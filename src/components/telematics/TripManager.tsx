@@ -13,6 +13,7 @@ import { useI18n } from '../../context/I18nContext';
 import { Trip, TripStatus } from '../../types';
 import { Modal } from '../common/Modal';
 import { exportToExcel, exportToPDFReport } from '../../lib/exportUtils';
+import { useTablePagination } from '../../lib/supabasePagination';
 import {
   PageContainer,
   PageHeader,
@@ -76,6 +77,22 @@ export const TripManager: React.FC = () => {
       );
     }
     return true;
+  });
+
+  const {
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    pagedItems: pagedTrips,
+  } = useTablePagination(filteredTrips, [searchQuery, statusFilter], {
+    table: 'trips',
+    orderBy: 'created_at',
+    ascending: false,
+    search: searchQuery,
+    searchColumns: ['trip_number', 'origin_name', 'destination_name'],
+    eqFilters: { status: statusFilter },
   });
 
   const handleCreateTrip = (e: React.FormEvent) => {
@@ -279,7 +296,7 @@ export const TripManager: React.FC = () => {
         }
         clearFiltersLabel={t('Clear filters')}
       >
-        {filteredTrips.map(trip => {
+        {pagedTrips.map(trip => {
           const veh = vehicles.find(v => v.id === trip.vehicle_id);
           const drv = drivers.find(d => d.id === trip.assigned_driver_id);
           const trl = trailers.find(tr => tr.id === trip.assigned_trailer_id);
@@ -387,6 +404,14 @@ export const TripManager: React.FC = () => {
 
       <TableFooter
         summaryText={`${t('Dispatched Trips Registry')}: ${filteredTrips.length} / ${trips.length}`}
+        page={page}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        totalRecords={filteredTrips.length}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+        onPrev={() => setPage(p => Math.max(1, p - 1))}
+        onNext={() => setPage(p => Math.min(totalPages, p + 1))}
       />
 
       {/* Dispatch Trip Modal */}

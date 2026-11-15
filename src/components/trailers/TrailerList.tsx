@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Trash2, Edit3, Eye } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Trash2, Edit3, Eye, FlaskConical } from 'lucide-react';
 import { useFleet } from '../../context/FleetContext';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
@@ -8,7 +8,10 @@ import { TrailerDetailDrawer } from './TrailerDetailDrawer';
 import { Trailer } from '../../types';
 import { exportToExcel, exportToPDFReport } from '../../lib/exportUtils';
 import { DESIGN_TOKENS } from '../../lib/designTokens';
+import { useTablePagination } from '../../lib/supabasePagination';
+import { computeTankTestingMetrics, ALL_TANK_TEST_TYPES } from '../../lib/tankTestingUtils';
 import {
+  EDITORIAL_STATUS,
   PageContainer,
   PageHeader,
   PrimaryButton,
@@ -20,6 +23,8 @@ import {
   PlateChip,
   StatusText,
   TableFooter,
+  EditorialSection,
+  MetricStrip,
 } from '../common/EditorialUI';
 
 const TRAILER_STATUS_META: Record<
@@ -53,7 +58,7 @@ const TRAILER_STATUS_META: Record<
 };
 
 export const TrailerList: React.FC = () => {
-  const { trailers, deleteTrailer, vehicles } = useFleet();
+  const { trailers, deleteTrailer, vehicles, tankerTestRecords } = useFleet();
   const { hasPermission } = useAuth();
   const { t, isRTL } = useI18n();
 
@@ -61,9 +66,13 @@ export const TrailerList: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedTrailer, setSelectedTrailer] = useState<Trailer | null>(null);
+  const [drawerInitialTab, setDrawerInitialTab] = useState<string>('overview');
   const [editingTrailer, setEditingTrailer] = useState<Trailer | undefined>(undefined);
-  const [page, setPage] = useState(1);
-  const PAGE_SIZE = 20;
+
+  const tankTestMetrics = useMemo(
+    () => computeTankTestingMetrics(trailers, tankerTestRecords),
+    [trailers, tankerTestRecords]
+  );
 
   const filteredTrailers = trailers.filter(tr => {
     const q = search.toLowerCase();
@@ -77,8 +86,21 @@ export const TrailerList: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const totalPages = Math.max(1, Math.ceil(filteredTrailers.length / PAGE_SIZE));
-  const pagedTrailers = filteredTrailers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const {
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    pagedItems: pagedTrailers,
+  } = useTablePagination(filteredTrailers, [search, statusFilter], {
+    table: 'trailers',
+    orderBy: 'created_at',
+    ascending: false,
+    search,
+    searchColumns: ['trailer_id', 'plate_number', 'trailer_number', 'vin', 'manufacturer'],
+    eqFilters: { status: statusFilter },
+  });
 
   const handleExportExcel = () => {
     const data = filteredTrailers.map(tr => ({
@@ -184,6 +206,46 @@ export const TrailerList: React.FC = () => {
         }
       />
 
+      <EditorialSection
+        title={isRTL ? 'ملخص فحوصات واختبارات الصهاريج' : 'Tank testing & inspection summary'}
+        marginTop={0}
+      >
+        <MetricStrip
+          items={[
+            {
+              label: isRTL ? 'الاختبارات الناجحة' : 'Passed tests',
+              value: tankTestMetrics.passedCount,
+              mono: true,
+              stripe: EDITORIAL_STATUS.green.stripe,
+            },
+            {
+              label: isRTL ? 'الاختبارات الراسبة' : 'Failed tests',
+              value: tankTestMetrics.failedCount,
+              mono: true,
+              stripe: EDITORIAL_STATUS.red.stripe,
+            },
+            {
+              label: isRTL ? 'الاختبارات قيد الانتظار' : 'Pending tests',
+              value: tankTestMetrics.pendingCount,
+              mono: true,
+              stripe: EDITORIAL_STATUS.amber.stripe,
+            },
+            {
+              label: isRTL ? 'قرب انتهاء الصلاحية (30 يوم)' : 'Upcoming test expirations',
+              value: tankTestMetrics.upcomingExpirationsCount,
+              mono: true,
+              stripe: EDITORIAL_STATUS.amber.stripe,
+            },
+            {
+              label: isRTL ? 'الفحوصات المتأخرة' : 'Overdue inspections',
+              value: tankTestMetrics.overdueInspectionsCount,
+              mono: true,
+              stripe: EDITORIAL_STATUS.red.stripe,
+            },
+          ]}
+        />
+      </EditorialSection>
+
       <StatusTabs
         tabs={[
           { key: 'ALL', label: isRTL ? 'الكل' : 'All', count: trailers.length },
@@ -209,12 +271,13 @@ export const TrailerList: React.FC = () => {
 
       <DataTable
         columns={[
-          { label: isRTL ? 'المقطورة واللوحة' : 'Trailer', align: 'start', width: '18%' },
-          { label: isRTL ? 'السعة والجيوب' : 'Capacity and compartments', align: 'start', width: '18%' },
-          { label: isRTL ? 'الشركة المصنعة' : 'Manufacturer and model', align: 'start', width: '20%' },
-          { label: isRTL ? 'الجرار المقترن' : 'Coupled tractor', align: 'start', width: '16%' },
-          { label: isRTL ? 'المحطة الحالية' : 'Current terminal', align: 'start', width: '16%' },
-          { label: isRTL ? 'الحالة' : 'Status', align: 'start', width: '12%' },
+          { label: isRTL ? 'المقطورة واللوحة' : 'Trailer', align: 'start', width: '16%' },
+          { label: isRTL ? 'السعة والجيوب' : 'Capacity and compartments', align: 'start', width: '14%' },
+          { label: isRTL ? 'الشركة المصنعة' : 'Manufacturer and model', align: 'start', width: '16%' },
+          { label: isRTL ? 'فحوصات الصهريج (H / P / V)' : 'Tank testing & inspection', align: 'start', width: '20%' },
+          { label: isRTL ? 'الجرار المقترن' : 'Coupled tractor', align: 'start', width: '12%' },
+          { label: isRTL ? 'المحطة الحالية' : 'Current terminal', align: 'start', width: '12%' },
+          { label: isRTL ? 'الحالة' : 'Status', align: 'start', width: '10%' },
         ]}
         isEmpty={pagedTrailers.length === 0}
         emptyMessage={t('No tanker trailers found matching criteria.')}
@@ -227,18 +290,37 @@ export const TrailerList: React.FC = () => {
         {pagedTrailers.map(tr => {
           const tractor = vehicles.find(v => v.id === tr.assigned_tractor_id);
           const meta = TRAILER_STATUS_META[tr.status] || TRAILER_STATUS_META.AVAILABLE;
+          const trTestSummaries = ALL_TANK_TEST_TYPES.map(tt =>
+            tankTestMetrics.summaries.find(
+              s => s.trailer.id === tr.id && s.testType === tt
+            )
+          );
 
           return (
             <DataRow
               key={tr.id}
               stripeColor={meta.stripe}
-              onClick={() => setSelectedTrailer(tr)}
+              onClick={() => {
+                setDrawerInitialTab('overview');
+                setSelectedTrailer(tr);
+              }}
               actions={
                 <>
                   <RowAction
+                    icon={<FlaskConical size={14} />}
+                    title={t('Tank Testing & Inspection')}
+                    onClick={() => {
+                      setDrawerInitialTab('tank_testing');
+                      setSelectedTrailer(tr);
+                    }}
+                  />
+                  <RowAction
                     icon={<Eye size={14} />}
                     title={t('View Details')}
-                    onClick={() => setSelectedTrailer(tr)}
+                    onClick={() => {
+                      setDrawerInitialTab('overview');
+                      setSelectedTrailer(tr);
+                    }}
                   />
                   {canEdit && (
                     <RowAction
@@ -301,6 +383,71 @@ export const TrailerList: React.FC = () => {
                 </div>
               </td>
 
+              <td
+                style={{ padding: '14px 16px', verticalAlign: 'middle' }}
+                onClick={e => {
+                  e.stopPropagation();
+                  setDrawerInitialTab('tank_testing');
+                  setSelectedTrailer(tr);
+                }}
+              >
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {trTestSummaries.map((s, idx) => {
+                    const shortLabel =
+                      idx === 0
+                        ? isRTL
+                          ? 'هيدرو'
+                          : 'Hyd'
+                        : idx === 1
+                        ? isRTL
+                          ? 'هوائي'
+                          : 'Pne'
+                        : isRTL
+                        ? 'تفريغ'
+                        : 'Vac';
+                    const st = s?.status || 'NOT TESTED';
+                    const dotColor =
+                      st === 'PASS'
+                        ? EDITORIAL_STATUS.green.stripe
+                        : st === 'FAIL'
+                        ? EDITORIAL_STATUS.red.stripe
+                        : st === 'PENDING'
+                        ? EDITORIAL_STATUS.amber.stripe
+                        : EDITORIAL_STATUS.muted.stripe;
+                    return (
+                      <span
+                        key={idx}
+                        title={`${ALL_TANK_TEST_TYPES[idx]}: ${st}`}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 5,
+                          padding: '2px 7px',
+                          fontSize: 11,
+                          fontFamily: 'var(--font-mono)',
+                          background: 'var(--color-surface)',
+                          border: '1px solid var(--color-border)',
+                          borderRadius: 3,
+                          color: 'var(--color-ink)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: 1,
+                            background: dotColor,
+                          }}
+                        />
+                        <span>{shortLabel}:</span>
+                        <span style={{ fontWeight: 600 }}>{st}</span>
+                      </span>
+                    );
+                  })}
+                </div>
+              </td>
+
               <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
                 {tractor ? (
                   <div>
@@ -350,6 +497,10 @@ export const TrailerList: React.FC = () => {
         }
         page={page}
         totalPages={totalPages}
+        pageSize={pageSize}
+        totalRecords={filteredTrailers.length}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
         onPrev={() => setPage(p => Math.max(1, p - 1))}
         onNext={() => setPage(p => Math.min(totalPages, p + 1))}
       />
@@ -364,6 +515,7 @@ export const TrailerList: React.FC = () => {
         trailer={selectedTrailer}
         isOpen={!!selectedTrailer}
         onClose={() => setSelectedTrailer(null)}
+        initialTab={drawerInitialTab}
       />
     </PageContainer>
   );

@@ -142,6 +142,7 @@ export const StorekeeperDashboard: React.FC<StorekeeperDashboardProps> = ({ onNa
           marginTop={0}
         >
           <DataTable
+            showPagination
             columns={[
               { label: isRTL ? 'القطعة' : 'Part' },
               { label: isRTL ? 'الموقع' : 'Rack' },
@@ -208,6 +209,7 @@ export const StorekeeperDashboard: React.FC<StorekeeperDashboardProps> = ({ onNa
           marginTop={0}
         >
           <DataTable
+            showPagination
             columns={[
               { label: isRTL ? 'القطعة' : 'Part' },
               { label: isRTL ? 'الموقع' : 'Rack' },
@@ -217,7 +219,7 @@ export const StorekeeperDashboard: React.FC<StorekeeperDashboardProps> = ({ onNa
             isEmpty={parts.length === 0}
             emptyMessage={isRTL ? 'لا توجد قطع غيار مسجلة.' : 'No spare parts available.'}
           >
-            {parts.slice(0, 4).map((p) => (
+            {parts.map((p) => (
               <DataRow key={p.id} stripeColor={EDITORIAL_STATUS.blue.stripe}>
                 <td className="py-3 pe-3">
                   <span

@@ -12,6 +12,7 @@ import {
 } from '../../lib/attachmentUtils';
 import { exportToExcel, exportToPDFReport } from '../../lib/exportUtils';
 import { DESIGN_TOKENS } from '../../lib/designTokens';
+import { useTablePagination } from '../../lib/supabasePagination';
 import {
   PageContainer,
   PageHeader,
@@ -44,8 +45,6 @@ export const DocumentList: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [assetFilter, setAssetFilter] = useState<'ALL' | 'VEHICLE' | 'TRAILER'>('ALL');
-  const [page, setPage] = useState(1);
-  const PAGE_SIZE = 20;
 
   const [feedback, setFeedback] = useState<{
     type: 'success' | 'error';
@@ -94,8 +93,25 @@ export const DocumentList: React.FC = () => {
     return matchesSearch && matchesType && matchesStatus && matchesAsset;
   });
 
-  const totalPages = Math.max(1, Math.ceil(filteredDocuments.length / PAGE_SIZE));
-  const pagedDocuments = filteredDocuments.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const {
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    pagedItems: pagedDocuments,
+  } = useTablePagination(
+    filteredDocuments,
+    [search, typeFilter, statusFilter, assetFilter],
+    {
+      table: 'vehicle_documents',
+      orderBy: 'created_at',
+      ascending: false,
+      search,
+      searchColumns: ['document_number', 'document_type', 'issuing_authority', 'notes'],
+      eqFilters: { document_type: typeFilter },
+    }
+  );
 
   const totalCount = documents.length;
   const expiredCount = documents.filter(d => getExpiryStatus(d.expiry_date) === 'EXPIRED').length;
@@ -624,6 +640,10 @@ export const DocumentList: React.FC = () => {
         }
         page={page}
         totalPages={totalPages}
+        pageSize={pageSize}
+        totalRecords={filteredDocuments.length}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
         onPrev={() => setPage(p => Math.max(1, p - 1))}
         onNext={() => setPage(p => Math.min(totalPages, p + 1))}
       />

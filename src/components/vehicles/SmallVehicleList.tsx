@@ -8,6 +8,7 @@ import { SmallVehicleDetailDrawer } from './SmallVehicleDetailDrawer';
 import { SmallVehicle } from '../../types';
 import { exportToExcel, exportToPDFReport } from '../../lib/exportUtils';
 import { DESIGN_TOKENS } from '../../lib/designTokens';
+import { useTablePagination } from '../../lib/supabasePagination';
 import {
   PageContainer,
   PageHeader,
@@ -32,8 +33,6 @@ export const SmallVehicleList: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<SmallVehicle | null>(null);
   const [editingVehicle, setEditingVehicle] = useState<SmallVehicle | null>(null);
-  const [page, setPage] = useState(1);
-  const PAGE_SIZE = 20;
 
   const isStandby = (v: SmallVehicle) =>
     !v.driver_name || v.driver_name.toLowerCase().includes('standby');
@@ -57,8 +56,20 @@ export const SmallVehicleList: React.FC = () => {
     );
   });
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const {
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    pagedItems: paged,
+  } = useTablePagination(filtered, [search, statusFilter], {
+    table: 'small_vehicles',
+    orderBy: 'sn',
+    ascending: true,
+    search,
+    searchColumns: ['plate_number', 'vehicle_number', 'brand', 'driver_name', 'department_location'],
+  });
 
   const assignedCount = smallVehicles.filter(v => !isStandby(v)).length;
   const standbyCount = smallVehicles.filter(isStandby).length;
@@ -335,6 +346,10 @@ export const SmallVehicleList: React.FC = () => {
         }
         page={page}
         totalPages={totalPages}
+        pageSize={pageSize}
+        totalRecords={filtered.length}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
         onPrev={() => setPage(p => Math.max(1, p - 1))}
         onNext={() => setPage(p => Math.min(totalPages, p + 1))}
       />

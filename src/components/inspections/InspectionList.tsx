@@ -12,6 +12,7 @@ import { Modal } from '../common/Modal';
 import { ImageLightboxModal } from '../common/ImageLightboxModal';
 import { InspectionFormMobile } from './InspectionFormMobile';
 import { exportToExcel, exportToPDFReport } from '../../lib/exportUtils';
+import { useTablePagination } from '../../lib/supabasePagination';
 import { DefectReport, SeverityLevel, VehicleStatus, DefectReportStatus } from '../../types';
 import {
   PageContainer,
@@ -186,6 +187,41 @@ export const InspectionList: React.FC = () => {
   const filteredChecklists = inspections.filter(i =>
     i.inspection_number.toLowerCase().includes(search.toLowerCase())
   );
+
+  const {
+    page: reportsPage,
+    setPage: setReportsPage,
+    pageSize: reportsPageSize,
+    setPageSize: setReportsPageSize,
+    totalPages: reportsTotalPages,
+    pagedItems: pagedReports,
+  } = useTablePagination(
+    filteredReports,
+    [search, severityFilter, statusFilter, vehicleFilter, categoryFilter, activeMainTab],
+    {
+      table: 'defect_reports',
+      orderBy: 'created_at',
+      ascending: false,
+      search,
+      searchColumns: ['report_number', 'driver_name', 'vehicle_id', 'plate_number', 'category', 'description'],
+      eqFilters: { severity: severityFilter },
+    }
+  );
+
+  const {
+    page: checklistsPage,
+    setPage: setChecklistsPage,
+    pageSize: checklistsPageSize,
+    setPageSize: setChecklistsPageSize,
+    totalPages: checklistsTotalPages,
+    pagedItems: pagedChecklists,
+  } = useTablePagination(filteredChecklists, [search, activeMainTab], {
+    table: 'vehicle_inspections',
+    orderBy: 'created_at',
+    ascending: false,
+    search,
+    searchColumns: ['inspection_number'],
+  });
 
   // Open detail modal & populate state
   const openReportDetail = (rep: DefectReport) => {
@@ -688,7 +724,7 @@ export const InspectionList: React.FC = () => {
             onClearFilters={hasActiveDefectFilters ? clearAllFilters : undefined}
             clearFiltersLabel={t('Clear filters')}
           >
-            {filteredReports.map(rep => {
+            {pagedReports.map(rep => {
               const veh = vehicles.find(
                 v => v.vehicle_id === rep.vehicle_id || v.plate_number === rep.plate_number
               );
@@ -853,6 +889,14 @@ export const InspectionList: React.FC = () => {
 
           <TableFooter
             summaryText={`${t('Showing')} ${filteredReports.length} ${t('of')} ${defectReports.length} ${t('driver issue reports')} · ${t('Public Portal Endpoint: Active')} (/driver-report)`}
+            page={reportsPage}
+            totalPages={reportsTotalPages}
+            pageSize={reportsPageSize}
+            totalRecords={filteredReports.length}
+            onPageChange={setReportsPage}
+            onPageSizeChange={setReportsPageSize}
+            onPrev={() => setReportsPage(p => Math.max(1, p - 1))}
+            onNext={() => setReportsPage(p => Math.min(reportsTotalPages, p + 1))}
           />
         </div>
       )}
@@ -876,7 +920,7 @@ export const InspectionList: React.FC = () => {
             clearFiltersLabel={t('Clear filters')}
             hasActionsColumn={false}
           >
-            {filteredChecklists.map(i => {
+            {pagedChecklists.map(i => {
               const veh = vehicles.find(v => v.id === i.vehicle_id);
               const linkedWO = workOrders.find(w => w.id === i.created_work_order_id);
               const isPass = i.overall_status === 'PASS';
@@ -964,6 +1008,14 @@ export const InspectionList: React.FC = () => {
 
           <TableFooter
             summaryText={`${t('Showing')} ${filteredChecklists.length} ${t('of')} ${inspections.length}`}
+            page={checklistsPage}
+            totalPages={checklistsTotalPages}
+            pageSize={checklistsPageSize}
+            totalRecords={filteredChecklists.length}
+            onPageChange={setChecklistsPage}
+            onPageSizeChange={setChecklistsPageSize}
+            onPrev={() => setChecklistsPage(p => Math.max(1, p - 1))}
+            onNext={() => setChecklistsPage(p => Math.min(checklistsTotalPages, p + 1))}
           />
         </div>
       )}

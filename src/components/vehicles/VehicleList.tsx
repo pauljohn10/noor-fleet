@@ -8,6 +8,7 @@ import { VehicleDetailDrawer } from './VehicleDetailDrawer';
 import { Vehicle } from '../../types';
 import { exportToExcel, exportToPDFReport } from '../../lib/exportUtils';
 import { DESIGN_TOKENS } from '../../lib/designTokens';
+import { useTablePagination } from '../../lib/supabasePagination';
 import {
   PageContainer,
   PageHeader,
@@ -82,8 +83,6 @@ export const VehicleList: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | undefined>(undefined);
-  const [page, setPage] = useState(1);
-  const PAGE_SIZE = 20;
 
   // Filter ONLY Heavy Tractor Trucks (Trucks Master)
   const tractorTrucks = vehicles.filter(isTractorTruck);
@@ -107,8 +106,21 @@ export const VehicleList: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const {
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    pagedItems: paged,
+  } = useTablePagination(filtered, [search, statusFilter], {
+    table: 'vehicles',
+    orderBy: 'created_at',
+    ascending: false,
+    search,
+    searchColumns: ['vehicle_id', 'plate_number', 'fleet_number', 'vin', 'make', 'model'],
+    eqFilters: { status: statusFilter },
+  });
 
   // Status counts
   const counts = STATUS_TABS.reduce<Record<string, number>>((acc, tab) => {
@@ -440,6 +452,10 @@ export const VehicleList: React.FC = () => {
         }
         page={page}
         totalPages={totalPages}
+        pageSize={pageSize}
+        totalRecords={filtered.length}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
         onPrev={() => setPage(p => Math.max(1, p - 1))}
         onNext={() => setPage(p => Math.min(totalPages, p + 1))}
       />

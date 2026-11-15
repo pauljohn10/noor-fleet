@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Truck,
   Plus,
@@ -7,9 +7,11 @@ import {
   Eye,
   ZoomIn,
   Maximize2,
+  FlaskConical,
 } from 'lucide-react';
 import { useFleet } from '../../context/FleetContext';
 import { useI18n } from '../../context/I18nContext';
+import { computeTankTestingMetrics } from '../../lib/tankTestingUtils';
 import { Badge } from '../common/Badge';
 import { Modal } from '../common/Modal';
 import { ImageLightboxModal } from '../common/ImageLightboxModal';
@@ -50,6 +52,7 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
     schedules,
     defectReports,
     drivers,
+    tankerTestRecords,
     addWorkOrder,
     addMaintenanceSchedule,
     updateMaintenanceScheduleStatus,
@@ -58,6 +61,11 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
     refreshData,
   } = useFleet();
   const { t, isRTL } = useI18n();
+
+  const tankTestMetrics = useMemo(
+    () => computeTankTestingMetrics(trailers, tankerTestRecords),
+    [trailers, tankerTestRecords]
+  );
 
   const [isVehicleModalOpen, setIsVehicleModalOpen] = useState(false);
   const [isTrailerModalOpen, setIsTrailerModalOpen] = useState(false);
@@ -352,6 +360,64 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
         />
       </EditorialSection>
 
+      {/* TANK TESTING & INSPECTION COMPLIANCE STRIP */}
+      <EditorialSection
+        title={
+          <span className="inline-flex items-center gap-2">
+            <FlaskConical className="w-4 h-4" style={{ color: 'var(--color-brand-accent)' }} />
+            {isRTL
+              ? 'حالة اختبارات وفحوصات الصهاريج (الهيدروستاتيكي / الهوائي / التفريغ)'
+              : 'Tanker testing & inspection compliance (Hydrostatic / Pneumatic / Vacuum)'}
+          </span>
+        }
+        action={
+          <GhostButton onClick={() => onNavigateTab('trailers')}>
+            {isRTL ? 'إدارة فحوصات الصهاريج ←' : 'Manage Tanker Tests →'}
+          </GhostButton>
+        }
+        marginTop={8}
+      >
+        <MetricStrip
+          items={[
+            {
+              label: isRTL ? 'الاختبارات الناجحة' : 'Passed tests',
+              value: tankTestMetrics.passedCount,
+              mono: true,
+              stripe: EDITORIAL_STATUS.green.stripe,
+              onClick: () => onNavigateTab('trailers'),
+            },
+            {
+              label: isRTL ? 'الاختبارات الراسبة' : 'Failed tests',
+              value: tankTestMetrics.failedCount,
+              mono: true,
+              stripe: EDITORIAL_STATUS.red.stripe,
+              onClick: () => onNavigateTab('trailers'),
+            },
+            {
+              label: isRTL ? 'الاختبارات قيد الانتظار' : 'Pending tests',
+              value: tankTestMetrics.pendingCount,
+              mono: true,
+              stripe: EDITORIAL_STATUS.amber.stripe,
+              onClick: () => onNavigateTab('trailers'),
+            },
+            {
+              label: isRTL ? 'انتهاء قريب (خلال 30 يوم)' : 'Upcoming test expirations',
+              value: tankTestMetrics.upcomingExpirationsCount,
+              mono: true,
+              stripe: EDITORIAL_STATUS.amber.stripe,
+              onClick: () => onNavigateTab('trailers'),
+            },
+            {
+              label: isRTL ? 'الفحوصات المتأخرة' : 'Overdue inspections',
+              value: tankTestMetrics.overdueInspectionsCount,
+              mono: true,
+              stripe: EDITORIAL_STATUS.red.stripe,
+              onClick: () => onNavigateTab('trailers'),
+            },
+          ]}
+        />
+      </EditorialSection>
+
       {/* DATA TABLE 1: DRIVER REPORTS */}
       <EditorialSection
         title={
@@ -368,6 +434,7 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
         marginTop={8}
       >
         <DataTable
+          showPagination
           columns={[
             { label: t('priority', 'Priority') },
             { label: t('report_num', 'Report #') },
@@ -380,7 +447,7 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
           isEmpty={defectReports.length === 0}
           emptyMessage={t('no_defect_reports', 'No driver defect reports found.')}
         >
-          {defectReports.slice(0, 5).map((rep) => (
+          {defectReports.map((rep) => (
             <DataRow
               key={rep.id}
               stripeColor={
@@ -494,6 +561,7 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
         marginTop={28}
       >
         <DataTable
+          showPagination
           columns={[
             { label: t('vehicles', 'Vehicle') },
             { label: t('plate_number', 'Plate Number') },
@@ -589,6 +657,7 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
         marginTop={28}
       >
         <DataTable
+          showPagination
           columns={[
             { label: isRTL ? 'عنوان الخدمة المجدولة' : 'Schedule Service Title' },
             { label: isRTL ? 'الشاحنة المستهدفة' : 'Target Unit' },

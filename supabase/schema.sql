@@ -880,3 +880,45 @@ CREATE POLICY "Manage Fuel Benchmarks" ON vehicle_fuel_benchmarks FOR ALL USING 
   )
 );
 CREATE POLICY "Read Fuel Reconciliations" ON trip_fuel_reconciliations FOR SELECT USING (auth.role() = 'authenticated');
+
+-- ====================================================================
+-- 16. TANK TESTING & INSPECTION MANAGEMENT (TANKER TRAILERS)
+-- ====================================================================
+ALTER TABLE public.trailers
+  ADD COLUMN IF NOT EXISTS inspection_standard TEXT DEFAULT 'SASO 2288 / ADR / API RP 1110',
+  ADD COLUMN IF NOT EXISTS required_tank_tests TEXT[] DEFAULT ARRAY['Hydrostatic Test', 'Pneumatic Test', 'Vacuum Test']::TEXT[];
+
+CREATE TABLE IF NOT EXISTS public.tanker_test_records (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  tanker_trailer_id UUID NOT NULL REFERENCES public.trailers(id) ON DELETE CASCADE,
+  test_type TEXT NOT NULL CHECK (
+    test_type IN ('Hydrostatic Test', 'Pneumatic Test', 'Vacuum Test')
+  ),
+  test_status TEXT NOT NULL DEFAULT 'NOT TESTED' CHECK (
+    test_status IN ('PASS', 'FAIL', 'PENDING', 'NOT TESTED')
+  ),
+  test_date DATE,
+  next_test_due_date DATE,
+  inspector_name TEXT,
+  inspection_center TEXT,
+  certificate_number TEXT,
+  attachment_url TEXT,
+  remarks TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_tanker_test_records_trailer_id
+  ON public.tanker_test_records(tanker_trailer_id);
+CREATE INDEX IF NOT EXISTS idx_tanker_test_records_trailer_type_date
+  ON public.tanker_test_records(tanker_trailer_id, test_type, test_date DESC NULLS LAST, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_tanker_test_records_status
+  ON public.tanker_test_records(test_status);
+CREATE INDEX IF NOT EXISTS idx_tanker_test_records_next_due_date
+  ON public.tanker_test_records(next_test_due_date);
+
+ALTER TABLE public.tanker_test_records ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public Read Tanker Test Records" ON public.tanker_test_records FOR SELECT USING (true);
+CREATE POLICY "Authorized Insert Tanker Test Records" ON public.tanker_test_records FOR INSERT WITH CHECK (auth.role() IN ('authenticated', 'anon'));
+CREATE POLICY "Authorized Update Tanker Test Records" ON public.tanker_test_records FOR UPDATE USING (auth.role() IN ('authenticated', 'anon'));
+

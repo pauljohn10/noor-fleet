@@ -83,6 +83,39 @@ export type SmallVehicleInput = {
   department_location?: string | null;
 };
 
+export type TankTestType = 'Hydrostatic Test' | 'Pneumatic Test' | 'Vacuum Test';
+
+export type TankTestStatus = 'PASS' | 'FAIL' | 'PENDING' | 'NOT TESTED';
+
+export interface TankerTestRecord {
+  id: string;
+  tanker_trailer_id: string;
+  test_type: TankTestType;
+  test_status: TankTestStatus;
+  test_date?: string | null;
+  next_test_due_date?: string | null;
+  inspector_name?: string | null;
+  inspection_center?: string | null;
+  certificate_number?: string | null;
+  attachment_url?: string | null;
+  remarks?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type TankerTestRecordInput = {
+  tanker_trailer_id: string;
+  test_type: TankTestType;
+  test_status: TankTestStatus;
+  test_date?: string | null;
+  next_test_due_date?: string | null;
+  inspector_name?: string | null;
+  inspection_center?: string | null;
+  certificate_number?: string | null;
+  attachment_url?: string | null;
+  remarks?: string | null;
+};
+
 export interface Trailer {
   id: string;
   trailer_id: string;
@@ -98,6 +131,8 @@ export interface Trailer {
   assigned_tractor_id?: string;
   status: TrailerStatus;
   current_location: string;
+  inspection_standard?: string;
+  required_tank_tests?: TankTestType[];
   notes?: string;
   photo_url?: string;
   created_at: string;

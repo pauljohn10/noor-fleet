@@ -24,6 +24,7 @@ import {
 import { UserRole } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
+import { useTablePagination } from '../../lib/supabasePagination';
 import { 
   listCorporateUsers, 
   createCorporateUser, 
@@ -109,6 +110,22 @@ export const UserManagementView: React.FC = () => {
       return matchesSearch && matchesRole && matchesStatus;
     });
   }, [users, searchTerm, roleFilter, statusFilter]);
+
+  const {
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    pagedItems: pagedUsers,
+  } = useTablePagination(filteredUsers, [searchTerm, roleFilter, statusFilter], {
+    table: 'profiles',
+    orderBy: 'created_at',
+    ascending: false,
+    search: searchTerm,
+    searchColumns: ['full_name', 'email', 'department'],
+    eqFilters: { role: roleFilter },
+  });
 
   // Metric stats
   const metrics = useMemo(() => {
@@ -479,7 +496,7 @@ export const UserManagementView: React.FC = () => {
             </td>
           </tr>
         ) : (
-          filteredUsers.map(user => {
+          pagedUsers.map(user => {
             const roleMeta = getRoleDisplay(user.role);
             const RoleIcon = roleMeta.icon;
             const stripe = user.is_active ? roleMeta.stripe : EDITORIAL_STATUS.red.stripe;
@@ -609,6 +626,14 @@ export const UserManagementView: React.FC = () => {
 
       <TableFooter
         summaryText={`${t('Showing')} ${filteredUsers.length} ${t('of')} ${users.length} ${t('Total Accounts')}`}
+        page={page}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        totalRecords={filteredUsers.length}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+        onPrev={() => setPage(p => Math.max(1, p - 1))}
+        onNext={() => setPage(p => Math.min(totalPages, p + 1))}
       />
 
       {/* MODAL 1: PROVISION NEW USER */}

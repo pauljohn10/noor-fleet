@@ -519,6 +519,7 @@ export const DataTable: React.FC<{
   onClearFilters?: () => void;
   clearFiltersLabel?: string;
   hasActionsColumn?: boolean;
+  showPagination?: boolean;
 }> = ({
   columns,
   children,
@@ -527,35 +528,85 @@ export const DataTable: React.FC<{
   onClearFilters,
   clearFiltersLabel,
   hasActionsColumn = true,
+  showPagination = false,
 }) => {
   const totalCols = columns.length + (hasActionsColumn ? 1 : 0);
+  const sortCtrl = (children as any)?.__sortCtrl as
+    | {
+        sortColIndex: number | null;
+        sortDirection: 'asc' | 'desc';
+        onSort: (colIdx: number, colLabel: string) => void;
+      }
+    | undefined;
+
+  const childArray = React.Children.toArray(children);
+  const [internalPage, setInternalPage] = React.useState(1);
+  const [internalPageSize, setInternalPageSize] = React.useState<number>(15);
+
+  const totalInternalCount = childArray.length;
+  const totalInternalPages = Math.max(1, Math.ceil(totalInternalCount / internalPageSize));
+  const safeInternalPage = Math.min(Math.max(1, internalPage), totalInternalPages);
+
+  React.useEffect(() => {
+    setInternalPage(1);
+  }, [totalInternalCount, internalPageSize]);
+
+  const renderedChildren = showPagination
+    ? childArray.slice(
+        (safeInternalPage - 1) * internalPageSize,
+        safeInternalPage * internalPageSize
+      )
+    : children;
 
   return (
     <div style={{ overflowX: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: isEmpty ? 'fixed' : 'auto' }}>
         <thead>
           <tr>
-            {columns.map((col, idx) => (
-              <th
-                key={idx}
-                style={{
-                  width: col.width,
-                  padding: '11px 16px',
-                  fontSize: 12,
-                  fontWeight: 500,
-                  color: 'var(--color-text-muted)',
-                  textAlign: col.align || 'start',
-                  background: 'var(--color-page-bg)',
-                  borderBottom: '1px solid var(--color-row-divider)',
-                  position: 'sticky',
-                  top: 0,
-                  zIndex: 5,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {col.label}
-              </th>
-            ))}
+            {columns.map((col, idx) => {
+              const isSorted = sortCtrl?.sortColIndex === idx;
+              return (
+                <th
+                  key={idx}
+                  onClick={
+                    sortCtrl && col.label
+                      ? () => sortCtrl.onSort(idx, col.label)
+                      : undefined
+                  }
+                  style={{
+                    width: col.width,
+                    padding: '11px 16px',
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: isSorted ? 'var(--color-ink)' : 'var(--color-text-muted)',
+                    textAlign: col.align || 'start',
+                    background: 'var(--color-page-bg)',
+                    borderBottom: '1px solid var(--color-row-divider)',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 5,
+                    whiteSpace: 'nowrap',
+                    cursor: sortCtrl && col.label ? 'pointer' : 'default',
+                    userSelect: 'none',
+                  }}
+                >
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    <span>{col.label}</span>
+                    {sortCtrl && col.label && (
+                      <span
+                        style={{
+                          fontSize: 10,
+                          opacity: isSorted ? 1 : 0.35,
+                          fontFamily: 'var(--font-mono)',
+                        }}
+                      >
+                        {isSorted ? (sortCtrl.sortDirection === 'asc' ? '↑' : '↓') : '↕'}
+                      </span>
+                    )}
+                  </span>
+                </th>
+              );
+            })}
             {hasActionsColumn && (
               <th
                 style={{
@@ -580,10 +631,23 @@ export const DataTable: React.FC<{
               clearFiltersLabel={clearFiltersLabel}
             />
           ) : (
-            children
+            renderedChildren
           )}
         </tbody>
       </table>
+      {showPagination && (
+        <TableFooter
+          summaryText={`${Array.isArray(renderedChildren) ? renderedChildren.length : 0} / ${totalInternalCount}`}
+          page={safeInternalPage}
+          totalPages={totalInternalPages}
+          pageSize={internalPageSize}
+          totalRecords={totalInternalCount}
+          onPageChange={setInternalPage}
+          onPageSizeChange={setInternalPageSize}
+          onPrev={() => setInternalPage((p) => Math.max(1, p - 1))}
+          onNext={() => setInternalPage((p) => Math.min(totalInternalPages, p + 1))}
+        />
+      )}
     </div>
   );
 };
@@ -728,47 +792,287 @@ export const StatusText: React.FC<{
   </div>
 );
 
+export const PAGE_SIZE_OPTIONS = [15, 25, 50, 100] as const;
+export const DEFAULT_PAGE_SIZE = 15;
+
+function buildPaginationRange(currentPage: number, totalPages: number): (number | 'ellipsis-start' | 'ellipsis-end')[] {
+  const safeTotal = Math.max(1, totalPages);
+  const safeCurrent = Math.min(Math.max(1, currentPage), safeTotal);
+
+  if (safeTotal <= 7) {
+    return Array.from({ length: safeTotal }, (_, i) => i + 1);
+  }
+
+  const pages: (number | 'ellipsis-start' | 'ellipsis-end')[] = [1];
+
+  const start = Math.max(2, safeCurrent - 1);
+  const end = Math.min(safeTotal - 1, safeCurrent + 1);
+
+  if (start > 2) {
+    pages.push('ellipsis-start');
+  }
+
+  for (let p = start; p <= end; p++) {
+    pages.push(p);
+  }
+
+  if (end < safeTotal - 1) {
+    pages.push('ellipsis-end');
+  }
+
+  pages.push(safeTotal);
+  return pages;
+}
+
 export const TableFooter: React.FC<{
   summaryText: string;
   page?: number;
   totalPages?: number;
+  pageSize?: number;
+  totalRecords?: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
   onPrev?: () => void;
   onNext?: () => void;
-}> = ({ summaryText, page = 1, totalPages = 1, onPrev, onNext }) => {
+}> = ({
+  summaryText,
+  page = 1,
+  totalPages = 1,
+  pageSize = DEFAULT_PAGE_SIZE,
+  totalRecords,
+  onPageChange,
+  onPageSizeChange,
+  onPrev,
+  onNext,
+}) => {
   const { isRTL } = useI18n();
+  const safeTotalPages = Math.max(
+    1,
+    totalRecords !== undefined && pageSize > 0
+      ? Math.ceil(totalRecords / pageSize)
+      : totalPages
+  );
+  const safePage = Math.min(Math.max(1, page), safeTotalPages);
+  const pageItems = buildPaginationRange(safePage, safeTotalPages);
+
+  const rangeStart =
+    totalRecords !== undefined
+      ? totalRecords === 0
+        ? 0
+        : (safePage - 1) * pageSize + 1
+      : null;
+  const rangeEnd =
+    totalRecords !== undefined
+      ? Math.min(safePage * pageSize, totalRecords)
+      : null;
+
+  const handleGoToPage = (targetPage: number) => {
+    const clamped = Math.min(Math.max(1, targetPage), safeTotalPages);
+    if (clamped === safePage) return;
+    if (onPageChange) {
+      onPageChange(clamped);
+    } else if (clamped < safePage && onPrev) {
+      const steps = safePage - clamped;
+      for (let i = 0; i < steps; i++) onPrev();
+    } else if (clamped > safePage && onNext) {
+      const steps = clamped - safePage;
+      for (let i = 0; i < steps; i++) onNext();
+    }
+  };
+
+  const handlePrevClick = () => {
+    if (safePage <= 1) return;
+    if (onPrev) {
+      onPrev();
+    } else if (onPageChange) {
+      onPageChange(safePage - 1);
+    }
+  };
+
+  const handleNextClick = () => {
+    if (safePage >= safeTotalPages) return;
+    if (onNext) {
+      onNext();
+    } else if (onPageChange) {
+      onPageChange(safePage + 1);
+    }
+  };
+
   return (
     <div
       style={{
         display: 'flex',
+        flexWrap: 'wrap',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '16px 0 0',
+        gap: '12px 16px',
+        padding: '16px 0 4px',
         fontSize: 12,
         color: 'var(--color-text-muted)',
         borderTop: '1px solid var(--color-row-divider)',
       }}
     >
-      <span>{summaryText}</span>
-      {onPrev && onNext && (
-        <div style={{ display: 'flex', gap: 6 }}>
+      {/* Left: Record summary, current page & total count */}
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          gap: '8px 14px',
+        }}
+      >
+        <span style={{ color: 'var(--color-text-secondary)', fontWeight: 500 }}>
+          {summaryText}
+        </span>
+        <span style={{ color: 'var(--color-border)' }}>·</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5 }}>
+          {rangeStart !== null && rangeEnd !== null && totalRecords !== undefined ? (
+            isRTL ? (
+              <>
+                عرض <strong>{rangeStart}–{rangeEnd}</strong> من إجمالي{' '}
+                <strong style={{ color: 'var(--color-ink)' }}>{totalRecords}</strong> · صفحة{' '}
+                <strong style={{ color: 'var(--color-ink)' }}>{safePage}</strong> من{' '}
+                <strong style={{ color: 'var(--color-ink)' }}>{safeTotalPages}</strong>
+              </>
+            ) : (
+              <>
+                Showing <strong style={{ color: 'var(--color-ink)' }}>{rangeStart}–{rangeEnd}</strong> of{' '}
+                <strong style={{ color: 'var(--color-ink)' }}>{totalRecords}</strong> · Page{' '}
+                <strong style={{ color: 'var(--color-ink)' }}>{safePage}</strong> of{' '}
+                <strong style={{ color: 'var(--color-ink)' }}>{safeTotalPages}</strong>
+              </>
+            )
+          ) : isRTL ? (
+            <>
+              صفحة <strong style={{ color: 'var(--color-ink)' }}>{safePage}</strong> من{' '}
+              <strong style={{ color: 'var(--color-ink)' }}>{safeTotalPages}</strong>
+            </>
+          ) : (
+            <>
+              Page <strong style={{ color: 'var(--color-ink)' }}>{safePage}</strong> of{' '}
+              <strong style={{ color: 'var(--color-ink)' }}>{safeTotalPages}</strong>
+            </>
+          )}
+        </span>
+      </div>
+
+      {/* Right: Rows per page selector + Page numbers (1, 2, 3...) + Previous / Next */}
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          gap: '8px 12px',
+          maxWidth: '100%',
+        }}
+      >
+        {onPageSizeChange && (
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 12, color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
+              {isRTL ? 'سجلات لكل صفحة:' : 'Rows per page:'}
+            </span>
+            <select
+              aria-label={isRTL ? 'سجلات لكل صفحة' : 'Rows per page'}
+              value={pageSize}
+              onChange={e => onPageSizeChange(Number(e.target.value))}
+              style={{
+                height: 30,
+                padding: '0 8px',
+                fontSize: 12,
+                fontFamily: 'var(--font-mono)',
+                fontWeight: 600,
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-input-border)',
+                borderRadius: 4,
+                color: 'var(--color-ink)',
+                cursor: 'pointer',
+                outline: 'none',
+              }}
+            >
+              {PAGE_SIZE_OPTIONS.map(sizeOpt => (
+                <option key={sizeOpt} value={sizeOpt}>
+                  {sizeOpt}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 4,
+          }}
+        >
           <EditorialButton
             variant="ghost"
-            disabled={page <= 1}
+            disabled={safePage <= 1}
             dimWhenDisabled
-            onClick={onPrev}
+            onClick={handlePrevClick}
+            style={{ height: 30, padding: '0 10px', fontSize: 12 }}
           >
             {isRTL ? 'السابق' : 'Previous'}
           </EditorialButton>
+
+          {pageItems.map(item => {
+            if (item === 'ellipsis-start' || item === 'ellipsis-end') {
+              return (
+                <span
+                  key={item}
+                  style={{
+                    padding: '0 4px',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 12,
+                    color: 'var(--color-text-muted)',
+                    userSelect: 'none',
+                  }}
+                >
+                  …
+                </span>
+              );
+            }
+            const isCurrent = item === safePage;
+            return (
+              <button
+                key={item}
+                type="button"
+                onClick={() => handleGoToPage(item)}
+                aria-current={isCurrent ? 'page' : undefined}
+                style={{
+                  minWidth: 30,
+                  height: 30,
+                  padding: '0 8px',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 12,
+                  fontWeight: isCurrent ? 700 : 500,
+                  borderRadius: 4,
+                  border: isCurrent
+                    ? '1px solid var(--color-ink)'
+                    : '1px solid var(--color-input-border)',
+                  background: isCurrent ? 'var(--color-ink)' : 'var(--color-surface)',
+                  color: isCurrent ? 'var(--color-surface)' : 'var(--color-text-secondary)',
+                  cursor: isCurrent ? 'default' : 'pointer',
+                  transition: 'background 0.12s, color 0.12s',
+                }}
+              >
+                {item}
+              </button>
+            );
+          })}
+
           <EditorialButton
             variant="ghost"
-            disabled={page >= totalPages}
+            disabled={safePage >= safeTotalPages}
             dimWhenDisabled
-            onClick={onNext}
+            onClick={handleNextClick}
+            style={{ height: 30, padding: '0 10px', fontSize: 12 }}
           >
             {isRTL ? 'التالي' : 'Next'}
           </EditorialButton>
         </div>
-      )}
+      </div>
     </div>
   );
 };

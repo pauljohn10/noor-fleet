@@ -13,6 +13,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
 import { GpsDeviceFormModal } from './GpsDeviceFormModal';
 import { GpsDeviceDetailDrawer } from './GpsDeviceDetailDrawer';
+import { useTablePagination } from '../../lib/supabasePagination';
 import {
   PageContainer,
   PageHeader,
@@ -90,6 +91,34 @@ export const GpsSyncStatusView: React.FC = () => {
       (assignmentFilter === 'UNASSIGNED' && !dev.installed_vehicle_id);
 
     return matchesSearch && matchesFilter;
+  });
+
+  const {
+    page: devPage,
+    setPage: setDevPage,
+    pageSize: devPageSize,
+    setPageSize: setDevPageSize,
+    totalPages: devTotalPages,
+    pagedItems: pagedDevices,
+  } = useTablePagination(filteredDevices, [searchQuery, assignmentFilter], {
+    table: 'gps_devices',
+    orderBy: 'created_at',
+    ascending: false,
+    search: searchQuery,
+    searchColumns: ['device_imei', 'device_model', 'serial_number', 'sim_phone_number'],
+  });
+
+  const {
+    page: logPage,
+    setPage: setLogPage,
+    pageSize: logPageSize,
+    setPageSize: setLogPageSize,
+    totalPages: logTotalPages,
+    pagedItems: pagedSyncLogs,
+  } = useTablePagination(gpsSyncLogs, [], {
+    table: 'gps_sync_logs',
+    orderBy: 'sync_started_at',
+    ascending: false,
   });
 
   const pairedCount = gpsDevices.filter(d => Boolean(d.installed_vehicle_id)).length;
@@ -225,7 +254,7 @@ export const GpsSyncStatusView: React.FC = () => {
         }
         clearFiltersLabel={t('Clear filters')}
       >
-        {filteredDevices.map(dev => {
+        {pagedDevices.map(dev => {
           const veh = vehicles.find(v => v.id === dev.installed_vehicle_id);
           const stripe = isGpsProviderConnected
             ? EDITORIAL_STATUS.green.stripe
@@ -345,6 +374,14 @@ export const GpsSyncStatusView: React.FC = () => {
 
       <TableFooter
         summaryText={`${t('Physical GPS Hardware Inventory')}: ${filteredDevices.length} / ${gpsDevices.length}`}
+        page={devPage}
+        totalPages={devTotalPages}
+        pageSize={devPageSize}
+        totalRecords={filteredDevices.length}
+        onPageChange={setDevPage}
+        onPageSizeChange={setDevPageSize}
+        onPrev={() => setDevPage(p => Math.max(1, p - 1))}
+        onNext={() => setDevPage(p => Math.min(devTotalPages, p + 1))}
       />
 
       {/* Sync Execution Logs Section */}
@@ -368,7 +405,7 @@ export const GpsSyncStatusView: React.FC = () => {
           emptyMessage={t('No sync logs recorded yet.')}
           hasActionsColumn={false}
         >
-          {gpsSyncLogs.map(log => (
+          {pagedSyncLogs.map(log => (
             <DataRow key={log.id} stripeColor={EDITORIAL_STATUS.green.stripe}>
               <td style={{ padding: '12px 16px', verticalAlign: 'middle', fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-text-secondary)' }} dir="ltr">
                 {new Date(log.sync_started_at).toLocaleTimeString(isRTL ? 'ar-SA-u-ca-gregory' : 'en-US', {
@@ -401,6 +438,17 @@ export const GpsSyncStatusView: React.FC = () => {
             </DataRow>
           ))}
         </DataTable>
+        <TableFooter
+          summaryText={`${t('Recent Ingestion Logs')}: ${gpsSyncLogs.length}`}
+          page={logPage}
+          totalPages={logTotalPages}
+          pageSize={logPageSize}
+          totalRecords={gpsSyncLogs.length}
+          onPageChange={setLogPage}
+          onPageSizeChange={setLogPageSize}
+          onPrev={() => setLogPage(p => Math.max(1, p - 1))}
+          onNext={() => setLogPage(p => Math.min(logTotalPages, p + 1))}
+        />
       </EditorialSection>
 
       {/* Interactive Form Modal */}

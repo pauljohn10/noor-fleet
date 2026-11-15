@@ -7,6 +7,7 @@ import { MaintenanceSchedule, PMStatus } from '../../types';
 import { Modal } from '../common/Modal';
 import { exportToExcel, exportToPDFReport } from '../../lib/exportUtils';
 import { DESIGN_TOKENS } from '../../lib/designTokens';
+import { useTablePagination } from '../../lib/supabasePagination';
 import {
   PageContainer,
   PageHeader,
@@ -89,8 +90,6 @@ export const MaintenanceScheduleList: React.FC = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [page, setPage] = useState(1);
-  const PAGE_SIZE = 20;
 
   // Status update states
   const [updatingRowId, setUpdatingRowId] = useState<string | null>(null);
@@ -138,8 +137,21 @@ export const MaintenanceScheduleList: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
-  const totalPages = Math.max(1, Math.ceil(filteredSchedules.length / PAGE_SIZE));
-  const pagedSchedules = filteredSchedules.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const {
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    pagedItems: pagedSchedules,
+  } = useTablePagination(filteredSchedules, [search, statusFilter], {
+    table: 'maintenance_schedules',
+    orderBy: 'created_at',
+    ascending: false,
+    search,
+    searchColumns: ['title', 'notes'],
+    eqFilters: { status: statusFilter },
+  });
 
   const countByStatus = (st: PMStatus) => schedules.filter(s => s.status === st).length;
 
@@ -607,6 +619,10 @@ export const MaintenanceScheduleList: React.FC = () => {
         }
         page={page}
         totalPages={totalPages}
+        pageSize={pageSize}
+        totalRecords={filteredSchedules.length}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
         onPrev={() => setPage(p => Math.max(1, p - 1))}
         onNext={() => setPage(p => Math.min(totalPages, p + 1))}
       />

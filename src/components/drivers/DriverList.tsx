@@ -7,6 +7,7 @@ import { Driver } from '../../types';
 import { DriverFormModal } from './DriverFormModal';
 import { exportToExcel, exportToPDFReport } from '../../lib/exportUtils';
 import { DESIGN_TOKENS } from '../../lib/designTokens';
+import { useTablePagination } from '../../lib/supabasePagination';
 import {
   PageContainer,
   PageHeader,
@@ -60,8 +61,6 @@ export const DriverList: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'ASSIGNED' | 'ON_LEAVE' | 'INACTIVE'>('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDriver, setEditingDriver] = useState<Driver | undefined>(undefined);
-  const [page, setPage] = useState(1);
-  const PAGE_SIZE = 20;
 
   const isAssignedDriver = (driverId: string) =>
     vehicles.some(v => v.assigned_driver_id === driverId);
@@ -80,8 +79,20 @@ export const DriverList: React.FC = () => {
     return d.status === statusFilter;
   });
 
-  const totalPages = Math.max(1, Math.ceil(filteredDrivers.length / PAGE_SIZE));
-  const pagedDrivers = filteredDrivers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const {
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    pagedItems: pagedDrivers,
+  } = useTablePagination(filteredDrivers, [search, statusFilter], {
+    table: 'drivers',
+    orderBy: 'created_at',
+    ascending: false,
+    search,
+    searchColumns: ['full_name', 'employee_id', 'license_number', 'phone'],
+  });
 
   const handleOpenAdd = () => {
     setEditingDriver(undefined);
@@ -411,6 +422,10 @@ export const DriverList: React.FC = () => {
         }
         page={page}
         totalPages={totalPages}
+        pageSize={pageSize}
+        totalRecords={filteredDrivers.length}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
         onPrev={() => setPage(p => Math.max(1, p - 1))}
         onNext={() => setPage(p => Math.min(totalPages, p + 1))}
       />

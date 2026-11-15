@@ -150,6 +150,7 @@ export const MechanicDashboard: React.FC<MechanicDashboardProps> = ({ onNavigate
         marginTop={0}
       >
         <DataTable
+          showPagination
           columns={[
             { label: isRTL ? 'أمر العمل' : 'Work order' },
             { label: isRTL ? 'المركبة والمقطورة' : 'Vehicle & trailer' },

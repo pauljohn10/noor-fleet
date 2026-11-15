@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Truck,
   Wrench,
@@ -11,11 +11,14 @@ import { useFleet, DateFilterOption } from '../../context/FleetContext';
 import { useI18n } from '../../context/I18nContext';
 import { StatCard } from '../common/StatCard';
 import { DashboardCharts } from '../dashboard/DashboardCharts';
+import { computeTankTestingMetrics } from '../../lib/tankTestingUtils';
 import {
   PageContainer,
   PageHeader,
   StatusTabs,
   EDITORIAL_STATUS,
+  EditorialSection,
+  MetricStrip,
 } from '../common/EditorialUI';
 
 interface ManagementDashboardProps {
@@ -29,10 +32,16 @@ export const ManagementDashboard: React.FC<ManagementDashboardProps> = ({ onNavi
     workOrders,
     parts,
     schedules,
+    tankerTestRecords,
     dateFilter,
     setDateFilter,
   } = useFleet();
   const { isRTL } = useI18n();
+
+  const tankTestMetrics = useMemo(
+    () => computeTankTestingMetrics(trailers, tankerTestRecords),
+    [trailers, tankerTestRecords]
+  );
 
   const totalTrucks = vehicles.filter(v => v.vehicle_type === 'TRACTOR_HEAD' || v.vehicle_type === 'OTHER').length;
   const totalTrailers = trailers.length;
@@ -182,6 +191,56 @@ export const ManagementDashboard: React.FC<ManagementDashboardProps> = ({ onNavi
           onClick={() => onNavigateTab('preventive')}
         />
       </div>
+
+      {/* Tank Testing & Inspection Executive Summary */}
+      <EditorialSection
+        title={
+          isRTL
+            ? 'فحوصات واختبارات الصهاريج (الهيدروستاتيكي / الهوائي / التفريغ)'
+            : 'Tank testing & inspection compliance (Hydrostatic / Pneumatic / Vacuum)'
+        }
+        marginTop={0}
+      >
+        <MetricStrip
+          items={[
+            {
+              label: isRTL ? 'الاختبارات الناجحة' : 'Passed tests',
+              value: tankTestMetrics.passedCount,
+              mono: true,
+              stripe: EDITORIAL_STATUS.green.stripe,
+              onClick: () => onNavigateTab('trailers'),
+            },
+            {
+              label: isRTL ? 'الاختبارات الراسبة' : 'Failed tests',
+              value: tankTestMetrics.failedCount,
+              mono: true,
+              stripe: EDITORIAL_STATUS.red.stripe,
+              onClick: () => onNavigateTab('trailers'),
+            },
+            {
+              label: isRTL ? 'الاختبارات قيد الانتظار' : 'Pending tests',
+              value: tankTestMetrics.pendingCount,
+              mono: true,
+              stripe: EDITORIAL_STATUS.amber.stripe,
+              onClick: () => onNavigateTab('trailers'),
+            },
+            {
+              label: isRTL ? 'انتهاء قريب (30 يوم)' : 'Upcoming test expirations',
+              value: tankTestMetrics.upcomingExpirationsCount,
+              mono: true,
+              stripe: EDITORIAL_STATUS.amber.stripe,
+              onClick: () => onNavigateTab('trailers'),
+            },
+            {
+              label: isRTL ? 'الفحوصات المتأخرة' : 'Overdue inspections',
+              value: tankTestMetrics.overdueInspectionsCount,
+              mono: true,
+              stripe: EDITORIAL_STATUS.red.stripe,
+              onClick: () => onNavigateTab('trailers'),
+            },
+          ]}
+        />
+      </EditorialSection>
 
       {/* Executive Recharts Graphics */}
       <DashboardCharts

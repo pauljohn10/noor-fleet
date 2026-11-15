@@ -4,6 +4,7 @@ import { useFleet } from '../../context/FleetContext';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
 import { DESIGN_TOKENS } from '../../lib/designTokens';
+import { useTablePagination } from '../../lib/supabasePagination';
 import {
   PageContainer,
   PageHeader,
@@ -20,8 +21,35 @@ export const AuditLogView: React.FC = () => {
   const { t, isRTL } = useI18n();
   const [search, setSearch] = useState('');
   const [moduleFilter, setModuleFilter] = useState('ALL');
-  const [page, setPage] = useState(1);
-  const PAGE_SIZE = 25;
+
+  const modules = Array.from(new Set(auditLogs.map(l => l.module))).slice(0, 6);
+
+  const filteredLogs = auditLogs.filter(log => {
+    const q = search.toLowerCase();
+    const matchesSearch =
+      log.action.toLowerCase().includes(q) ||
+      log.module.toLowerCase().includes(q) ||
+      log.record_id.toLowerCase().includes(q) ||
+      log.user_name.toLowerCase().includes(q);
+    const matchesModule = moduleFilter === 'ALL' || log.module === moduleFilter;
+    return matchesSearch && matchesModule;
+  });
+
+  const {
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    pagedItems: pagedLogs,
+  } = useTablePagination(filteredLogs, [search, moduleFilter], {
+    table: 'audit_logs',
+    orderBy: 'created_at',
+    ascending: false,
+    search,
+    searchColumns: ['action', 'module'],
+    eqFilters: { module: moduleFilter },
+  });
 
   if (!hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER', 'MANAGEMENT'])) {
     return (
@@ -46,22 +74,6 @@ export const AuditLogView: React.FC = () => {
       </PageContainer>
     );
   }
-
-  const modules = Array.from(new Set(auditLogs.map(l => l.module))).slice(0, 6);
-
-  const filteredLogs = auditLogs.filter(log => {
-    const q = search.toLowerCase();
-    const matchesSearch =
-      log.action.toLowerCase().includes(q) ||
-      log.module.toLowerCase().includes(q) ||
-      log.record_id.toLowerCase().includes(q) ||
-      log.user_name.toLowerCase().includes(q);
-    const matchesModule = moduleFilter === 'ALL' || log.module === moduleFilter;
-    return matchesSearch && matchesModule;
-  });
-
-  const totalPages = Math.max(1, Math.ceil(filteredLogs.length / PAGE_SIZE));
-  const pagedLogs = filteredLogs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <PageContainer>
@@ -175,6 +187,10 @@ export const AuditLogView: React.FC = () => {
         }
         page={page}
         totalPages={totalPages}
+        pageSize={pageSize}
+        totalRecords={filteredLogs.length}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
         onPrev={() => setPage(p => Math.max(1, p - 1))}
         onNext={() => setPage(p => Math.min(totalPages, p + 1))}
       />

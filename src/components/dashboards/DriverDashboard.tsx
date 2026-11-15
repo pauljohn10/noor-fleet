@@ -467,6 +467,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
         marginTop={0}
       >
         <DataTable
+          showPagination
           columns={[
             { label: isRTL ? 'البلاغ والفئة' : 'Report & category' },
             { label: isRTL ? 'الوصف ورد الورشة' : 'Description & response' },

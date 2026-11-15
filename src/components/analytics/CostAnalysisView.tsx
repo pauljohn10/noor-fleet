@@ -4,6 +4,7 @@ import { useFleet } from '../../context/FleetContext';
 import { useI18n } from '../../context/I18nContext';
 import { Badge } from '../common/Badge';
 import { exportToExcel, exportToPDFReport } from '../../lib/exportUtils';
+import { useTablePagination } from '../../lib/supabasePagination';
 import {
   PageContainer,
   PageHeader,
@@ -13,6 +14,7 @@ import {
   DataTable,
   DataRow,
   PlateChip,
+  TableFooter,
   EDITORIAL_STATUS,
 } from '../common/EditorialUI';
 
@@ -34,6 +36,32 @@ export const CostAnalysisView: React.FC = () => {
       cost
     };
   }).sort((a, b) => b.cost - a.cost);
+
+  const {
+    page: costPage,
+    setPage: setCostPage,
+    pageSize: costPageSize,
+    setPageSize: setCostPageSize,
+    totalPages: costTotalPages,
+    pagedItems: pagedCostRanking,
+  } = useTablePagination(vehicleCostRanking, [], {
+    table: 'vehicles',
+    orderBy: 'created_at',
+    ascending: false,
+  });
+
+  const {
+    page: schedPage,
+    setPage: setSchedPage,
+    pageSize: schedPageSize,
+    setPageSize: setSchedPageSize,
+    totalPages: schedTotalPages,
+    pagedItems: pagedSchedules,
+  } = useTablePagination(schedules, [], {
+    table: 'maintenance_schedules',
+    orderBy: 'created_at',
+    ascending: false,
+  });
 
   const handleExportExcel = () => {
     const data = vehicleCostRanking.map(r => ({
@@ -161,7 +189,7 @@ export const CostAnalysisView: React.FC = () => {
             emptyMessage={t('No vehicles found')}
             hasActionsColumn={false}
           >
-            {vehicleCostRanking.map(item => (
+            {pagedCostRanking.map(item => (
               <DataRow key={item.vehicle.id} stripeColor={item.cost > 0 ? EDITORIAL_STATUS.amber.stripe : EDITORIAL_STATUS.muted.stripe}>
                 <td style={{ padding: '12px 16px', verticalAlign: 'middle' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 3 }}>
@@ -180,6 +208,17 @@ export const CostAnalysisView: React.FC = () => {
               </DataRow>
             ))}
           </DataTable>
+          <TableFooter
+            summaryText={`${vehicleCostRanking.length} ${t('vehicles')}`}
+            page={costPage}
+            totalPages={costTotalPages}
+            pageSize={costPageSize}
+            totalRecords={vehicleCostRanking.length}
+            onPageChange={setCostPage}
+            onPageSizeChange={setCostPageSize}
+            onPrev={() => setCostPage(p => Math.max(1, p - 1))}
+            onNext={() => setCostPage(p => Math.min(costTotalPages, p + 1))}
+          />
         </EditorialSection>
 
         <EditorialSection title={t('Maintenance Calendar Schedule Overview')} marginTop={0}>
@@ -193,7 +232,7 @@ export const CostAnalysisView: React.FC = () => {
             emptyMessage={t('No schedules found')}
             hasActionsColumn={false}
           >
-            {schedules.map(s => (
+            {pagedSchedules.map(s => (
               <DataRow
                 key={s.id}
                 stripeColor={s.status === 'OVERDUE' ? EDITORIAL_STATUS.red.stripe : EDITORIAL_STATUS.blue.stripe}
@@ -210,6 +249,17 @@ export const CostAnalysisView: React.FC = () => {
               </DataRow>
             ))}
           </DataTable>
+          <TableFooter
+            summaryText={`${schedules.length} ${t('schedules')}`}
+            page={schedPage}
+            totalPages={schedTotalPages}
+            pageSize={schedPageSize}
+            totalRecords={schedules.length}
+            onPageChange={setSchedPage}
+            onPageSizeChange={setSchedPageSize}
+            onPrev={() => setSchedPage(p => Math.max(1, p - 1))}
+            onNext={() => setSchedPage(p => Math.min(schedTotalPages, p + 1))}
+          />
         </EditorialSection>
       </div>
     </PageContainer>

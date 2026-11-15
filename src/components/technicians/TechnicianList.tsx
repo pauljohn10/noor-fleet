@@ -3,6 +3,7 @@ import { Users } from 'lucide-react';
 import { useFleet } from '../../context/FleetContext';
 import { useI18n } from '../../context/I18nContext';
 import { DESIGN_TOKENS } from '../../lib/designTokens';
+import { useTablePagination } from '../../lib/supabasePagination';
 import {
   PageContainer,
   PageHeader,
@@ -28,6 +29,21 @@ export const TechnicianList: React.FC = () => {
       (tech.department || '').toLowerCase().includes(q);
     const matchesStatus = statusFilter === 'ALL' || tech.status === statusFilter;
     return matchesSearch && matchesStatus;
+  });
+
+  const {
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    pagedItems: pagedTechnicians,
+  } = useTablePagination(filtered, [search, statusFilter], {
+    table: 'technicians',
+    orderBy: 'created_at',
+    ascending: false,
+    search,
+    searchColumns: ['full_name', 'employee_id', 'specialization', 'department'],
   });
 
   const activeCount = technicians.filter(tech => tech.status === 'ACTIVE').length;
@@ -85,7 +101,7 @@ export const TechnicianList: React.FC = () => {
             : undefined
         }
       >
-        {filtered.map(tech => {
+        {pagedTechnicians.map(tech => {
           const techWOs = workOrders.filter(w => w.assigned_technician_id === tech.id);
           const activeWOs = techWOs.filter(w => w.status !== 'RELEASED' && w.status !== 'CANCELLED');
           const completedWOs = techWOs.filter(w => w.status === 'RELEASED' || w.status === 'COMPLETED');
@@ -205,6 +221,14 @@ export const TechnicianList: React.FC = () => {
             ? `${filtered.length} من ${technicians.length} فني`
             : `${filtered.length} of ${technicians.length} technicians`
         }
+        page={page}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        totalRecords={filtered.length}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+        onPrev={() => setPage(p => Math.max(1, p - 1))}
+        onNext={() => setPage(p => Math.min(totalPages, p + 1))}
       />
     </PageContainer>
   );

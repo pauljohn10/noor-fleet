@@ -208,11 +208,10 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
                       currentProfile.full_name
                     )
                   }
-                  className={`flex flex-col items-center shrink-0 px-1.5 transition ${
-                    hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER'])
-                      ? 'cursor-pointer'
-                      : 'cursor-default opacity-80'
-                  }`}
+                  className={`flex flex-col items-center shrink-0 px-1.5 transition ${hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER'])
+                    ? 'cursor-pointer'
+                    : 'cursor-default opacity-80'
+                    }`}
                 >
                   <div
                     className="w-7 h-7 flex items-center justify-center font-bold text-xs"
@@ -222,14 +221,14 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
                       background: isCurrent
                         ? 'var(--color-ink)'
                         : isPassed
-                        ? 'var(--color-brand-accent)'
-                        : 'var(--color-page-bg)',
+                          ? 'var(--color-brand-accent)'
+                          : 'var(--color-page-bg)',
                       color: isCurrent || isPassed ? 'var(--color-page-bg)' : 'var(--color-text-muted)',
                       border: isCurrent
                         ? '1px solid var(--color-ink)'
                         : isPassed
-                        ? '1px solid var(--color-brand-accent)'
-                        : '1px solid var(--color-border)',
+                          ? '1px solid var(--color-brand-accent)'
+                          : '1px solid var(--color-border)',
                     }}
                   >
                     {idx + 1}
@@ -240,8 +239,8 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
                       color: isCurrent
                         ? 'var(--color-ink)'
                         : isPassed
-                        ? 'var(--color-brand-accent)'
-                        : 'var(--color-text-muted)',
+                          ? 'var(--color-brand-accent)'
+                          : 'var(--color-text-muted)',
                     }}
                   >
                     {t(st)}
@@ -666,11 +665,10 @@ export const JobCardDetailView: React.FC<JobCardDetailViewProps> = ({
               style={{
                 background: 'var(--color-surface)',
                 border: '1px solid var(--color-border)',
-                borderInlineStart: `3px solid ${
-                  workOrder.qc_passed
-                    ? EDITORIAL_STATUS.green.stripe
-                    : EDITORIAL_STATUS.amber.stripe
-                }`,
+                borderInlineStart: `3px solid ${workOrder.qc_passed
+                  ? EDITORIAL_STATUS.green.stripe
+                  : EDITORIAL_STATUS.amber.stripe
+                  }`,
                 borderRadius: 'var(--radius-sm)',
               }}
             >
