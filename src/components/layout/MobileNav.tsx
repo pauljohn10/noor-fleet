@@ -17,19 +17,19 @@ export const MobileNav: React.FC<MobileNavProps> = ({ activeTab, onSelectTab }) 
     switch (activeRole) {
       case 'FLEET_MANAGER':
         return [
-          { key: 'dashboard', label: t('dashboard', 'Dashboard'), icon: <LayoutDashboard className="w-5 h-5" /> },
-          { key: 'vehicles', label: t('vehicles', 'Trucks'), icon: <Truck className="w-5 h-5" /> },
-          { key: 'workOrders', label: t('workOrders', 'Work Orders'), icon: <Wrench className="w-5 h-5" /> },
-          { key: 'inspections', label: t('inspections', 'Reports'), icon: <ShieldCheck className="w-5 h-5 text-amber-400" /> }
+          { key: 'dashboard', label: t('dashboard', 'Dashboard'), icon: <LayoutDashboard size={18} /> },
+          { key: 'vehicles', label: t('vehicles', 'Trucks'), icon: <Truck size={18} /> },
+          { key: 'workOrders', label: t('workOrders', 'Work Orders'), icon: <Wrench size={18} /> },
+          { key: 'inspections', label: t('inspections', 'Reports'), icon: <ShieldCheck size={18} /> },
         ];
       case 'SUPER_ADMIN':
       case 'MANAGEMENT':
       default:
         return [
-          { key: 'dashboard', label: t('dashboard', 'Dashboard'), icon: <LayoutDashboard className="w-5 h-5" /> },
-          { key: 'vehicles', label: t('vehicles', 'Trucks'), icon: <Truck className="w-5 h-5" /> },
-          { key: 'workOrders', label: t('workOrders', 'Work Orders'), icon: <Wrench className="w-5 h-5" /> },
-          { key: 'inventory', label: t('inventory', 'Store'), icon: <Package className="w-5 h-5" /> }
+          { key: 'dashboard', label: t('dashboard', 'Dashboard'), icon: <LayoutDashboard size={18} /> },
+          { key: 'vehicles', label: t('vehicles', 'Trucks'), icon: <Truck size={18} /> },
+          { key: 'workOrders', label: t('workOrders', 'Work Orders'), icon: <Wrench size={18} /> },
+          { key: 'inventory', label: t('inventory', 'Store'), icon: <Package size={18} /> },
         ];
     }
   };
@@ -37,19 +37,36 @@ export const MobileNav: React.FC<MobileNavProps> = ({ activeTab, onSelectTab }) 
   const items = getRoleMobileItems();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-slate-950 border-t border-slate-800 md:hidden flex justify-around p-2">
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-40 md:hidden flex justify-around py-1.5 px-2"
+      style={{
+        background: 'var(--color-surface)',
+        borderTop: '1px solid var(--color-border)',
+      }}
+    >
       {items.map(item => {
         const isActive = activeTab === item.key;
         return (
           <button
             key={item.key}
+            type="button"
             onClick={() => onSelectTab(item.key)}
-            className={`flex flex-col items-center py-1 px-3 rounded-lg text-[10px] font-bold transition ${
-              isActive ? 'text-amber-400 bg-amber-500/10' : 'text-slate-400 hover:text-slate-200'
-            }`}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              padding: '6px 12px',
+              borderRadius: 4,
+              border: 'none',
+              background: isActive ? 'var(--color-row-hover)' : 'transparent',
+              color: isActive ? 'var(--color-ink)' : 'var(--color-text-muted)',
+              fontWeight: isActive ? 600 : 400,
+              fontSize: 11,
+              cursor: 'pointer',
+            }}
           >
             {item.icon}
-            <span className="mt-1">{item.label}</span>
+            <span style={{ marginTop: 3 }}>{item.label}</span>
           </button>
         );
       })}

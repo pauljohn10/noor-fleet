@@ -1,32 +1,69 @@
 import React, { useState } from 'react';
-import { Bell, CheckCircle, AlertTriangle, FileText, Wrench, Package, X } from 'lucide-react';
+import { Bell, AlertTriangle, FileText, Wrench, Package, X } from 'lucide-react';
 import { useFleet } from '../../context/FleetContext';
+import { useI18n } from '../../context/I18nContext';
+import { DESIGN_TOKENS } from '../../lib/designTokens';
 
 export const NotificationCenter: React.FC = () => {
   const { notifications, markNotificationRead } = useFleet();
+  const { isRTL, t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'WORK_ORDER': return <Wrench className="w-4 h-4 text-emerald-400" />;
-      case 'DOCUMENT': return <FileText className="w-4 h-4 text-amber-400" />;
-      case 'STOCK': return <Package className="w-4 h-4 text-rose-400" />;
-      default: return <AlertTriangle className="w-4 h-4 text-sky-400" />;
+      case 'WORK_ORDER':
+        return <Wrench size={14} style={{ color: DESIGN_TOKENS.colors.status.availableText }} />;
+      case 'DOCUMENT':
+        return <FileText size={14} style={{ color: DESIGN_TOKENS.colors.status.workshopText }} />;
+      case 'STOCK':
+        return <Package size={14} style={{ color: DESIGN_TOKENS.colors.status.outOfServiceText }} />;
+      default:
+        return <AlertTriangle size={14} style={{ color: DESIGN_TOKENS.colors.status.onTripText }} />;
     }
   };
 
   return (
-    <div className="relative">
+    <div style={{ position: 'relative' }}>
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-slate-300 hover:text-slate-100 hover:bg-slate-800 rounded-lg transition"
-        title="Notifications"
+        title={t('Notifications', 'Notifications')}
+        style={{
+          position: 'relative',
+          padding: 7,
+          color: 'var(--color-text-secondary)',
+          background: 'transparent',
+          border: 'none',
+          borderRadius: 4,
+          cursor: 'pointer',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
       >
-        <Bell className="w-5 h-5" />
+        <Bell size={18} />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white">
+          <span
+            style={{
+              position: 'absolute',
+              top: 2,
+              insetInlineEnd: 2,
+              minWidth: 16,
+              height: 16,
+              padding: '0 4px',
+              borderRadius: 4,
+              background: DESIGN_TOKENS.colors.status.outOfServiceStripe,
+              color: 'var(--color-surface)',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 10,
+              fontWeight: 600,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             {unreadCount}
           </span>
         )}
@@ -34,53 +71,125 @@ export const NotificationCenter: React.FC = () => {
 
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 mt-2 z-50 w-80 sm:w-96 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 bg-slate-950/60">
-              <div className="flex items-center gap-2">
-                <Bell className="w-4 h-4 text-amber-400" />
-                <h4 className="text-sm font-bold text-slate-100">System Alerts</h4>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setIsOpen(false)} />
+          <div
+            style={{
+              position: 'absolute',
+              [isRTL ? 'left' : 'right']: 0,
+              marginTop: 8,
+              zIndex: 50,
+              width: 360,
+              maxWidth: 'calc(100vw - 24px)',
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 4,
+              overflow: 'hidden',
+              fontFamily: isRTL ? 'var(--font-arabic)' : 'var(--font-ui)',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '12px 16px',
+                borderBottom: '1px solid var(--color-row-divider)',
+                background: 'var(--color-page-bg)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Bell size={14} style={{ color: 'var(--color-ink)' }} />
+                <h4 style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}>
+                  {t('System Alerts', 'System Alerts')}
+                </h4>
                 {unreadCount > 0 && (
-                  <span className="px-2 py-0.5 text-xs font-bold bg-amber-500/20 text-amber-300 rounded-full">
-                    {unreadCount} New
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 11,
+                      color: DESIGN_TOKENS.colors.status.outOfServiceText,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {isRTL ? `${unreadCount} جديد` : `${unreadCount} new`}
                   </span>
                 )}
               </div>
               <button
+                type="button"
                 onClick={() => setIsOpen(false)}
-                className="p-1 text-slate-400 hover:text-slate-200 rounded"
+                title={t('Close', 'Close')}
+                style={{
+                  padding: 4,
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--color-text-muted)',
+                  cursor: 'pointer',
+                }}
               >
-                <X className="w-4 h-4" />
+                <X size={14} />
               </button>
             </div>
 
-            <div className="max-h-80 overflow-y-auto divide-y divide-slate-800/60">
+            <div style={{ maxHeight: 340, overflowY: 'auto' }}>
               {notifications.length === 0 ? (
-                <div className="p-6 text-center text-slate-500 text-xs">
-                  No system notifications currently.
+                <div style={{ padding: 24, textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 12.5 }}>
+                  {t('No system notifications currently.', 'No system notifications currently.')}
                 </div>
               ) : (
                 notifications.map(n => (
                   <div
                     key={n.id}
                     onClick={() => markNotificationRead(n.id)}
-                    className={`p-3.5 hover:bg-slate-800/50 transition cursor-pointer flex gap-3 ${
-                      !n.is_read ? 'bg-slate-800/20' : 'opacity-70'
-                    }`}
+                    style={{
+                      padding: '12px 16px',
+                      borderBottom: '1px solid var(--color-row-divider)',
+                      borderInlineStart: !n.is_read
+                        ? `3px solid ${DESIGN_TOKENS.colors.accent}`
+                        : '3px solid transparent',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      gap: 10,
+                      opacity: n.is_read ? 0.7 : 1,
+                      background: !n.is_read ? 'var(--color-surface)' : 'transparent',
+                    }}
                   >
-                    <div className="mt-0.5 p-2 bg-slate-800 rounded-lg shrink-0">
+                    <div
+                      style={{
+                        marginTop: 2,
+                        width: 28,
+                        height: 28,
+                        borderRadius: 4,
+                        background: 'var(--color-page-bg)',
+                        border: '1px solid var(--color-border)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
                       {getCategoryIcon(n.category)}
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-bold text-slate-200">{n.title}</p>
-                        {!n.is_read && (
-                          <span className="h-2 w-2 rounded-full bg-amber-500" />
-                        )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                        <p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, color: 'var(--color-ink)' }}>
+                          {t(n.title, n.title)}
+                        </p>
                       </div>
-                      <p className="text-xs text-slate-400 mt-1 leading-relaxed">{n.message}</p>
-                      <span className="text-[10px] text-slate-500 mt-1 block">
-                        {new Date(n.created_at).toLocaleString()}
+                      <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.45 }}>
+                        {n.message}
+                      </p>
+                      <span
+                        dir="ltr"
+                        style={{
+                          display: 'block',
+                          marginTop: 4,
+                          fontSize: 11,
+                          fontFamily: 'var(--font-mono)',
+                          color: 'var(--color-text-muted)',
+                        }}
+                      >
+                        {new Date(n.created_at).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}
                       </span>
                     </div>
                   </div>

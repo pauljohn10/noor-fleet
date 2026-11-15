@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { useI18n } from '../../context/I18nContext';
 
 interface ModalProps {
   isOpen: boolean;
@@ -14,101 +15,153 @@ interface ModalProps {
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl';
 }
 
+const MAX_WIDTH_PX: Record<NonNullable<ModalProps['maxWidth']>, number> = {
+  sm: 384,
+  md: 448,
+  lg: 512,
+  xl: 576,
+  '2xl': 672,
+  '3xl': 768,
+  '4xl': 896,
+  '5xl': 1024,
+};
+
 export const Modal: React.FC<ModalProps> = ({
   isOpen,
   isHidden = false,
   onClose,
   title,
   subtitle,
-  icon,
   children,
   footer,
-  maxWidth = '2xl'
+  maxWidth = '2xl',
 }) => {
+  const { t, isRTL } = useI18n();
+
   useEffect(() => {
     if (!isOpen || isHidden) return;
-
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
-
     document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', handleKeyDown);
-
     return () => {
-      if (!isHidden) {
-        document.body.style.overflow = 'auto';
-      }
+      if (!isHidden) document.body.style.overflow = 'auto';
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, isHidden, onClose]);
 
   if (!isOpen) return null;
 
-  const maxWidthMap = {
-    sm: 'max-w-sm',
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl',
-    '2xl': 'max-w-2xl',
-    '3xl': 'max-w-3xl',
-    '4xl': 'max-w-4xl',
-    '5xl': 'max-w-5xl'
-  };
-
   const modalNode = (
     <div
-      className={`fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 md:p-6 bg-slate-950/70 backdrop-blur-[3px] animate-fade-in overflow-y-auto ${
-        isHidden ? '!hidden pointer-events-none opacity-0' : ''
-      }`}
-      style={isHidden ? { display: 'none' } : undefined}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 100,
+        display: isHidden ? 'none' : 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20,
+        backgroundColor: 'rgba(22, 21, 19, 0.42)',
+        overflowY: 'auto',
+      }}
       aria-hidden={isHidden}
       onClick={onClose}
     >
       <div
-        className={`relative w-full ${maxWidthMap[maxWidth]} max-h-[min(90vh,860px)] flex flex-col bg-white border border-slate-200/90 rounded-2xl shadow-[0_24px_60px_-12px_rgba(15,23,42,0.35)] overflow-hidden my-auto transition-all`}
+        role="dialog"
+        aria-modal="true"
         onClick={e => e.stopPropagation()}
+        style={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: MAX_WIDTH_PX[maxWidth],
+          maxHeight: 'min(90vh, 860px)',
+          display: 'flex',
+          flexDirection: 'column',
+          background: 'var(--color-page-bg)',
+          color: 'var(--color-ink)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 4,
+          overflow: 'hidden',
+          margin: 'auto',
+          fontFamily: isRTL ? 'var(--font-arabic)' : 'var(--font-ui)',
+        }}
       >
-        {/* Top Accent Strip */}
-        <div className="h-1 w-full bg-gradient-to-r from-amber-500 via-amber-400 to-sky-500 shrink-0" />
-
-        {/* Pinned Modal Header */}
-        <div className="flex items-start justify-between gap-4 px-5 sm:px-6 py-4 border-b border-slate-200/90 bg-slate-50/90 shrink-0">
-          <div className="flex items-start gap-3 min-w-0">
-            {icon && (
-              <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
-                {icon}
-              </div>
+        {/* Pinned Header */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            gap: 16,
+            padding: '18px 24px',
+            borderBottom: '1px solid var(--color-row-divider)',
+            background: 'var(--color-surface)',
+            flexShrink: 0,
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <h3
+              style={{
+                margin: 0,
+                fontFamily: isRTL ? 'var(--font-arabic)' : 'var(--font-brand)',
+                fontSize: 20,
+                fontWeight: 700,
+                letterSpacing: isRTL ? '0' : '-0.02em',
+                color: 'var(--color-ink)',
+                lineHeight: 1.2,
+              }}
+            >
+              {t(title, title)}
+            </h3>
+            {subtitle && (
+              <p style={{ margin: '4px 0 0', fontSize: 12.5, color: 'var(--color-text-muted)', lineHeight: 1.4 }}>
+                {t(subtitle, subtitle)}
+              </p>
             )}
-            <div className="min-w-0">
-              <h3 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight leading-snug">
-                {title}
-              </h3>
-              {subtitle && (
-                <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">
-                  {subtitle}
-                </p>
-              )}
-            </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-200/70 rounded-lg transition active:scale-95 cursor-pointer shrink-0"
-            title="Close (Esc)"
+            title={t('Close (Esc)', 'Close (Esc)')}
+            style={{
+              padding: 6,
+              background: 'transparent',
+              border: '1px solid var(--color-border)',
+              borderRadius: 4,
+              color: 'var(--color-text-secondary)',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
           >
-            <X className="w-4 h-4" />
+            <X size={16} />
           </button>
         </div>
 
-        {/* Scrollable Modal Body */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-5 sm:px-6 py-5">
+        {/* Scrollable Body */}
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px 24px' }}>
           {children}
         </div>
 
-        {/* Pinned Modal Footer */}
+        {/* Pinned Footer */}
         {footer && (
-          <div className="shrink-0 border-t border-slate-200/90 bg-slate-50/95 px-5 sm:px-6 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div
+            style={{
+              flexShrink: 0,
+              borderTop: '1px solid var(--color-row-divider)',
+              background: 'var(--color-surface)',
+              padding: '14px 24px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              gap: 10,
+            }}
+          >
             {footer}
           </div>
         )}

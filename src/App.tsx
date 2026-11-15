@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { I18nProvider } from './context/I18nContext';
+import { I18nProvider, useI18n } from './context/I18nContext';
 import { FleetProvider } from './context/FleetContext';
 import { Layout } from './components/layout/Layout';
 import { NavItemKey } from './components/layout/Sidebar';
@@ -14,6 +14,7 @@ import { ManagementDashboard } from './components/dashboards/ManagementDashboard
 
 import { VehicleList } from './components/vehicles/VehicleList';
 import { SmallVehicleList } from './components/vehicles/SmallVehicleList';
+import { VehicleStatusMatrix } from './components/vehicles/VehicleStatusMatrix';
 import { TrailerList } from './components/trailers/TrailerList';
 import { JobCardList } from './components/workOrders/JobCardList';
 import { MaintenanceScheduleList } from './components/preventive/MaintenanceScheduleList';
@@ -50,6 +51,7 @@ export function AppContent() {
   const [activeTab, setActiveTab] = useState<NavItemKey>('dashboard');
   const [isPublicPortal, setIsPublicPortal] = useState<boolean>(() => isPublicDriverReportRoute());
   const { activeRole, isAuthenticated, isLoading } = useAuth();
+  const { t } = useI18n();
 
   useEffect(() => {
     const syncRoute = () => setIsPublicPortal(isPublicDriverReportRoute());
@@ -69,15 +71,49 @@ export function AppContent() {
   // Loading Screen
   if (isLoading) {
     return (
-      <div className="min-h-screen w-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#081a44] via-[#0d2870] to-[#061233] text-white">
-        <div className="w-14 h-14 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center shadow-xl shadow-amber-500/20 mb-4 animate-bounce">
-          <Flame className="w-8 h-8 fill-current" />
+      <div
+        className="min-h-screen w-screen flex flex-col items-center justify-center"
+        style={{ background: 'var(--color-page-bg)', color: 'var(--color-ink)' }}
+      >
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            border: '1.5px solid var(--color-ink)',
+            borderRadius: 4,
+            overflow: 'hidden',
+            background: 'var(--color-surface)',
+            marginBottom: 16,
+          }}
+        >
+          <span style={{ width: 7, alignSelf: 'stretch', background: 'var(--color-brand-accent)' }} />
+          <span
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 15,
+              fontWeight: 600,
+              padding: '6px 12px',
+              color: 'var(--color-ink)',
+            }}
+          >
+            NF
+          </span>
         </div>
-        <h2 className="text-xl font-black tracking-tight text-white">NOOR FLEET ERP</h2>
-        <p className="text-xs text-sky-200 mt-1 font-medium">Initializing secure telemetry & fleet session...</p>
-        <div className="w-36 h-1 bg-white/20 rounded-full mt-4 overflow-hidden">
-          <div className="h-full bg-amber-400 rounded-full animate-pulse" style={{ width: '70%' }} />
-        </div>
+        <h2
+          style={{
+            margin: 0,
+            fontFamily: 'var(--font-brand)',
+            fontSize: 22,
+            fontWeight: 700,
+            letterSpacing: '-0.03em',
+            color: 'var(--color-ink)',
+          }}
+        >
+          {t('app.title', 'Noor Fleet')}
+        </h2>
+        <p style={{ marginTop: 6, fontSize: 13, color: 'var(--color-text-muted)' }}>
+          {t('app.initializing', 'Initializing secure telemetry & fleet session...')}
+        </p>
       </div>
     );
   }
@@ -123,6 +159,8 @@ export function AppContent() {
         return <MaintenanceScheduleList />;
       case 'inspections':
         return <InspectionList />;
+      case 'statusMatrix':
+        return <VehicleStatusMatrix />;
       case 'inventory':
         return <PartsList />;
       case 'technicians':

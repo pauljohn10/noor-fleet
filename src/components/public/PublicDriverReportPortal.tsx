@@ -1,8 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Flame, Truck, User, Wrench, Zap, Disc, AlertTriangle, HelpCircle,
-  Camera, CheckCircle2, Clock, ShieldCheck, Globe, X, Send, Loader2,
-  AlertCircle, Lock, ZoomIn, Maximize2, Sparkles, Check
+  Truck,
+  User,
+  Wrench,
+  Zap,
+  Disc,
+  AlertTriangle,
+  HelpCircle,
+  Camera,
+  CheckCircle2,
+  Clock,
+  ShieldCheck,
+  Globe,
+  X,
+  Send,
+  Loader2,
+  AlertCircle,
+  Lock,
+  ZoomIn,
+  Maximize2,
+  Sparkles,
 } from 'lucide-react';
 import { useFleet } from '../../context/FleetContext';
 import { useI18n } from '../../context/I18nContext';
@@ -10,6 +27,12 @@ import { DefectReportCategory } from '../../types';
 import { compressImageFile, formatFileSize } from '../../lib/imageCompression';
 import { ImageLightboxModal } from '../common/ImageLightboxModal';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
+import { DESIGN_TOKENS } from '../../lib/designTokens';
+import {
+  EDITORIAL_STATUS,
+  PlateChip,
+  PrimaryButton,
+} from '../common/EditorialUI';
 
 const ISSUE_CATEGORIES: {
   value: DefectReportCategory;
@@ -18,54 +41,60 @@ const ISSUE_CATEGORIES: {
   descEn: string;
   descAr: string;
   icon: React.ReactNode;
-  activeClass: string;
+  stripeColor: string;
+  iconColor: string;
 }[] = [
-  {
-    value: 'Mechanical',
-    labelEn: 'Mechanical',
-    labelAr: 'ميكانيكي',
-    descEn: 'Engine, brakes, transmission, air or fuel system',
-    descAr: 'المحرك، الفرامل، القير، الهواء أو الوقود',
-    icon: <Wrench className="w-5 h-5" />,
-    activeClass: 'border-amber-500 bg-amber-50 text-amber-950 ring-2 ring-amber-500/25',
-  },
-  {
-    value: 'Electrical',
-    labelEn: 'Electrical',
-    labelAr: 'كهربائي',
-    descEn: 'Battery, lights, sensors, starter, wiring',
-    descAr: 'البطارية، الإضاءة، الحساسات، الضفيرة',
-    icon: <Zap className="w-5 h-5" />,
-    activeClass: 'border-sky-500 bg-sky-50 text-sky-950 ring-2 ring-sky-500/25',
-  },
-  {
-    value: 'Tire',
-    labelEn: 'Tire',
-    labelAr: 'الإطارات',
-    descEn: 'Flat tire, blowout, tread wear, wheel hub',
-    descAr: 'بنشر، تلف الإطار، الجنط أو الرمان',
-    icon: <Disc className="w-5 h-5" />,
-    activeClass: 'border-indigo-500 bg-indigo-50 text-indigo-950 ring-2 ring-indigo-500/25',
-  },
-  {
-    value: 'Accident',
-    labelEn: 'Accident',
-    labelAr: 'حادث مروري',
-    descEn: 'Collision, body damage, emergency hazard',
-    descAr: 'تصادم، تلفيات بالهيكل، طوارئ الطريق',
-    icon: <AlertTriangle className="w-5 h-5" />,
-    activeClass: 'border-rose-500 bg-rose-50 text-rose-950 ring-2 ring-rose-500/25',
-  },
-  {
-    value: 'Other',
-    labelEn: 'Other',
-    labelAr: 'أخرى',
-    descEn: 'Tanker valve, cabin, AC, or general issue',
-    descAr: 'صمامات الصهريج، المكيف، أو ملاحظة أخرى',
-    icon: <HelpCircle className="w-5 h-5" />,
-    activeClass: 'border-slate-600 bg-slate-100 text-slate-950 ring-2 ring-slate-500/20',
-  },
-];
+    {
+      value: 'Mechanical',
+      labelEn: 'Mechanical',
+      labelAr: 'ميكانيكي',
+      descEn: 'Engine, brakes, transmission, air or fuel system',
+      descAr: 'المحرك، الفرامل، القير، الهواء أو الوقود',
+      icon: <Wrench className="w-4 h-4" />,
+      stripeColor: EDITORIAL_STATUS.amber.stripe,
+      iconColor: EDITORIAL_STATUS.amber.text,
+    },
+    {
+      value: 'Electrical',
+      labelEn: 'Electrical',
+      labelAr: 'كهربائي',
+      descEn: 'Battery, lights, sensors, starter, wiring',
+      descAr: 'البطارية، الإضاءة، الحساسات، الضفيرة',
+      icon: <Zap className="w-4 h-4" />,
+      stripeColor: EDITORIAL_STATUS.blue.stripe,
+      iconColor: EDITORIAL_STATUS.blue.text,
+    },
+    {
+      value: 'Tire',
+      labelEn: 'Tire',
+      labelAr: 'الإطارات',
+      descEn: 'Flat tire, blowout, tread wear, wheel hub',
+      descAr: 'بنشر، تلف الإطار، الجنط أو الرمان',
+      icon: <Disc className="w-4 h-4" />,
+      stripeColor: 'var(--color-brand-accent)',
+      iconColor: 'var(--color-brand-accent)',
+    },
+    {
+      value: 'Accident',
+      labelEn: 'Accident',
+      labelAr: 'حادث مروري',
+      descEn: 'Collision, body damage, emergency hazard',
+      descAr: 'تصادم، تلفيات بالهيكل، طوارئ الطريق',
+      icon: <AlertTriangle className="w-4 h-4" />,
+      stripeColor: EDITORIAL_STATUS.red.stripe,
+      iconColor: EDITORIAL_STATUS.red.text,
+    },
+    {
+      value: 'Other',
+      labelEn: 'Other',
+      labelAr: 'أخرى',
+      descEn: 'Tanker valve, cabin, AC, or general issue',
+      descAr: 'صمامات الصهريج، المكيف، أو ملاحظة أخرى',
+      icon: <HelpCircle className="w-4 h-4" />,
+      stripeColor: EDITORIAL_STATUS.muted.stripe,
+      iconColor: 'var(--color-text-secondary)',
+    },
+  ];
 
 const COOLDOWN_STORAGE_KEY = 'noor_fleet_last_public_report_ts';
 const COOLDOWN_MS = 15_000; // 15-second anti-spam cooldown between submissions
@@ -123,7 +152,7 @@ export const PublicDriverReportPortal: React.FC = () => {
     const prefillPlate = params.get('plate');
     if (prefillPlate) {
       const matched = vehicles.find(
-        v => v.plate_number.toUpperCase() === prefillPlate.toUpperCase()
+        (v) => v.plate_number.toUpperCase() === prefillPlate.toUpperCase()
       );
       if (matched) {
         setSelectedPlate(matched.plate_number);
@@ -134,9 +163,9 @@ export const PublicDriverReportPortal: React.FC = () => {
     }
   }, [vehicles]);
 
-  const matchedVehicle = vehicles.find(v => v.plate_number === selectedPlate);
+  const matchedVehicle = vehicles.find((v) => v.plate_number === selectedPlate);
   const matchedTrailer = matchedVehicle?.assigned_trailer_id
-    ? trailers.find(t => t.id === matchedVehicle.assigned_trailer_id)
+    ? trailers.find((tr) => tr.id === matchedVehicle.assigned_trailer_id)
     : undefined;
 
   // Compress & optimize uploaded image before storage upload (Max 1600px, ~200-400KB target)
@@ -168,7 +197,6 @@ export const PublicDriverReportPortal: React.FC = () => {
     setPhotoFileName(file.name);
 
     try {
-      // Downscale to max 1600px, high quality, target 200-400KB
       const result = await compressImageFile(file, {
         maxDimension: 1600,
         quality: 0.82,
@@ -186,7 +214,7 @@ export const PublicDriverReportPortal: React.FC = () => {
     } catch (err: any) {
       console.warn('Advanced compression warning, falling back to standard reader:', err);
       const reader = new FileReader();
-      reader.onload = event => {
+      reader.onload = (event) => {
         setPhotoDataUrl(event.target?.result as string);
         setCompressedBlob(file);
         setCompressionStats(null);
@@ -306,7 +334,7 @@ export const PublicDriverReportPortal: React.FC = () => {
       if (!result.success) {
         setErrorMsg(
           result.error ||
-            (isRTL ? 'تعذر إرسال البلاغ. حاول مرة أخرى.' : 'Failed to submit report. Please try again.')
+          (isRTL ? 'تعذر إرسال البلاغ. حاول مرة أخرى.' : 'Failed to submit report. Please try again.')
         );
       } else {
         localStorage.setItem(COOLDOWN_STORAGE_KEY, String(Date.now()));
@@ -323,7 +351,7 @@ export const PublicDriverReportPortal: React.FC = () => {
     } catch (err: any) {
       setErrorMsg(
         err?.message ||
-          (isRTL ? 'حدث خطأ أثناء إرسال البلاغ.' : 'An unexpected error occurred while submitting.')
+        (isRTL ? 'حدث خطأ أثناء إرسال البلاغ.' : 'An unexpected error occurred while submitting.')
       );
     } finally {
       setIsSubmitting(false);
@@ -344,25 +372,85 @@ export const PublicDriverReportPortal: React.FC = () => {
 
   return (
     <div
-      className={`min-h-screen w-full bg-slate-100 flex flex-col justify-between font-sans ${
-        isRTL ? '[direction:rtl] text-right' : '[direction:ltr] text-left'
-      }`}
+      className={`min-h-screen w-full flex flex-col justify-between ${isRTL ? '[direction:rtl] text-right' : '[direction:ltr] text-left'
+        }`}
+      style={{
+        background: 'var(--color-page-bg)',
+        color: 'var(--color-ink)',
+        fontFamily: isRTL ? 'var(--font-arabic)' : 'var(--font-ui)',
+      }}
     >
-      {/* Top Brand Header Bar */}
-      <header className="bg-gradient-to-r from-[#081a44] via-[#0d2870] to-[#081a44] text-white border-b border-amber-400/30 shadow-md">
-        <div className="max-w-xl mx-auto px-4 py-3.5 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center shadow-md shadow-amber-400/20 shrink-0">
-              <Flame className="w-6 h-6 fill-current" />
+      {/* Top Warm-Paper Header Bar */}
+      <header
+        style={{
+          background: 'var(--color-surface)',
+          borderBottom: '1px solid var(--color-border)',
+        }}
+      >
+        <div className="max-w-xl mx-auto px-4 py-3.5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            {/* Signature Plate-Style NF Chip matching LoginPage */}
+            <div
+              className="flex items-stretch overflow-hidden shrink-0"
+              style={{
+                background: 'var(--color-page-bg)',
+                border: '1px solid var(--color-input-border)',
+                borderRadius: 'var(--radius-sm)',
+                height: 26,
+              }}
+            >
+              <span
+                style={{
+                  width: 6,
+                  background: DESIGN_TOKENS.colors.accent,
+                  flexShrink: 0,
+                }}
+              />
+              <span
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 12,
+                  fontWeight: 500,
+                  letterSpacing: '0.06em',
+                  color: 'var(--color-ink)',
+                  padding: '0 8px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                }}
+                dir="ltr"
+              >
+                NF
+              </span>
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-base font-black tracking-tight text-white">NOOR FLEET</span>
-                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">
+
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span
+                  className="text-base font-bold truncate"
+                  style={{
+                    fontFamily: isRTL ? 'var(--font-arabic)' : 'var(--font-brand)',
+                    color: 'var(--color-ink)',
+                    letterSpacing: isRTL ? '0' : '-0.02em',
+                  }}
+                >
+                  Noor Fleet
+                </span>
+                <span
+                  className="text-[11px] font-semibold px-2 py-0.5"
+                  style={{
+                    background: 'var(--color-page-bg)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-sm)',
+                    color: 'var(--color-brand-accent)',
+                  }}
+                >
                   {isRTL ? 'بوابة السائقين' : 'Driver Portal'}
                 </span>
               </div>
-              <p className="text-[11px] text-sky-200/90 font-medium">
+              <p
+                className="text-[11px] truncate mt-0.5"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
                 {isRTL
                   ? 'مؤسسة النور المتحدة للنقل — قسم الصيانة والأسطول'
                   : 'Al-Noor United Transport Est. — Fleet & Workshop Division'}
@@ -373,29 +461,67 @@ export const PublicDriverReportPortal: React.FC = () => {
           <button
             type="button"
             onClick={toggleLanguage}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-bold text-white transition cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium cursor-pointer shrink-0 transition-colors"
+            style={{
+              background: 'var(--color-page-bg)',
+              border: '1px solid var(--color-input-border)',
+              borderRadius: 'var(--radius-sm)',
+              color: 'var(--color-ink)',
+              fontFamily: language === 'en' ? 'var(--font-arabic)' : 'var(--font-ui)',
+            }}
           >
-            <Globe className="w-3.5 h-3.5 text-amber-300" />
+            <Globe className="w-3.5 h-3.5" style={{ color: 'var(--color-brand-accent)' }} />
             <span>{language === 'en' ? 'العربية' : 'English'}</span>
           </button>
         </div>
       </header>
 
       {/* Main Mobile-Friendly Container */}
-      <main className="flex-1 w-full max-w-xl mx-auto px-4 py-5 sm:py-8">
+      <main className="flex-1 w-full max-w-xl mx-auto px-4 py-6 sm:py-8">
         {submittedRecord ? (
           /* ============================================================ */
           /* CONFIRMATION VIEW AFTER SUCCESSFUL SUBMISSION                */
           /* ============================================================ */
-          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-lg overflow-hidden animate-fade-in">
-            <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 p-6 text-white text-center">
-              <div className="w-16 h-16 rounded-2xl bg-white/15 border border-white/25 flex items-center justify-center mx-auto mb-3 shadow-inner">
-                <CheckCircle2 className="w-10 h-10 text-white" />
+          <div
+            className="overflow-hidden"
+            style={{
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderTop: `3px solid ${EDITORIAL_STATUS.green.stripe}`,
+              borderRadius: 'var(--radius-sm)',
+            }}
+          >
+            <div
+              className="p-6 text-center"
+              style={{
+                background: 'var(--color-page-bg)',
+                borderBottom: '1px solid var(--color-border)',
+              }}
+            >
+              <div
+                className="w-12 h-12 flex items-center justify-center mx-auto mb-3"
+                style={{
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-sm)',
+                  color: EDITORIAL_STATUS.green.text,
+                }}
+              >
+                <CheckCircle2 className="w-6 h-6" />
               </div>
-              <h2 className="text-xl font-black tracking-tight">
+              <h2
+                className="text-xl font-bold"
+                style={{
+                  fontFamily: isRTL ? 'var(--font-arabic)' : 'var(--font-brand)',
+                  color: 'var(--color-ink)',
+                }}
+              >
                 {isRTL ? 'تم إرسال البلاغ بنجاح!' : 'Report Submitted Successfully!'}
               </h2>
-              <p className="text-xs text-emerald-100 mt-1 max-w-sm mx-auto leading-relaxed">
+              <p
+                className="text-xs mt-1.5 max-w-sm mx-auto leading-relaxed"
+                style={{ color: 'var(--color-text-secondary)' }}
+              >
                 {isRTL
                   ? 'تم تسجيل بلاغ العطل مباشرة في نظام صيانة أسطول النور وإشعار مشرف الورشة.'
                   : 'Your vehicle issue has been recorded directly in the Noor Fleet Maintenance System and dispatched to the workshop team.'}
@@ -404,77 +530,174 @@ export const PublicDriverReportPortal: React.FC = () => {
 
             <div className="p-5 sm:p-6 space-y-4">
               {/* Reference Number Highlight */}
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+              <div
+                className="p-4 text-center"
+                style={{
+                  background: 'var(--color-page-bg)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-sm)',
+                }}
+              >
+                <span
+                  className="text-xs font-medium block"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
                   {isRTL ? 'رقم مرجع البلاغ' : 'Official Report Reference'}
                 </span>
-                <span className="font-mono text-2xl font-black text-slate-900 mt-0.5 block">
+                <span
+                  className="text-2xl font-bold mt-1 block"
+                  style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-ink)' }}
+                  dir="ltr"
+                >
                   {submittedRecord.reportNumber}
                 </span>
               </div>
 
               {/* Submitted Details Summary */}
-              <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50/70 border border-slate-200/80 rounded-xl p-4">
+              <div
+                className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs p-4"
+                style={{
+                  background: 'var(--color-page-bg)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-sm)',
+                }}
+              >
                 <div>
-                  <span className="text-slate-400 font-semibold block">
+                  <span
+                    className="text-[11px] font-medium block"
+                    style={{ color: 'var(--color-text-muted)' }}
+                  >
                     {isRTL ? 'اسم السائق' : 'Driver Name'}
                   </span>
-                  <span className="font-bold text-slate-900 mt-0.5 block">
+                  <span
+                    className="font-semibold mt-0.5 block"
+                    style={{ color: 'var(--color-ink)' }}
+                  >
                     {submittedRecord.driverName}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-400 font-semibold block">
+                  <span
+                    className="text-[11px] font-medium block"
+                    style={{ color: 'var(--color-text-muted)' }}
+                  >
                     {isRTL ? 'رقم اللوحة / المركبة' : 'Vehicle Plate / Unit'}
                   </span>
-                  <span className="font-mono font-bold text-slate-900 mt-0.5 block">
-                    {submittedRecord.plateNumber} ({submittedRecord.vehicleId})
-                  </span>
+                  <div className="mt-1 flex items-center gap-2 flex-wrap" dir="ltr">
+                    <PlateChip plate={submittedRecord.plateNumber} />
+                    <span
+                      className="text-xs"
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        color: 'var(--color-text-secondary)',
+                      }}
+                    >
+                      {submittedRecord.vehicleId}
+                    </span>
+                  </div>
                 </div>
                 <div>
-                  <span className="text-slate-400 font-semibold block">
+                  <span
+                    className="text-[11px] font-medium block"
+                    style={{ color: 'var(--color-text-muted)' }}
+                  >
                     {isRTL ? 'تصنيف المشكلة' : 'Issue Category'}
                   </span>
-                  <span className="font-bold text-amber-800 mt-0.5 block">
-                    {submittedRecord.category}
+                  <span
+                    className="font-semibold mt-0.5 block"
+                    style={{ color: 'var(--color-brand-accent)' }}
+                  >
+                    {(() => {
+                      const matchedCat = ISSUE_CATEGORIES.find(
+                        (c) => c.value === submittedRecord.category
+                      );
+                      return matchedCat
+                        ? isRTL
+                          ? matchedCat.labelAr
+                          : matchedCat.labelEn
+                        : submittedRecord.category;
+                    })()}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-400 font-semibold block">
+                  <span
+                    className="text-[11px] font-medium block"
+                    style={{ color: 'var(--color-text-muted)' }}
+                  >
                     {isRTL ? 'تاريخ ووقت البلاغ' : 'Recorded Date & Time'}
                   </span>
-                  <span className="font-mono text-slate-700 mt-0.5 block text-[11px]">
-                    {new Date(submittedRecord.submittedAt).toLocaleString()}
+                  <span
+                    className="mt-0.5 block text-[11px]"
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      color: 'var(--color-text-secondary)',
+                    }}
+                    dir="ltr"
+                  >
+                    {new Date(submittedRecord.submittedAt).toLocaleString(
+                      isRTL ? 'ar-SA-u-ca-gregory' : 'en-US'
+                    )}
                   </span>
                 </div>
               </div>
 
-              <button
+              <PrimaryButton
                 type="button"
                 onClick={handleResetForNewReport}
-                className="w-full py-3.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm shadow-sm transition active:scale-[0.99] cursor-pointer"
+                className="w-full justify-center py-3 text-sm"
               >
                 {isRTL ? 'إرسال بلاغ آخر' : 'Submit Another Issue Report'}
-              </button>
+              </PrimaryButton>
             </div>
           </div>
         ) : (
           /* ============================================================ */
           /* PUBLIC DRIVER ISSUE REPORT FORM                              */
           /* ============================================================ */
-          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-md overflow-hidden">
+          <div
+            className="overflow-hidden"
+            style={{
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--radius-sm)',
+            }}
+          >
             {/* Form Title Banner */}
-            <div className="px-5 py-5 bg-slate-50/90 border-b border-slate-200/90">
-              <div className="flex items-center justify-between gap-2">
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            <div
+              className="px-5 py-5"
+              style={{
+                background: 'var(--color-page-bg)',
+                borderBottom: '1px solid var(--color-border)',
+              }}
+            >
+              <div className="flex items-start sm:items-center justify-between gap-2 flex-wrap">
+                <h1
+                  className="text-2xl font-bold"
+                  style={{
+                    fontFamily: isRTL ? 'var(--font-arabic)' : 'var(--font-brand)',
+                    color: 'var(--color-ink)',
+                    letterSpacing: isRTL ? '0' : '-0.02em',
+                  }}
+                >
                   {isRTL ? 'الإبلاغ عن مشكلة في المركبة' : 'Report a Vehicle Issue'}
                 </h1>
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  {isRTL ? 'بدون تسجيل دخول' : 'No Login Needed'}
+                <span
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold shrink-0"
+                  style={{
+                    background: 'var(--color-surface)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-sm)',
+                    color: 'var(--color-brand-accent)',
+                  }}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>{isRTL ? 'بدون تسجيل دخول' : 'No Login Needed'}</span>
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
+              <p
+                className="text-xs sm:text-sm mt-1.5 leading-relaxed"
+                style={{ color: 'var(--color-text-secondary)' }}
+              >
                 {isRTL
                   ? 'أكمل النموذج أدناه لإرسال بلاغ فوري إلى قسم الصيانة وإدارة الأسطول.'
                   : 'Complete the simple form below to notify Noor Fleet Maintenance & Dispatch immediately.'}
@@ -491,7 +714,7 @@ export const PublicDriverReportPortal: React.FC = () => {
                     tabIndex={-1}
                     autoComplete="off"
                     value={honeypotUrl}
-                    onChange={e => setHoneypotUrl(e.target.value)}
+                    onChange={(e) => setHoneypotUrl(e.target.value)}
                   />
                 </label>
               </div>
@@ -500,20 +723,30 @@ export const PublicDriverReportPortal: React.FC = () => {
               {errorMsg && (
                 <div
                   role="alert"
-                  className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-start gap-2.5"
+                  className="p-3.5 text-xs font-semibold flex items-start gap-2.5"
+                  style={{
+                    background: 'var(--color-page-bg)',
+                    border: '1px solid var(--color-border)',
+                    borderInlineStart: `3px solid ${EDITORIAL_STATUS.red.stripe}`,
+                    borderRadius: 'var(--radius-sm)',
+                    color: EDITORIAL_STATUS.red.text,
+                  }}
                 >
-                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>{errorMsg}</span>
                 </div>
               )}
 
               {/* 1. Driver Name (Required) */}
               <div>
-                <label className="block text-sm font-extrabold text-slate-800 mb-1.5">
+                <label
+                  className="block text-xs font-semibold mb-1.5"
+                  style={{ color: 'var(--color-ink)' }}
+                >
                   <span className="inline-flex items-center gap-1.5">
-                    <User className="w-4 h-4 text-amber-600" />
+                    <User className="w-3.5 h-3.5" style={{ color: 'var(--color-brand-accent)' }} />
                     {isRTL ? 'اسم السائق' : 'Driver Name'}{' '}
-                    <span className="text-rose-500">*</span>
+                    <span style={{ color: EDITORIAL_STATUS.red.text }}>*</span>
                   </span>
                 </label>
                 <input
@@ -521,14 +754,16 @@ export const PublicDriverReportPortal: React.FC = () => {
                   required
                   list="noor-registered-drivers"
                   value={driverName}
-                  onChange={e => setDriverName(e.target.value)}
+                  onChange={(e) => setDriverName(e.target.value)}
                   placeholder={
-                    isRTL ? 'أدخل اسمك الكامل (مثال: محمد علي خان)' : 'Enter your full name (e.g. Mohammed Ali Khan)'
+                    isRTL
+                      ? 'أدخل اسمك الكامل (مثال: محمد علي خان)'
+                      : 'Enter your full name (e.g. Mohammed Ali Khan)'
                   }
-                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
+                  className="nf-field w-full font-medium"
                 />
                 <datalist id="noor-registered-drivers">
-                  {drivers.map(d => (
+                  {drivers.map((d) => (
                     <option key={d.id} value={d.full_name} />
                   ))}
                 </datalist>
@@ -536,36 +771,41 @@ export const PublicDriverReportPortal: React.FC = () => {
 
               {/* 2. Vehicle Plate Number (Required, selectable from existing registered vehicles) */}
               <div>
-                <label className="block text-sm font-extrabold text-slate-800 mb-1.5">
+                <label
+                  className="block text-xs font-semibold mb-1.5"
+                  style={{ color: 'var(--color-ink)' }}
+                >
                   <span className="inline-flex items-center gap-1.5">
-                    <Truck className="w-4 h-4 text-amber-600" />
+                    <Truck className="w-3.5 h-3.5" style={{ color: 'var(--color-brand-accent)' }} />
                     {isRTL ? 'رقم لوحة المركبة' : 'Vehicle Plate Number'}{' '}
-                    <span className="text-rose-500">*</span>
+                    <span style={{ color: EDITORIAL_STATUS.red.text }}>*</span>
                   </span>
                 </label>
                 <select
                   required
                   value={selectedPlate}
-                  onChange={e => {
+                  onChange={(e) => {
                     setSelectedPlate(e.target.value);
-                    const veh = vehicles.find(v => v.plate_number === e.target.value);
+                    const veh = vehicles.find((v) => v.plate_number === e.target.value);
                     if (veh && !driverName.trim() && veh.assigned_driver_id) {
-                      const assignedDrv = drivers.find(d => d.id === veh.assigned_driver_id);
+                      const assignedDrv = drivers.find((d) => d.id === veh.assigned_driver_id);
                       if (assignedDrv) setDriverName(assignedDrv.full_name);
                     }
                   }}
-                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition cursor-pointer"
+                  className="nf-field w-full font-semibold cursor-pointer"
                 >
                   <option value="">
                     {isRTL ? '-- اختر رقم لوحة الشاحنة --' : '-- Select Vehicle Plate Number --'}
                   </option>
-                  {vehicles.map(v => (
+                  {vehicles.map((v) => (
                     <option key={v.id} value={v.plate_number}>
                       {v.plate_number} — {v.vehicle_id} ({v.make} {v.model})
                     </option>
                   ))}
                   <option value="__CUSTOM__">
-                    {isRTL ? 'لوحة أخرى (إدخال يدوي)...' : 'Other Plate Number (Enter Manually)...'}
+                    {isRTL
+                      ? 'لوحة أخرى (إدخال يدوي)...'
+                      : 'Other Plate Number (Enter Manually)...'}
                   </option>
                 </select>
 
@@ -573,24 +813,55 @@ export const PublicDriverReportPortal: React.FC = () => {
                   <input
                     type="text"
                     required
+                    dir="ltr"
                     value={customPlate}
-                    onChange={e => setCustomPlate(e.target.value.toUpperCase())}
-                    placeholder={isRTL ? 'أدخل رقم اللوحة (مثال: LBR-4921)' : 'Enter Plate Number (e.g. LBR-4921)'}
-                    className="mt-2.5 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-mono font-bold text-slate-900 uppercase placeholder:text-slate-400 placeholder:font-sans placeholder:font-normal focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
+                    onChange={(e) => setCustomPlate(e.target.value.toUpperCase())}
+                    placeholder={
+                      isRTL ? 'أدخل رقم اللوحة (مثال: LBR-4921)' : 'Enter Plate Number (e.g. LBR-4921)'
+                    }
+                    className="nf-field w-full mt-2.5 font-semibold"
+                    style={{ fontFamily: 'var(--font-mono)' }}
                   />
                 )}
 
                 {matchedVehicle && (
-                  <div className="mt-2 px-3.5 py-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80 flex flex-wrap items-center justify-between gap-2 text-xs">
-                    <span className="font-bold text-slate-800">
-                      {isRTL ? 'المركبة المسجلة:' : 'Linked Fleet Unit:'}{' '}
-                      <span className="font-mono text-amber-900">{matchedVehicle.vehicle_id}</span> —{' '}
-                      {matchedVehicle.make} {matchedVehicle.model}
-                    </span>
-                    {matchedTrailer && (
-                      <span className="font-mono font-bold text-sky-800 bg-sky-100/80 px-2 py-0.5 rounded border border-sky-200">
-                        {isRTL ? 'المقطورة:' : 'Trailer:'} {matchedTrailer.trailer_id} ({matchedTrailer.plate_number})
+                  <div
+                    className="mt-2.5 px-3.5 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs"
+                    style={{
+                      background: 'var(--color-page-bg)',
+                      border: '1px solid var(--color-border)',
+                      borderInlineStart: '3px solid var(--color-brand-accent)',
+                      borderRadius: 'var(--radius-sm)',
+                    }}
+                  >
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span
+                        className="font-medium"
+                        style={{ color: 'var(--color-text-secondary)' }}
+                      >
+                        {isRTL ? 'المركبة المسجلة:' : 'Linked Fleet Unit:'}
                       </span>
+                      <span
+                        className="font-semibold"
+                        style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-ink)' }}
+                        dir="ltr"
+                      >
+                        {matchedVehicle.vehicle_id}
+                      </span>
+                      <span style={{ color: 'var(--color-text-secondary)' }}>
+                        — {matchedVehicle.make} {matchedVehicle.model}
+                      </span>
+                    </div>
+                    {matchedTrailer && (
+                      <div className="flex items-center gap-1.5" dir="ltr">
+                        <span
+                          className="text-[11px]"
+                          style={{ color: 'var(--color-text-muted)' }}
+                        >
+                          {isRTL ? 'المقطورة:' : 'Trailer:'}
+                        </span>
+                        <PlateChip plate={`${matchedTrailer.trailer_id} · ${matchedTrailer.plate_number}`} />
+                      </div>
                     )}
                   </div>
                 )}
@@ -598,36 +869,57 @@ export const PublicDriverReportPortal: React.FC = () => {
 
               {/* 3. Issue Category (Mechanical, Electrical, Tire, Accident, Other) */}
               <div>
-                <label className="block text-sm font-extrabold text-slate-800 mb-2">
+                <label
+                  className="block text-xs font-semibold mb-2"
+                  style={{ color: 'var(--color-ink)' }}
+                >
                   {isRTL ? 'تصنيف المشكلة' : 'Issue Category'}{' '}
-                  <span className="text-rose-500">*</span>
+                  <span style={{ color: EDITORIAL_STATUS.red.text }}>*</span>
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {ISSUE_CATEGORIES.map(item => {
+                  {ISSUE_CATEGORIES.map((item) => {
                     const isSelected = category === item.value;
                     return (
                       <button
                         key={item.value}
                         type="button"
                         onClick={() => setCategory(item.value)}
-                        className={`flex items-start gap-3 p-3.5 rounded-xl border text-left rtl:text-right transition cursor-pointer ${
-                          isSelected
-                            ? item.activeClass
-                            : 'border-slate-200 bg-slate-50/60 hover:bg-slate-100/80 text-slate-800'
-                        }`}
+                        className="flex items-start gap-3 p-3 text-left rtl:text-right transition cursor-pointer"
+                        style={{
+                          background: isSelected ? 'var(--color-surface)' : 'var(--color-page-bg)',
+                          border: isSelected
+                            ? '1px solid var(--color-ink)'
+                            : '1px solid var(--color-border)',
+                          borderInlineStart: isSelected
+                            ? `3px solid ${item.stripeColor}`
+                            : '1px solid var(--color-border)',
+                          borderRadius: 'var(--radius-sm)',
+                        }}
                       >
                         <div
-                          className={`p-2 rounded-lg shrink-0 ${
-                            isSelected ? 'bg-white shadow-2xs' : 'bg-white border border-slate-200/80 text-slate-600'
-                          }`}
+                          className="p-2 shrink-0"
+                          style={{
+                            background: isSelected
+                              ? 'var(--color-page-bg)'
+                              : 'var(--color-surface)',
+                            border: '1px solid var(--color-border)',
+                            borderRadius: 'var(--radius-sm)',
+                            color: isSelected ? item.iconColor : 'var(--color-text-muted)',
+                          }}
                         >
                           {item.icon}
                         </div>
                         <div className="min-w-0">
-                          <div className="font-black text-sm leading-tight">
+                          <div
+                            className="font-semibold text-xs leading-tight"
+                            style={{ color: 'var(--color-ink)' }}
+                          >
                             {isRTL ? item.labelAr : item.labelEn}
                           </div>
-                          <div className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                          <div
+                            className="text-[11px] mt-1 leading-snug"
+                            style={{ color: 'var(--color-text-muted)' }}
+                          >
                             {isRTL ? item.descAr : item.descEn}
                           </div>
                         </div>
@@ -639,59 +931,115 @@ export const PublicDriverReportPortal: React.FC = () => {
 
               {/* 4. Issue Description (Required) */}
               <div>
-                <label className="block text-sm font-extrabold text-slate-800 mb-1.5">
+                <label
+                  className="block text-xs font-semibold mb-1.5"
+                  style={{ color: 'var(--color-ink)' }}
+                >
                   {isRTL ? 'وصف المشكلة بالتفصيل' : 'Issue Description'}{' '}
-                  <span className="text-rose-500">*</span>
+                  <span style={{ color: EDITORIAL_STATUS.red.text }}>*</span>
                 </label>
                 <textarea
                   rows={4}
                   required
                   value={description}
-                  onChange={e => setDescription(e.target.value)}
+                  onChange={(e) => setDescription(e.target.value)}
                   placeholder={
                     isRTL
                       ? 'اشرح المشكلة أو العطل الذي لاحظته في الشاحنة...'
                       : 'Describe what happened, any warning lights, unusual noises, or leaks...'
                   }
-                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition resize-y"
+                  className="nf-field w-full resize-y"
                 />
               </div>
 
               {/* 5. Photo Upload (Optional) */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-sm font-extrabold text-slate-800">
+                  <label
+                    className="block text-xs font-semibold"
+                    style={{ color: 'var(--color-ink)' }}
+                  >
                     <span className="inline-flex items-center gap-1.5">
-                      <Camera className="w-4 h-4 text-amber-600" />
+                      <Camera
+                        className="w-3.5 h-3.5"
+                        style={{ color: 'var(--color-brand-accent)' }}
+                      />
                       {isRTL ? 'إرفاق صورة للمشكلة' : 'Photo Upload'}
                     </span>
                   </label>
-                  <span className="text-xs font-semibold text-slate-400">
+                  <span className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
                     {isRTL ? 'اختياري' : 'Optional'}
                   </span>
                 </div>
 
                 {isCompressing ? (
-                  <div className="flex flex-col items-center justify-center gap-2 p-6 rounded-xl border border-amber-300 bg-amber-50/60 text-center animate-pulse">
-                    <Loader2 className="w-6 h-6 text-amber-600 animate-spin" />
-                    <span className="text-xs font-bold text-amber-900">
-                      {isRTL ? 'جاري ضغط وتحسين الصورة للموبايل...' : 'Compressing & optimizing photo for mobile...'}
+                  <div
+                    className="flex flex-col items-center justify-center gap-2 p-6 text-center animate-pulse"
+                    style={{
+                      background: 'var(--color-page-bg)',
+                      border: '1px solid var(--color-border)',
+                      borderInlineStart: '3px solid var(--color-brand-accent)',
+                      borderRadius: 'var(--radius-sm)',
+                    }}
+                  >
+                    <Loader2
+                      className="w-5 h-5 animate-spin"
+                      style={{ color: 'var(--color-brand-accent)' }}
+                    />
+                    <span
+                      className="text-xs font-semibold"
+                      style={{ color: 'var(--color-ink)' }}
+                    >
+                      {isRTL
+                        ? 'جاري ضغط وتحسين الصورة للموبايل...'
+                        : 'Compressing & optimizing photo for mobile...'}
                     </span>
-                    <span className="text-[11px] text-amber-700">
-                      {isRTL ? 'الحفاظ على وضوح تفاصيل العطل وتصغير الحجم' : 'Preserving damage details & reducing file size'}
+                    <span
+                      className="text-[11px]"
+                      style={{ color: 'var(--color-text-muted)' }}
+                    >
+                      {isRTL
+                        ? 'الحفاظ على وضوح تفاصيل العطل وتصغير الحجم'
+                        : 'Preserving damage details & reducing file size'}
                     </span>
                   </div>
                 ) : !photoDataUrl ? (
-                  <label className="flex flex-col items-center justify-center gap-2 p-5 border-2 border-dashed border-slate-300 hover:border-amber-500 rounded-xl bg-slate-50/70 hover:bg-amber-50/30 transition cursor-pointer text-center">
-                    <div className="w-11 h-11 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center">
+                  <label
+                    className="flex flex-col items-center justify-center gap-2 p-5 transition cursor-pointer text-center"
+                    style={{
+                      background: 'var(--color-page-bg)',
+                      border: '1px dashed var(--color-input-border)',
+                      borderRadius: 'var(--radius-sm)',
+                    }}
+                  >
+                    <div
+                      className="w-10 h-10 flex items-center justify-center"
+                      style={{
+                        background: 'var(--color-surface)',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: 'var(--radius-sm)',
+                        color: 'var(--color-brand-accent)',
+                      }}
+                    >
                       <Camera className="w-5 h-5" />
                     </div>
                     <div>
-                      <span className="text-xs sm:text-sm font-bold text-slate-800 block">
-                        {isRTL ? 'اضغط لالتقاط صورة أو اختيارها من الهاتف' : 'Tap to take a photo or upload from phone'}
+                      <span
+                        className="text-xs sm:text-sm font-semibold block"
+                        style={{ color: 'var(--color-ink)' }}
+                      >
+                        {isRTL
+                          ? 'اضغط لالتقاط صورة أو اختيارها من الهاتف'
+                          : 'Tap to take a photo or upload from phone'}
                       </span>
-                      <span className="text-[11px] text-slate-400 block mt-0.5">
-                        JPG, PNG — {isRTL ? 'يتم ضغط الصورة تلقائياً إلى ~200-400KB' : 'Auto-resized to max 1600px & compressed to ~200-400 KB'}
+                      <span
+                        className="text-[11px] block mt-0.5"
+                        style={{ color: 'var(--color-text-muted)' }}
+                      >
+                        JPG, PNG —{' '}
+                        {isRTL
+                          ? 'يتم ضغط الصورة تلقائياً إلى ~200-400KB'
+                          : 'Auto-resized to max 1600px & compressed to ~200-400 KB'}
                       </span>
                     </div>
                     <input
@@ -703,58 +1051,108 @@ export const PublicDriverReportPortal: React.FC = () => {
                     />
                   </label>
                 ) : (
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2.5">
+                  <div
+                    className="p-3 space-y-2.5"
+                    style={{
+                      background: 'var(--color-page-bg)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 'var(--radius-sm)',
+                    }}
+                  >
                     <div className="flex items-center gap-3">
                       {/* Clickable Thumbnail to Open Lightbox */}
                       <div
                         onClick={() => setIsLightboxOpen(true)}
-                        className="group relative cursor-pointer w-20 h-20 rounded-lg overflow-hidden border border-slate-200 bg-slate-900 shrink-0 shadow-2xs"
-                        title={isRTL ? 'اضغط لتكبير الصورة ومعاينتها' : 'Click to preview full-screen photo'}
+                        className="group relative cursor-pointer w-20 h-20 overflow-hidden shrink-0"
+                        style={{
+                          background: 'var(--color-surface)',
+                          border: '1px solid var(--color-border)',
+                          borderRadius: 'var(--radius-sm)',
+                        }}
+                        title={
+                          isRTL
+                            ? 'اضغط لتكبير الصورة ومعاينتها'
+                            : 'Click to preview full-screen photo'
+                        }
                       >
                         <img
                           src={photoDataUrl}
                           alt="Uploaded vehicle issue preview"
-                          className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110"
+                          className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
                         />
-                        <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/40 transition-all flex items-center justify-center">
-                          <ZoomIn className="w-5 h-5 text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md" />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/35 transition-all flex items-center justify-center">
+                          <ZoomIn className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-xs font-bold text-slate-900 truncate">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p
+                            className="text-xs font-semibold truncate"
+                            style={{ color: 'var(--color-ink)' }}
+                          >
                             {photoFileName || (isRTL ? 'صورة مرفقة' : 'Attached Issue Photo')}
                           </p>
                           <button
                             type="button"
                             onClick={() => setIsLightboxOpen(true)}
-                            className="text-[10px] font-bold text-amber-800 hover:text-amber-900 bg-amber-100 hover:bg-amber-200 px-1.5 py-0.5 rounded transition flex items-center gap-0.5 cursor-pointer shrink-0"
+                            className="text-[11px] font-semibold px-2 py-0.5 flex items-center gap-1 cursor-pointer shrink-0 transition"
+                            style={{
+                              background: 'var(--color-surface)',
+                              border: '1px solid var(--color-border)',
+                              borderRadius: 'var(--radius-sm)',
+                              color: 'var(--color-brand-accent)',
+                            }}
                           >
                             <Maximize2 className="w-2.5 h-2.5" />
                             <span>{isRTL ? 'معاينة' : 'Preview'}</span>
                           </button>
                         </div>
 
-                        {/* File Size & Compression Ratio Badge */}
+                        {/* File Size & Compression Ratio */}
                         {compressionStats ? (
                           <div className="mt-1 space-y-0.5">
                             <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
-                              <span className="text-slate-400 line-through">
+                              <span
+                                className="line-through"
+                                style={{ color: 'var(--color-text-muted)' }}
+                              >
                                 {compressionStats.originalSize}
                               </span>
-                              <span className="font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded text-[10px]">
-                                {compressionStats.compressedSize} ({compressionStats.savedPercent}% smaller)
+                              <span
+                                className="font-semibold px-1.5 py-0.5 text-[10px]"
+                                style={{
+                                  background: 'var(--color-surface)',
+                                  border: '1px solid var(--color-border)',
+                                  borderRadius: 'var(--radius-sm)',
+                                  color: EDITORIAL_STATUS.green.text,
+                                }}
+                              >
+                                {isRTL
+                                  ? `${compressionStats.compressedSize} (توفير ${compressionStats.savedPercent}%)`
+                                  : `${compressionStats.compressedSize} (${compressionStats.savedPercent}% smaller)`}
                               </span>
                             </div>
-                            <span className="text-[10px] text-slate-400 block font-mono">
+                            <span
+                              className="text-[10px] block"
+                              style={{
+                                fontFamily: 'var(--font-mono)',
+                                color: 'var(--color-text-muted)',
+                              }}
+                              dir="ltr"
+                            >
                               {compressionStats.dimensions}
                             </span>
                           </div>
                         ) : (
-                          <p className="text-[11px] text-emerald-700 font-semibold mt-0.5 flex items-center gap-1">
+                          <p
+                            className="text-[11px] font-semibold mt-0.5 flex items-center gap-1"
+                            style={{ color: EDITORIAL_STATUS.green.text }}
+                          >
                             <CheckCircle2 className="w-3.5 h-3.5" />
-                            {isRTL ? 'جاهزة للإرسال مع البلاغ' : 'Ready to attach with report'}
+                            <span>
+                              {isRTL ? 'جاهزة للإرسال مع البلاغ' : 'Ready to attach with report'}
+                            </span>
                           </p>
                         )}
                       </div>
@@ -762,31 +1160,62 @@ export const PublicDriverReportPortal: React.FC = () => {
                       <button
                         type="button"
                         onClick={handleRemovePhoto}
-                        className="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition cursor-pointer self-start"
+                        className="p-2 cursor-pointer self-start transition"
+                        style={{
+                          background: 'var(--color-surface)',
+                          border: '1px solid var(--color-border)',
+                          borderRadius: 'var(--radius-sm)',
+                          color: EDITORIAL_STATUS.red.text,
+                        }}
                         title={isRTL ? 'حذف الصورة' : 'Remove photo'}
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
 
-                    <p className="text-[10px] text-slate-500 font-medium italic flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-amber-500 shrink-0" />
-                      {isRTL
-                        ? 'تم تحسين أبعاد وحجم الصورة تلقائياً لسرعة الإرسال مع الحفاظ على دقة تفاصيل العطل.'
-                        : 'Image optimized for fast mobile upload while keeping vehicle damage details crisp.'}
+                    <p
+                      className="text-[11px] flex items-center gap-1"
+                      style={{ color: 'var(--color-text-muted)' }}
+                    >
+                      <Sparkles
+                        className="w-3 h-3 shrink-0"
+                        style={{ color: 'var(--color-brand-accent)' }}
+                      />
+                      <span>
+                        {isRTL
+                          ? 'تم تحسين أبعاد وحجم الصورة تلقائياً لسرعة الإرسال مع الحفاظ على دقة تفاصيل العطل.'
+                          : 'Image optimized for fast mobile upload while keeping vehicle damage details crisp.'}
+                      </span>
                     </p>
                   </div>
                 )}
               </div>
 
               {/* 6. Report Date & Time (Automatically Recorded) */}
-              <div className="flex items-center justify-between gap-2 px-4 py-3 rounded-xl bg-slate-50 border border-slate-200/90 text-xs text-slate-600">
-                <div className="flex items-center gap-2 font-semibold">
-                  <Clock className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span>{isRTL ? 'تاريخ ووقت البلاغ (تلقائي):' : 'Report Date & Time (Auto-recorded):'}</span>
+              <div
+                className="flex items-center justify-between gap-2 px-4 py-3 text-xs"
+                style={{
+                  background: 'var(--color-page-bg)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-sm)',
+                  color: 'var(--color-text-secondary)',
+                }}
+              >
+                <div className="flex items-center gap-2 font-medium">
+                  <Clock
+                    className="w-4 h-4 shrink-0"
+                    style={{ color: 'var(--color-text-muted)' }}
+                  />
+                  <span>
+                    {isRTL ? 'تاريخ ووقت البلاغ (تلقائي):' : 'Report Date & Time (Auto-recorded):'}
+                  </span>
                 </div>
-                <span className="font-mono font-bold text-slate-900">
-                  {currentTime.toLocaleString([], {
+                <span
+                  className="font-semibold"
+                  style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-ink)' }}
+                  dir="ltr"
+                >
+                  {currentTime.toLocaleString(isRTL ? 'ar-SA-u-ca-gregory' : 'en-US', {
                     year: 'numeric',
                     month: 'short',
                     day: '2-digit',
@@ -797,30 +1226,31 @@ export const PublicDriverReportPortal: React.FC = () => {
               </div>
 
               {/* Submit Button */}
-              <button
+              <PrimaryButton
                 type="submit"
                 disabled={isSubmitting || isCompressing}
-                className="w-full py-4 px-5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-base shadow-md shadow-amber-500/20 transition active:scale-[0.99] disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
+                dimWhenDisabled={isSubmitting || isCompressing}
+                className="w-full justify-center py-3 text-sm"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                     <span>
                       {uploadStatusText || (isRTL ? 'جاري إرسال البلاغ...' : 'Submitting Report...')}
                     </span>
                   </>
                 ) : isCompressing ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                     <span>{isRTL ? 'جاري معالجة الصورة...' : 'Processing Photo...'}</span>
                   </>
                 ) : (
                   <>
-                    <Send className="w-5 h-5" />
+                    <Send className="w-4 h-4" />
                     <span>{isRTL ? 'إرسال البلاغ الآن' : 'Submit Report'}</span>
                   </>
                 )}
-              </button>
+              </PrimaryButton>
             </form>
           </div>
         )}
@@ -838,13 +1268,22 @@ export const PublicDriverReportPortal: React.FC = () => {
       )}
 
       {/* Footer */}
-      <footer className="max-w-xl mx-auto w-full px-4 py-4 text-center text-[11px] text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-slate-200/70">
+      <footer
+        className="max-w-xl mx-auto w-full px-4 py-4 text-center text-[11px] flex flex-col sm:flex-row items-center justify-between gap-2"
+        style={{
+          color: 'var(--color-text-muted)',
+          borderTop: '1px solid var(--color-border)',
+        }}
+      >
         <span>
-          © {new Date().getFullYear()} Al-Noor United Transport Est. • Secure Public Issue Reporting
+          {isRTL
+            ? `© ${new Date().getFullYear()} مؤسسة النور المتحدة للنقل • بوابة بلاغات الأعطال العامة الآمنة`
+            : `© ${new Date().getFullYear()} Al-Noor United Transport Est. • Secure Public Issue Reporting`}
         </span>
         <a
           href="/"
-          className="inline-flex items-center gap-1 font-bold text-slate-500 hover:text-slate-800 transition"
+          className="inline-flex items-center gap-1 font-semibold hover:underline transition"
+          style={{ color: 'var(--color-ink)' }}
         >
           <Lock className="w-3 h-3" />
           <span>{isRTL ? 'دخول موظفي الإدارة والورشة' : 'Fleet Staff Login'}</span>
@@ -853,4 +1292,3 @@ export const PublicDriverReportPortal: React.FC = () => {
     </div>
   );
 };
-

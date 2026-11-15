@@ -1,64 +1,76 @@
 import React, { useState, useEffect } from 'react';
-import {
-  CalendarCheck, Plus, Search, Filter, CheckCircle2, AlertCircle,
-  Clock, AlertTriangle, Loader2, RefreshCw, Wrench, Truck, FileText, Download
-} from 'lucide-react';
+import { RefreshCw, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { useFleet } from '../../context/FleetContext';
 import { useAuth } from '../../context/AuthContext';
-import { Badge } from '../common/Badge';
+import { useI18n } from '../../context/I18nContext';
 import { MaintenanceSchedule, PMStatus } from '../../types';
 import { Modal } from '../common/Modal';
 import { exportToExcel, exportToPDFReport } from '../../lib/exportUtils';
+import { DESIGN_TOKENS } from '../../lib/designTokens';
+import {
+  PageContainer,
+  PageHeader,
+  PrimaryButton,
+  SecondaryButton,
+  GhostButton,
+  StatusTabs,
+  EditorialSelect,
+  DataTable,
+  DataRow,
+  RowAction,
+  StatusText,
+  TableFooter,
+} from '../common/EditorialUI';
 
 const PM_STATUS_OPTIONS: {
   value: PMStatus;
   label: string;
   shortLabel: string;
   description: string;
-  badgeVariant: 'info' | 'amber' | 'danger' | 'success' | 'slate';
-  cardClasses: string;
+  stripe: string;
+  text: string;
 }[] = [
-  {
-    value: 'UPCOMING',
-    label: 'Upcoming (Scheduled)',
-    shortLabel: 'UPCOMING',
-    description: 'Scheduled for future service; within normal operating interval.',
-    badgeVariant: 'info',
-    cardClasses: 'border-sky-200 bg-sky-50/70 text-sky-900'
-  },
-  {
-    value: 'DUE_SOON',
-    label: 'Due Soon',
-    shortLabel: 'DUE SOON',
-    description: 'Approaching service threshold (mileage or calendar date).',
-    badgeVariant: 'amber',
-    cardClasses: 'border-amber-200 bg-amber-50/70 text-amber-900'
-  },
-  {
-    value: 'DUE',
-    label: 'Due Now',
-    shortLabel: 'DUE NOW',
-    description: 'Service threshold reached; ready for workshop bay induction.',
-    badgeVariant: 'amber',
-    cardClasses: 'border-orange-200 bg-orange-50/70 text-orange-900'
-  },
-  {
-    value: 'OVERDUE',
-    label: 'Overdue',
-    shortLabel: 'OVERDUE',
-    description: 'Exceeded target mileage or due date; requires immediate attention.',
-    badgeVariant: 'danger',
-    cardClasses: 'border-rose-200 bg-rose-50/70 text-rose-900'
-  },
-  {
-    value: 'COMPLETED',
-    label: 'Completed',
-    shortLabel: 'COMPLETED',
-    description: 'Preventive maintenance service completed and verified.',
-    badgeVariant: 'success',
-    cardClasses: 'border-emerald-200 bg-emerald-50/70 text-emerald-900'
-  }
-];
+    {
+      value: 'UPCOMING',
+      label: 'Upcoming (Scheduled)',
+      shortLabel: 'UPCOMING',
+      description: 'Scheduled for future service; within normal operating interval.',
+      stripe: DESIGN_TOKENS.colors.status.onTripStripe,
+      text: DESIGN_TOKENS.colors.status.onTripText,
+    },
+    {
+      value: 'DUE_SOON',
+      label: 'Due Soon',
+      shortLabel: 'DUE SOON',
+      description: 'Approaching service threshold (mileage or calendar date).',
+      stripe: DESIGN_TOKENS.colors.status.workshopStripe,
+      text: DESIGN_TOKENS.colors.status.workshopText,
+    },
+    {
+      value: 'DUE',
+      label: 'Due Now',
+      shortLabel: 'DUE NOW',
+      description: 'Service threshold reached; ready for workshop bay induction.',
+      stripe: DESIGN_TOKENS.colors.status.workshopStripe,
+      text: DESIGN_TOKENS.colors.status.workshopText,
+    },
+    {
+      value: 'OVERDUE',
+      label: 'Overdue',
+      shortLabel: 'OVERDUE',
+      description: 'Exceeded target mileage or due date; requires immediate attention.',
+      stripe: DESIGN_TOKENS.colors.status.outOfServiceStripe,
+      text: DESIGN_TOKENS.colors.status.outOfServiceText,
+    },
+    {
+      value: 'COMPLETED',
+      label: 'Completed',
+      shortLabel: 'COMPLETED',
+      description: 'Preventive maintenance service completed and verified.',
+      stripe: DESIGN_TOKENS.colors.status.availableStripe,
+      text: DESIGN_TOKENS.colors.status.availableText,
+    },
+  ];
 
 export const MaintenanceScheduleList: React.FC = () => {
   const {
@@ -67,15 +79,18 @@ export const MaintenanceScheduleList: React.FC = () => {
     trailers,
     addMaintenanceSchedule,
     updateMaintenanceScheduleStatus,
-    updateMaintenanceSchedule
+    updateMaintenanceSchedule,
   } = useFleet();
   const { currentProfile, hasPermission } = useAuth();
+  const { t, isRTL } = useI18n();
 
   const canManageStatus = hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER']);
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
 
   // Status update states
   const [updatingRowId, setUpdatingRowId] = useState<string | null>(null);
@@ -84,11 +99,8 @@ export const MaintenanceScheduleList: React.FC = () => {
   const [statusNotes, setStatusNotes] = useState('');
   const [isSavingStatusModal, setIsSavingStatusModal] = useState(false);
 
-  // Feedback banner state
-  const [feedback, setFeedback] = useState<{
-    type: 'success' | 'error';
-    message: string;
-  } | null>(null);
+  // Feedback banner
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // New Schedule Form State
   const [title, setTitle] = useState('');
@@ -111,12 +123,12 @@ export const MaintenanceScheduleList: React.FC = () => {
 
   const filteredSchedules = schedules.filter(s => {
     const veh = vehicles.find(v => v.id === s.vehicle_id);
-    const trl = trailers.find(t => t.id === s.trailer_id);
+    const trl = trailers.find(tr => tr.id === s.trailer_id);
     const unitLabel = veh
       ? `${veh.vehicle_id} ${veh.plate_number}`
       : trl
-      ? `${trl.trailer_id} ${trl.plate_number}`
-      : '';
+        ? `${trl.trailer_id} ${trl.plate_number}`
+        : '';
     const q = search.toLowerCase();
     const matchesSearch =
       s.title.toLowerCase().includes(q) ||
@@ -126,7 +138,9 @@ export const MaintenanceScheduleList: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
-  // Status KPI counts
+  const totalPages = Math.max(1, Math.ceil(filteredSchedules.length / PAGE_SIZE));
+  const pagedSchedules = filteredSchedules.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   const countByStatus = (st: PMStatus) => schedules.filter(s => s.status === st).length;
 
   const openChangeStatusModal = (schedule: MaintenanceSchedule) => {
@@ -151,18 +165,18 @@ export const MaintenanceScheduleList: React.FC = () => {
         const statusMeta = PM_STATUS_OPTIONS.find(o => o.value === newStatus);
         setFeedback({
           type: 'success',
-          message: `Status for "${schedule.title}" updated to ${statusMeta?.shortLabel || newStatus}.`
+          message: `${t('Status for')} "${schedule.title}" ${t('updated to')} ${t(statusMeta?.shortLabel || newStatus)}.`,
         });
       } else {
         setFeedback({
           type: 'error',
-          message: `Could not locate schedule "${schedule.title}" to update status.`
+          message: `${t('Could not locate schedule')} "${schedule.title}" ${t('to update status.')}`,
         });
       }
     } catch (err: any) {
       setFeedback({
         type: 'error',
-        message: err?.message || 'Failed to update preventive maintenance status.'
+        message: err?.message || t('Failed to update preventive maintenance status.'),
       });
     } finally {
       setUpdatingRowId(null);
@@ -177,11 +191,9 @@ export const MaintenanceScheduleList: React.FC = () => {
     setFeedback(null);
 
     try {
-      // Only update status and notes so other schedule fields are never accidentally overwritten
-      const trimmedNotes = statusNotes.trim();
       const updates: Partial<MaintenanceSchedule> = {
         status: targetStatus,
-        notes: trimmedNotes
+        notes: statusNotes.trim(),
       };
 
       const ok = await updateMaintenanceSchedule(
@@ -194,19 +206,19 @@ export const MaintenanceScheduleList: React.FC = () => {
         const statusMeta = PM_STATUS_OPTIONS.find(o => o.value === targetStatus);
         setFeedback({
           type: 'success',
-          message: `Preventive maintenance record "${selectedSchedule.title}" updated to ${statusMeta?.shortLabel || targetStatus}.`
+          message: `${t('Preventive maintenance record')} "${selectedSchedule.title}" ${t('updated to')} ${t(statusMeta?.shortLabel || targetStatus)}.`,
         });
         setSelectedSchedule(null);
       } else {
         setFeedback({
           type: 'error',
-          message: 'Failed to save status update. Please try again.'
+          message: t('Failed to save status update. Please try again.'),
         });
       }
     } catch (err: any) {
       setFeedback({
         type: 'error',
-        message: err?.message || 'An unexpected error occurred while saving status.'
+        message: err?.message || t('An unexpected error occurred while saving status.'),
       });
     } finally {
       setIsSavingStatusModal(false);
@@ -230,469 +242,405 @@ export const MaintenanceScheduleList: React.FC = () => {
       next_due_mileage: frequencyType === 'MILEAGE' ? Number(nextDueMileage) : 0,
       next_due_date: nextDueDate || '2026-10-15',
       status: initialStatus,
-      notes: newScheduleNotes.trim() || 'Scheduled routine preventive maintenance service'
+      notes: newScheduleNotes.trim() || 'Scheduled routine preventive maintenance service',
     });
 
     setFeedback({
       type: 'success',
-      message: `Created preventive maintenance schedule "${title.trim()}".`
+      message: `${t('Created preventive maintenance schedule')} "${title.trim()}".`,
     });
     setIsCreateModalOpen(false);
     setTitle('');
     setNewScheduleNotes('');
   };
 
-  const getStatusBadge = (status: PMStatus) => {
-    switch (status) {
-      case 'COMPLETED':
-        return <Badge variant="success">COMPLETED</Badge>;
-      case 'UPCOMING':
-        return <Badge variant="info">UPCOMING</Badge>;
-      case 'DUE_SOON':
-        return <Badge variant="amber">DUE SOON</Badge>;
-      case 'DUE':
-        return <Badge variant="amber">DUE NOW</Badge>;
-      case 'OVERDUE':
-        return <Badge variant="danger">OVERDUE</Badge>;
-      default:
-        return <Badge variant="slate">{status}</Badge>;
-    }
-  };
-
   const handleExportExcel = () => {
     const data = filteredSchedules.map(s => {
       const veh = vehicles.find(v => v.id === s.vehicle_id);
-      const trl = trailers.find(t => t.id === s.trailer_id);
+      const trl = trailers.find(tr => tr.id === s.trailer_id);
+      const statusMeta = PM_STATUS_OPTIONS.find(o => o.value === s.status);
       return {
-        'Schedule Title': s.title,
-        'Assigned Unit': veh ? `${veh.vehicle_id} (${veh.plate_number})` : trl ? `${trl.trailer_id} (${trl.plate_number})` : 'Unassigned',
-        'Interval': s.frequency_type === 'MILEAGE' ? `Every ${s.interval_value} KM` : `Every ${s.interval_value} Days`,
-        'Last Service Odometer': s.last_service_mileage || 'N/A',
-        'Next Due Odometer': s.next_due_mileage || 'N/A',
-        'Next Due Date': s.next_due_date,
-        'Status': s.status,
-        'Notes': s.notes || ''
+        [t('Schedule Title')]: s.title,
+        [t('Assigned Unit')]: veh
+          ? `${veh.vehicle_id} (${veh.plate_number})`
+          : trl
+            ? `${trl.trailer_id} (${trl.plate_number})`
+            : t('Unassigned'),
+        [t('Interval')]:
+          s.frequency_type === 'MILEAGE'
+            ? `${t('Every')} ${s.interval_value} ${t('KM')}`
+            : s.frequency_type === 'HOURS'
+              ? `${t('Every')} ${s.interval_value} ${t('Hrs')}`
+              : `${t('Every')} ${s.interval_value} ${t('Days')}`,
+        [t('Last Service Odometer')]: s.last_service_mileage || t('N/A'),
+        [t('Next Due Odometer')]: s.next_due_mileage || t('N/A'),
+        [t('Next Due Date')]: s.next_due_date || t('N/A'),
+        [t('Status')]: t(statusMeta?.shortLabel || s.status),
+        [t('Notes')]: s.notes || '',
       };
     });
     exportToExcel(data, 'Preventive_Maintenance_Schedules');
   };
 
   const handleExportPDF = () => {
-    const headers = ['Schedule Title', 'Unit Assigned', 'Interval', 'Last Service Odo', 'Next Due Odo', 'Next Due Date', 'Status'];
+    const headers = [
+      t('Schedule Title'),
+      t('Assigned Unit'),
+      t('Interval'),
+      t('Last Service Odo'),
+      t('Next Due Odo'),
+      t('Next Due Date'),
+      t('Status'),
+    ];
     const rows = filteredSchedules.map(s => {
       const veh = vehicles.find(v => v.id === s.vehicle_id);
-      const trl = trailers.find(t => t.id === s.trailer_id);
+      const trl = trailers.find(tr => tr.id === s.trailer_id);
+      const statusMeta = PM_STATUS_OPTIONS.find(o => o.value === s.status);
       return [
         s.title,
-        veh ? `${veh.vehicle_id} (${veh.plate_number})` : trl ? `${trl.trailer_id} (${trl.plate_number})` : 'Unassigned',
-        s.frequency_type === 'MILEAGE' ? `Every ${(s.interval_value || 0).toLocaleString()} KM` : `Every ${s.interval_value || 0} Days`,
-        s.last_service_mileage ? `${(s.last_service_mileage || 0).toLocaleString()} KM` : 'N/A',
-        s.next_due_mileage ? `${(s.next_due_mileage || 0).toLocaleString()} KM` : 'N/A',
-        s.next_due_date || 'N/A',
-        s.status.replace(/_/g, ' ')
+        veh
+          ? `${veh.vehicle_id} (${veh.plate_number})`
+          : trl
+            ? `${trl.trailer_id} (${trl.plate_number})`
+            : t('Unassigned'),
+        s.frequency_type === 'MILEAGE'
+          ? `${t('Every')} ${(s.interval_value || 0).toLocaleString()} ${t('KM')}`
+          : s.frequency_type === 'HOURS'
+            ? `${t('Every')} ${s.interval_value || 0} ${t('Hrs')}`
+            : `${t('Every')} ${s.interval_value || 0} ${t('Days')}`,
+        s.last_service_mileage ? `${(s.last_service_mileage || 0).toLocaleString()} ${t('KM')}` : t('N/A'),
+        s.next_due_mileage ? `${(s.next_due_mileage || 0).toLocaleString()} ${t('KM')}` : t('N/A'),
+        s.next_due_date || t('N/A'),
+        t(statusMeta?.shortLabel || s.status.replace(/_/g, ' ')),
       ];
     });
 
-    const overdueCount = schedules.filter(s => s.status === 'OVERDUE').length;
-    const dueCount = schedules.filter(s => s.status === 'DUE' || s.status === 'DUE_SOON').length;
-    const completedCount = schedules.filter(s => s.status === 'COMPLETED').length;
+    const overdueCount = countByStatus('OVERDUE');
+    const dueCount = countByStatus('DUE') + countByStatus('DUE_SOON');
+    const completedCount = countByStatus('COMPLETED');
 
     exportToPDFReport(
-      'Preventive Maintenance Service Schedules Ledger',
+      t('Preventive Maintenance Service Schedules Ledger'),
       headers,
       rows,
       'Preventive_Maintenance_Report',
       {
         orientation: 'landscape',
-        subtitle: 'Commercial Tractor & Tanker Scheduled Service Intervals, Target Odometers & Due Dates',
+        subtitle: t('Commercial Tractor & Tanker Scheduled Service Intervals, Target Odometers & Due Dates'),
         summaryKPIs: [
-          { label: 'Total PM Schedules', value: schedules.length, color: 'slate' },
-          { label: 'Overdue Services', value: overdueCount, color: overdueCount > 0 ? 'rose' : 'emerald' },
-          { label: 'Due / Due Soon', value: dueCount, color: dueCount > 0 ? 'amber' : 'emerald' },
-          { label: 'Completed', value: completedCount, color: 'emerald' }
+          { label: t('Total PM Schedules'), value: schedules.length, color: 'slate' },
+          { label: t('Overdue Services'), value: overdueCount, color: overdueCount > 0 ? 'rose' : 'emerald' },
+          { label: t('Due / Due Soon'), value: dueCount, color: dueCount > 0 ? 'amber' : 'emerald' },
+          { label: t('Completed'), value: completedCount, color: 'emerald' },
         ],
         metadata: [
-          { label: 'Status Filter', value: statusFilter },
-          { label: 'Export Scope', value: `${filteredSchedules.length} schedules listed` }
-        ]
+          {
+            label: t('Status Filter'),
+            value:
+              statusFilter === 'ALL'
+                ? t('All')
+                : t(PM_STATUS_OPTIONS.find(o => o.value === statusFilter)?.shortLabel || statusFilter),
+          },
+          { label: t('Export Scope'), value: `${filteredSchedules.length} ${t('schedules listed')}` },
+        ],
       }
     );
   };
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-slate-200/90 p-4 rounded-xl shadow-2xs">
-        <div>
-          <h2 className="text-base font-black tracking-tight text-slate-900 flex items-center gap-2">
-            <CalendarCheck className="w-5 h-5 text-amber-600" /> PREVENTIVE MAINTENANCE SCHEDULES
-          </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Automated maintenance intervals triggered by Odometer Mileage (KM), Engine Hours, or Calendar Days.
-          </p>
-        </div>
+    <PageContainer>
+      <PageHeader
+        title={
+          <>
+            {isRTL ? 'جداول الصيانة' : 'Preventive'}
+            <br />
+            {isRTL ? 'الوقائية الدورية' : 'Maintenance'}
+          </>
+        }
+        subtitle={t('Automated maintenance intervals triggered by Odometer Mileage (KM), Engine Hours, or Calendar Days.')}
+        actions={
+          <>
+            <GhostButton onClick={handleExportExcel}>
+              {t('Excel')}
+            </GhostButton>
+            <GhostButton onClick={handleExportPDF}>
+              {isRTL ? 'تقرير PDF' : 'PDF report'}
+            </GhostButton>
+            {canManageStatus && (
+              <PrimaryButton onClick={() => setIsCreateModalOpen(true)}>
+                {isRTL ? `+ ${t('Create PM Schedule')}` : '+ Create PM schedule'}
+              </PrimaryButton>
+            )}
+          </>
+        }
+      />
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleExportExcel}
-            className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-lg border border-slate-200 transition active:scale-95 cursor-pointer"
-            title="Export to Excel"
-          >
-            <Download className="w-3.5 h-3.5 text-slate-600" />
-            <span className="hidden sm:inline">Excel</span>
-          </button>
-          <button
-            onClick={handleExportPDF}
-            className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-lg border border-slate-200 transition active:scale-95 cursor-pointer"
-            title="Export to PDF"
-          >
-            <FileText className="w-3.5 h-3.5 text-slate-600" />
-            <span className="hidden sm:inline">PDF</span>
-          </button>
-          {canManageStatus && (
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-500 text-slate-950 text-xs font-bold rounded-lg hover:bg-amber-400 transition shadow-2xs active:scale-95 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" /> Create PM Schedule
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Feedback Banner */}
       {feedback && (
         <div
           role="status"
-          className={`flex items-center justify-between gap-3 px-4 py-3 rounded-xl border text-xs font-bold shadow-2xs transition-all ${
-            feedback.type === 'success'
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-              : 'bg-rose-50 border-rose-200 text-rose-900'
-          }`}
+          style={{
+            marginBottom: 20,
+            padding: '10px 14px',
+            borderRadius: 4,
+            border: '1px solid var(--color-border)',
+            borderInlineStart: `3px solid ${feedback.type === 'success'
+              ? DESIGN_TOKENS.colors.status.availableStripe
+              : DESIGN_TOKENS.colors.status.outOfServiceStripe
+              }`,
+            background: 'var(--color-surface)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            fontSize: 13,
+          }}
         >
-          <div className="flex items-center gap-2.5">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {feedback.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <CheckCircle2 size={15} style={{ color: DESIGN_TOKENS.colors.status.availableText }} />
             ) : (
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              <AlertCircle size={15} style={{ color: DESIGN_TOKENS.colors.status.outOfServiceText }} />
             )}
             <span>{feedback.message}</span>
           </div>
           <button
             type="button"
             onClick={() => setFeedback(null)}
-            className="text-[11px] font-bold underline opacity-75 hover:opacity-100 cursor-pointer"
+            style={{
+              background: 'none',
+              border: 'none',
+              fontSize: 12,
+              textDecoration: 'underline',
+              color: 'var(--color-text-secondary)',
+              cursor: 'pointer',
+            }}
           >
-            Dismiss
+            {t('Dismiss')}
           </button>
         </div>
       )}
 
-      {/* Status Summary Cards (Interactive Filters) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
-        <button
-          type="button"
-          onClick={() => setStatusFilter('ALL')}
-          className={`text-left p-3 rounded-xl border transition cursor-pointer ${
-            statusFilter === 'ALL'
-              ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
-              : 'bg-white text-slate-800 border-slate-200/90 hover:bg-slate-50'
-          }`}
-        >
-          <span className={`text-[10px] font-extrabold uppercase tracking-wider block ${statusFilter === 'ALL' ? 'text-slate-300' : 'text-slate-400'}`}>
-            All Schedules
-          </span>
-          <span className="font-mono font-black text-xl mt-0.5 block">{schedules.length}</span>
-        </button>
+      <StatusTabs
+        tabs={[
+          { key: 'ALL', label: isRTL ? 'الكل' : 'All', count: schedules.length },
+          {
+            key: 'UPCOMING',
+            label: isRTL ? 'مجدولة' : 'Upcoming',
+            count: countByStatus('UPCOMING'),
+            stripe: DESIGN_TOKENS.colors.status.onTripStripe,
+          },
+          {
+            key: 'DUE_SOON',
+            label: isRTL ? 'مستحقة قريباً' : 'Due soon',
+            count: countByStatus('DUE_SOON'),
+            stripe: DESIGN_TOKENS.colors.status.workshopStripe,
+          },
+          {
+            key: 'DUE',
+            label: isRTL ? 'مستحقة الآن' : 'Due now',
+            count: countByStatus('DUE'),
+            stripe: DESIGN_TOKENS.colors.status.workshopStripe,
+          },
+          {
+            key: 'OVERDUE',
+            label: isRTL ? 'متأخرة' : 'Overdue',
+            count: countByStatus('OVERDUE'),
+            stripe: DESIGN_TOKENS.colors.status.outOfServiceStripe,
+          },
+          {
+            key: 'COMPLETED',
+            label: isRTL ? 'مكتملة' : 'Completed',
+            count: countByStatus('COMPLETED'),
+            stripe: DESIGN_TOKENS.colors.status.availableStripe,
+          },
+        ]}
+        activeKey={statusFilter}
+        onChange={k => {
+          setStatusFilter(k);
+          setPage(1);
+        }}
+        searchValue={search}
+        onSearchChange={val => {
+          setSearch(val);
+          setPage(1);
+        }}
+        searchPlaceholder={t('Search PM schedule title, unit, or notes...')}
+      />
 
-        <button
-          type="button"
-          onClick={() => setStatusFilter('UPCOMING')}
-          className={`text-left p-3 rounded-xl border transition cursor-pointer ${
-            statusFilter === 'UPCOMING'
-              ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
-              : 'bg-sky-50/60 text-sky-950 border-sky-200/80 hover:bg-sky-50'
-          }`}
-        >
-          <span className={`text-[10px] font-extrabold uppercase tracking-wider block ${statusFilter === 'UPCOMING' ? 'text-sky-100' : 'text-sky-700'}`}>
-            Upcoming
-          </span>
-          <span className="font-mono font-black text-xl mt-0.5 block">{countByStatus('UPCOMING')}</span>
-        </button>
+      <DataTable
+        columns={[
+          { label: isRTL ? 'مهمة الصيانة' : 'Service task', align: 'start' },
+          { label: isRTL ? 'المركبة / المقطورة' : 'Assigned unit', align: 'start' },
+          { label: isRTL ? 'التكرار' : 'Frequency', align: 'start' },
+          { label: isRTL ? 'الفاصل' : 'Interval', align: 'end' },
+          { label: isRTL ? 'موعد الصيانة القادم' : 'Next due target', align: 'start' },
+          { label: isRTL ? 'الحالة' : 'Status', align: 'start' },
+        ]}
+        hasActionsColumn={canManageStatus}
+        isEmpty={pagedSchedules.length === 0}
+        emptyMessage={t('No preventive maintenance schedules found matching filter.')}
+        onClearFilters={() => {
+          setSearch('');
+          setStatusFilter('ALL');
+          setPage(1);
+        }}
+      >
+        {pagedSchedules.map(s => {
+          const veh = vehicles.find(v => v.id === s.vehicle_id);
+          const trl = trailers.find(tr => tr.id === s.trailer_id);
+          const meta = PM_STATUS_OPTIONS.find(o => o.value === s.status) || PM_STATUS_OPTIONS[0];
+          const isRowUpdating = updatingRowId === s.id;
 
-        <button
-          type="button"
-          onClick={() => setStatusFilter('DUE_SOON')}
-          className={`text-left p-3 rounded-xl border transition cursor-pointer ${
-            statusFilter === 'DUE_SOON'
-              ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-xs'
-              : 'bg-amber-50/60 text-amber-950 border-amber-200/80 hover:bg-amber-50'
-          }`}
-        >
-          <span className={`text-[10px] font-extrabold uppercase tracking-wider block ${statusFilter === 'DUE_SOON' ? 'text-slate-900' : 'text-amber-800'}`}>
-            Due Soon
-          </span>
-          <span className="font-mono font-black text-xl mt-0.5 block">{countByStatus('DUE_SOON')}</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setStatusFilter('DUE')}
-          className={`text-left p-3 rounded-xl border transition cursor-pointer ${
-            statusFilter === 'DUE'
-              ? 'bg-orange-500 text-white border-orange-500 shadow-xs'
-              : 'bg-orange-50/60 text-orange-950 border-orange-200/80 hover:bg-orange-50'
-          }`}
-        >
-          <span className={`text-[10px] font-extrabold uppercase tracking-wider block ${statusFilter === 'DUE' ? 'text-orange-100' : 'text-orange-800'}`}>
-            Due Now
-          </span>
-          <span className="font-mono font-black text-xl mt-0.5 block">{countByStatus('DUE')}</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setStatusFilter('OVERDUE')}
-          className={`text-left p-3 rounded-xl border transition cursor-pointer ${
-            statusFilter === 'OVERDUE'
-              ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
-              : 'bg-rose-50/60 text-rose-950 border-rose-200/80 hover:bg-rose-50'
-          }`}
-        >
-          <span className={`text-[10px] font-extrabold uppercase tracking-wider block ${statusFilter === 'OVERDUE' ? 'text-rose-100' : 'text-rose-800'}`}>
-            Overdue
-          </span>
-          <span className="font-mono font-black text-xl mt-0.5 block">{countByStatus('OVERDUE')}</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setStatusFilter('COMPLETED')}
-          className={`text-left p-3 rounded-xl border transition cursor-pointer ${
-            statusFilter === 'COMPLETED'
-              ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-              : 'bg-emerald-50/60 text-emerald-950 border-emerald-200/80 hover:bg-emerald-50'
-          }`}
-        >
-          <span className={`text-[10px] font-extrabold uppercase tracking-wider block ${statusFilter === 'COMPLETED' ? 'text-emerald-100' : 'text-emerald-800'}`}>
-            Completed
-          </span>
-          <span className="font-mono font-black text-xl mt-0.5 block">{countByStatus('COMPLETED')}</span>
-        </button>
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white border border-slate-200/90 p-3 rounded-xl shadow-2xs">
-        <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-          <input
-            type="text"
-            placeholder="Search PM schedule title, unit, or notes..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-amber-500 focus:outline-none"
-          />
-        </div>
-
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Filter className="w-4 h-4 text-slate-400" />
-          <select
-            aria-label="Filter by maintenance status"
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-            className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-700 font-semibold focus:bg-white focus:outline-none cursor-pointer"
-          >
-            <option value="ALL">All Maintenance Statuses</option>
-            <option value="UPCOMING">UPCOMING</option>
-            <option value="DUE_SOON">DUE SOON</option>
-            <option value="DUE">DUE NOW</option>
-            <option value="OVERDUE">OVERDUE</option>
-            <option value="COMPLETED">COMPLETED</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Schedule Table */}
-      <div className="bg-white border border-slate-200/90 rounded-xl overflow-hidden shadow-2xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-700">
-            <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold uppercase text-slate-500 tracking-wider">
-              <tr>
-                <th className="p-3.5">Schedule Title & Notes</th>
-                <th className="p-3.5">Assigned Unit</th>
-                <th className="p-3.5">Frequency</th>
-                <th className="p-3.5">Interval</th>
-                <th className="p-3.5">Next Due Target</th>
-                <th className="p-3.5">Status</th>
-                {canManageStatus && (
-                  <th className="p-3.5 text-right">Status Management</th>
+          return (
+            <DataRow
+              key={s.id}
+              stripeColor={meta.stripe}
+              onClick={canManageStatus ? () => openChangeStatusModal(s) : undefined}
+              actions={
+                canManageStatus ? (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <EditorialSelect
+                      aria-label={`${t('Quick status select for')} ${s.title}`}
+                      value={s.status}
+                      disabled={isRowUpdating}
+                      onChange={e => handleQuickStatusChange(s, e.target.value as PMStatus)}
+                      style={{ paddingBlock: 4, fontSize: 12 }}
+                    >
+                      {PM_STATUS_OPTIONS.map(opt => (
+                        <option key={opt.value} value={opt.value}>
+                          {t(opt.shortLabel)}
+                        </option>
+                      ))}
+                    </EditorialSelect>
+                    <RowAction
+                      icon={isRowUpdating ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                      title={t('Change Status')}
+                      onClick={() => openChangeStatusModal(s)}
+                    />
+                  </div>
+                ) : null
+              }
+            >
+              <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-ink)' }}>{s.title}</div>
+                {s.notes && (
+                  <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>{s.notes}</div>
                 )}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 font-medium">
-              {filteredSchedules.length === 0 ? (
-                <tr>
-                  <td colSpan={canManageStatus ? 7 : 6} className="p-8 text-center text-slate-400">
-                    No preventive maintenance schedules found matching filter.
-                  </td>
-                </tr>
-              ) : (
-                filteredSchedules.map(s => {
-                  const veh = vehicles.find(v => v.id === s.vehicle_id);
-                  const trl = trailers.find(t => t.id === s.trailer_id);
-                  const isRowUpdating = updatingRowId === s.id;
+              </td>
 
-                  return (
-                    <tr key={s.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="p-3.5">
-                        <div className="font-bold text-slate-900">{s.title}</div>
-                        {s.notes && (
-                          <div className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
-                            {s.notes}
-                          </div>
-                        )}
-                      </td>
-                      <td className="p-3.5">
-                        {veh ? (
-                          <span className="font-bold text-slate-900">{veh.vehicle_id} ({veh.plate_number})</span>
-                        ) : trl ? (
-                          <span className="font-bold text-blue-700">{trl.trailer_id} ({trl.plate_number})</span>
-                        ) : (
-                          <span className="text-slate-400 italic">Fleet General</span>
-                        )}
-                      </td>
-                      <td className="p-3.5">
-                        <span className="px-2 py-0.5 rounded bg-slate-100 font-mono text-slate-700 text-[11px] border border-slate-200">
-                          {s.frequency_type}
-                        </span>
-                      </td>
-                      <td className="p-3.5 font-mono font-bold text-slate-900">
-                        {(s.interval_value || 0).toLocaleString()}{' '}
-                        {s.frequency_type === 'MILEAGE' ? 'KM' : s.frequency_type === 'HOURS' ? 'Hrs' : 'Days'}
-                      </td>
-                      <td className="p-3.5 font-mono text-slate-600">
-                        <div>{s.next_due_date || 'N/A'}</div>
-                        {(s.next_due_mileage || 0) > 0 && (
-                          <div className="text-[11px] text-slate-400">
-                            Target: {(s.next_due_mileage || 0).toLocaleString()} KM
-                          </div>
-                        )}
-                      </td>
-                      <td className="p-3.5">
-                        <div className="flex items-center gap-2">
-                          {getStatusBadge(s.status)}
-                          {isRowUpdating && (
-                            <Loader2 className="w-3.5 h-3.5 text-amber-600 animate-spin" />
-                          )}
-                        </div>
-                      </td>
-                      {canManageStatus && (
-                        <td className="p-3.5 text-right">
-                          <div className="inline-flex items-center justify-end gap-2">
-                            <select
-                              aria-label={`Quick status select for ${s.title}`}
-                              value={s.status}
-                              disabled={isRowUpdating}
-                              onChange={e => handleQuickStatusChange(s, e.target.value as PMStatus)}
-                              className="rounded-lg border border-slate-200 bg-slate-50 hover:bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-800 focus:border-amber-500 focus:bg-white focus:outline-none transition cursor-pointer disabled:opacity-50"
-                            >
-                              {PM_STATUS_OPTIONS.map(opt => (
-                                <option key={opt.value} value={opt.value}>
-                                  {opt.shortLabel}
-                                </option>
-                              ))}
-                            </select>
+              <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                {veh ? (
+                  <div>
+                    <div
+                      dir="ltr"
+                      style={{ fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}
+                    >
+                      {veh.vehicle_id}
+                    </div>
+                    <div
+                      dir="ltr"
+                      style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, color: 'var(--color-text-muted)', marginTop: 2 }}
+                    >
+                      {veh.plate_number}
+                    </div>
+                  </div>
+                ) : trl ? (
+                  <div>
+                    <div
+                      dir="ltr"
+                      style={{ fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}
+                    >
+                      {trl.trailer_id}
+                    </div>
+                    <div
+                      dir="ltr"
+                      style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, color: 'var(--color-text-muted)', marginTop: 2 }}
+                    >
+                      {trl.plate_number}
+                    </div>
+                  </div>
+                ) : (
+                  <span style={{ fontSize: 13, color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+                    {t('Fleet General')}
+                  </span>
+                )}
+              </td>
 
-                            <button
-                              type="button"
-                              onClick={() => openChangeStatusModal(s)}
-                              disabled={isRowUpdating}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white hover:bg-amber-50 text-slate-700 hover:text-slate-950 font-bold text-[11px] rounded-lg border border-slate-200 hover:border-amber-300 shadow-2xs transition active:scale-95 cursor-pointer disabled:opacity-50"
-                            >
-                              <RefreshCw className="w-3 h-3 text-amber-600" />
-                              Change Status
-                            </button>
-                          </div>
-                        </td>
-                      )}
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+              <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{t(s.frequency_type)}</span>
+              </td>
+
+              <td style={{ padding: '14px 16px', verticalAlign: 'middle', textAlign: 'end' }}>
+                <span dir="ltr" style={{ fontFamily: 'var(--font-mono)', fontSize: 13.5, color: 'var(--color-ink)' }}>
+                  {(s.interval_value || 0).toLocaleString()}{' '}
+                  {s.frequency_type === 'MILEAGE' ? t('KM') : s.frequency_type === 'HOURS' ? t('Hrs') : t('Days')}
+                </span>
+              </td>
+
+              <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                <div dir="ltr" style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--color-ink)' }}>
+                  {s.next_due_date || t('N/A')}
+                </div>
+                {(s.next_due_mileage || 0) > 0 && (
+                  <div
+                    dir="ltr"
+                    style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, color: 'var(--color-text-muted)', marginTop: 2 }}
+                  >
+                    {(s.next_due_mileage || 0).toLocaleString()} {t('KM')}
+                  </div>
+                )}
+              </td>
+
+              <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                <StatusText label={t(meta.label)} color={meta.text} />
+              </td>
+            </DataRow>
+          );
+        })}
+      </DataTable>
+
+      <TableFooter
+        summaryText={
+          isRTL
+            ? `${filteredSchedules.length} من ${schedules.length} جدول صيانة`
+            : `${filteredSchedules.length} of ${schedules.length} schedules`
+        }
+        page={page}
+        totalPages={totalPages}
+        onPrev={() => setPage(p => Math.max(1, p - 1))}
+        onNext={() => setPage(p => Math.min(totalPages, p + 1))}
+      />
 
       {/* Change Status Modal */}
       {selectedSchedule && (
         <Modal
           isOpen={!!selectedSchedule}
           onClose={() => !isSavingStatusModal && setSelectedSchedule(null)}
-          title="Update Preventive Maintenance Status"
-          subtitle="Modify schedule lifecycle status and log workshop service remarks."
+          title={t('Update Preventive Maintenance Status')}
+          subtitle={t('Modify schedule lifecycle status and log workshop service remarks.')}
           maxWidth="lg"
         >
-          <form onSubmit={handleModalStatusSubmit} className="space-y-4 text-xs font-sans">
-            {/* Schedule Context Summary Card */}
-            <div className="bg-slate-50/80 border border-slate-200/90 rounded-xl p-4 space-y-2.5">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
-                    Maintenance Schedule Record
-                  </span>
-                  <h4 className="text-sm font-black text-slate-900 mt-0.5">
-                    {selectedSchedule.title}
-                  </h4>
-                </div>
-                <div className="shrink-0">
-                  {getStatusBadge(selectedSchedule.status)}
-                </div>
+          <form onSubmit={handleModalStatusSubmit} className="space-y-4">
+            <div
+              style={{
+                padding: '14px 16px',
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 4,
+              }}
+            >
+              <div style={{ fontSize: 11.5, color: 'var(--color-text-muted)' }}>
+                {t('Maintenance Schedule Record')}
               </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-200/70 text-[11px]">
-                <div>
-                  <span className="text-slate-400 font-semibold block">Assigned Unit</span>
-                  <span className="font-bold text-slate-800">
-                    {(() => {
-                      const v = vehicles.find(x => x.id === selectedSchedule.vehicle_id);
-                      const tr = trailers.find(x => x.id === selectedSchedule.trailer_id);
-                      if (v) return `${v.vehicle_id} (${v.plate_number})`;
-                      if (tr) return `${tr.trailer_id} (${tr.plate_number})`;
-                      return 'Fleet General';
-                    })()}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-slate-400 font-semibold block">Interval Rule</span>
-                  <span className="font-mono font-bold text-slate-800">
-                    {(selectedSchedule.interval_value || 0).toLocaleString()} {selectedSchedule.frequency_type}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-slate-400 font-semibold block">Next Due Target</span>
-                  <span className="font-mono font-bold text-slate-800">
-                    {selectedSchedule.next_due_date ||
-                      (selectedSchedule.next_due_mileage
-                        ? `${(selectedSchedule.next_due_mileage || 0).toLocaleString()} KM`
-                        : 'N/A')}
-                  </span>
-                </div>
-              </div>
+              <h4 style={{ margin: '4px 0 0', fontSize: 15, fontWeight: 600, color: 'var(--color-ink)' }}>
+                {selectedSchedule.title}
+              </h4>
             </div>
 
-            {/* Select Target Status */}
-            <div className="bg-slate-50/70 border border-slate-200/90 rounded-xl p-4 space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-200/80">
-                <div className="flex items-center gap-2">
-                  <Wrench className="w-3.5 h-3.5 text-amber-600" />
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700">
-                    Select New Maintenance Status
-                  </span>
-                </div>
-                <span className="text-[10px] font-semibold text-amber-700">Required</span>
-              </div>
-
+            <div>
+              <label className="text-xs font-medium text-[#5B574F] block mb-2">
+                {t('Select New Maintenance Status')}
+              </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {PM_STATUS_OPTIONS.map(option => {
                   const isSelected = targetStatus === option.value;
@@ -701,18 +649,23 @@ export const MaintenanceScheduleList: React.FC = () => {
                       key={option.value}
                       type="button"
                       onClick={() => setTargetStatus(option.value)}
-                      className={`text-left p-3 rounded-xl border transition flex flex-col justify-between gap-1.5 cursor-pointer ${
-                        isSelected
-                          ? 'border-amber-500 bg-amber-50/90 ring-2 ring-amber-500/20 shadow-2xs'
-                          : 'border-slate-200 bg-white hover:bg-slate-50/80'
-                      }`}
+                      style={{
+                        textAlign: 'start',
+                        padding: 12,
+                        borderRadius: 4,
+                        border: isSelected
+                          ? '1.5px solid var(--color-ink)'
+                          : '1px solid var(--color-border)',
+                        borderInlineStart: `3px solid ${option.stripe}`,
+                        background: isSelected ? 'var(--color-row-hover)' : 'var(--color-surface)',
+                        cursor: 'pointer',
+                      }}
                     >
-                      <div className="flex items-center justify-between w-full">
-                        <span className="font-black text-xs text-slate-900">{option.label}</span>
-                        <Badge variant={option.badgeVariant}>{option.shortLabel}</Badge>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}>
+                        {t(option.label)}
                       </div>
-                      <p className="text-[11px] text-slate-500 leading-snug">
-                        {option.description}
+                      <p style={{ margin: '4px 0 0', fontSize: 11.5, color: 'var(--color-text-muted)' }}>
+                        {t(option.description)}
                       </p>
                     </button>
                   );
@@ -720,51 +673,26 @@ export const MaintenanceScheduleList: React.FC = () => {
               </div>
             </div>
 
-            {/* Service Remarks / Status Notes */}
-            <div className="bg-slate-50/70 border border-slate-200/90 rounded-xl p-4 space-y-2">
-              <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5 text-slate-400" />
-                Maintenance Status Notes / Remarks
+            <div>
+              <label className="text-xs font-medium text-[#5B574F] block mb-1.5">
+                {t('Maintenance Status Notes / Remarks')}
               </label>
               <textarea
                 rows={2}
                 value={statusNotes}
                 onChange={e => setStatusNotes(e.target.value)}
-                placeholder="Optional workshop notes, bay assignment, or completion remarks..."
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition resize-none"
+                placeholder={t('Optional workshop notes, bay assignment, or completion remarks...')}
+                className="nf-field resize-none"
               />
-              <p className="text-[11px] text-slate-400">
-                Updating the status preserves all existing interval, vehicle assignment, and mileage targets.
-              </p>
             </div>
 
-            {/* Footer Buttons */}
-            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200">
-              <button
-                type="button"
-                disabled={isSavingStatusModal}
-                onClick={() => setSelectedSchedule(null)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-lg border border-slate-200 transition active:scale-95 cursor-pointer disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSavingStatusModal}
-                className="inline-flex items-center gap-1.5 px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-lg shadow-xs transition active:scale-95 cursor-pointer disabled:opacity-50"
-              >
-                {isSavingStatusModal ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    Saving Status...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    Save Status Update
-                  </>
-                )}
-              </button>
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#DDD8CB]">
+              <SecondaryButton disabled={isSavingStatusModal} onClick={() => setSelectedSchedule(null)}>
+                {t('Cancel')}
+              </SecondaryButton>
+              <PrimaryButton type="submit" disabled={isSavingStatusModal}>
+                {isSavingStatusModal ? t('Saving Status...') : t('Save Status Update')}
+              </PrimaryButton>
             </div>
           </form>
         </Modal>
@@ -774,207 +702,173 @@ export const MaintenanceScheduleList: React.FC = () => {
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        title="Create Preventive Maintenance Schedule"
-        subtitle="Automate recurring service intervals for fuel trucks and tanker trailers."
+        title={t('Create Preventive Maintenance Schedule')}
+        subtitle={t('Automate recurring service intervals for fuel trucks and tanker trailers.')}
         maxWidth="lg"
       >
-        <form onSubmit={handleCreateSchedule} className="space-y-4 text-xs font-sans">
-          <div className="bg-slate-50/70 border border-slate-200/90 rounded-xl p-4 space-y-3.5">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-200/80">
-              <div className="flex items-center gap-2">
-                <Truck className="w-3.5 h-3.5 text-amber-600" />
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700">
-                  1. Schedule Definition & Target Asset
-                </span>
-              </div>
-              <span className="text-[10px] font-semibold text-amber-700">* Required fields</span>
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">
-                Schedule Title <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. 10,000 KM Engine Oil & Filter Service"
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 font-bold focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Asset Category
-                </label>
-                <select
-                  value={unitType}
-                  onChange={e => setUnitType(e.target.value as 'VEHICLE' | 'TRAILER')}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 font-semibold focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
-                >
-                  <option value="VEHICLE">Tractor Head Truck</option>
-                  <option value="TRAILER">Fuel Tanker Trailer</option>
-                </select>
-              </div>
-
-              {unitType === 'VEHICLE' ? (
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Target Tractor Truck <span className="text-rose-500">*</span>
-                  </label>
-                  <select
-                    required
-                    value={targetVehicleId}
-                    onChange={e => setTargetVehicleId(e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 font-bold focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
-                  >
-                    <option value="">-- Select Truck --</option>
-                    {vehicles.map(v => (
-                      <option key={v.id} value={v.id}>
-                        {v.vehicle_id} ({v.plate_number})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ) : (
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Target Tanker Trailer <span className="text-rose-500">*</span>
-                  </label>
-                  <select
-                    required
-                    value={targetTrailerId}
-                    onChange={e => setTargetTrailerId(e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 font-bold focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
-                  >
-                    <option value="">-- Select Trailer --</option>
-                    {trailers.map(tr => (
-                      <option key={tr.id} value={tr.id}>
-                        {tr.trailer_id} ({tr.plate_number})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
+        <form onSubmit={handleCreateSchedule} className="space-y-4">
+          <div>
+            <label className="text-xs font-medium text-[#5B574F] block mb-1.5">
+              {t('Schedule Title')} *
+            </label>
+            <input
+              type="text"
+              required
+              placeholder={t('e.g. 10,000 KM Engine Oil & Filter Service')}
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              className="nf-field"
+            />
           </div>
 
-          <div className="bg-slate-50/70 border border-slate-200/90 rounded-xl p-4 space-y-3.5">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-200/80">
-              <div className="flex items-center gap-2">
-                <Clock className="w-3.5 h-3.5 text-amber-600" />
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700">
-                  2. Interval Threshold & Initial Status
-                </span>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+              <label className="text-xs font-medium text-[#5B574F] block mb-1.5">
+                {t('Asset Category')}
+              </label>
+              <select
+                value={unitType}
+                onChange={e => setUnitType(e.target.value as 'VEHICLE' | 'TRAILER')}
+                className="nf-field"
+              >
+                <option value="VEHICLE">{t('Tractor Head Truck')}</option>
+                <option value="TRAILER">{t('Fuel Tanker Trailer')}</option>
+              </select>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            {unitType === 'VEHICLE' ? (
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Frequency Rule</label>
+                <label className="text-xs font-medium text-[#5B574F] block mb-1.5">
+                  {t('Target Tractor Truck')} *
+                </label>
                 <select
-                  value={frequencyType}
-                  onChange={e => setFrequencyType(e.target.value as any)}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 font-semibold focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
+                  required
+                  value={targetVehicleId}
+                  onChange={e => setTargetVehicleId(e.target.value)}
+                  className="nf-field"
                 >
-                  <option value="MILEAGE">Mileage Interval (KM)</option>
-                  <option value="HOURS">Engine Hours</option>
-                  <option value="DAYS">Calendar Days</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Interval Value</label>
-                <input
-                  type="number"
-                  min={1}
-                  value={intervalValue}
-                  onChange={e => setIntervalValue(Number(e.target.value))}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 font-mono font-bold focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Initial Status</label>
-                <select
-                  value={initialStatus}
-                  onChange={e => setInitialStatus(e.target.value as PMStatus)}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 font-bold focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
-                >
-                  {PM_STATUS_OPTIONS.map(opt => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.shortLabel}
+                  <option value="">{t('-- Select Truck --')}</option>
+                  {vehicles.map(v => (
+                    <option key={v.id} value={v.id}>
+                      {v.vehicle_id} ({v.plate_number})
                     </option>
                   ))}
                 </select>
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            ) : (
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Last Service (KM)</label>
-                <input
-                  type="number"
-                  min={0}
-                  value={lastServiceMileage}
-                  onChange={e => setLastServiceMileage(Number(e.target.value))}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 font-mono focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
-                />
+                <label className="text-xs font-medium text-[#5B574F] block mb-1.5">
+                  {t('Target Tanker Trailer')} *
+                </label>
+                <select
+                  required
+                  value={targetTrailerId}
+                  onChange={e => setTargetTrailerId(e.target.value)}
+                  className="nf-field"
+                >
+                  <option value="">{t('-- Select Trailer --')}</option>
+                  {trailers.map(tr => (
+                    <option key={tr.id} value={tr.id}>
+                      {tr.trailer_id} ({tr.plate_number})
+                    </option>
+                  ))}
+                </select>
               </div>
+            )}
+          </div>
 
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Next Due (KM)</label>
-                <input
-                  type="number"
-                  min={0}
-                  value={nextDueMileage}
-                  onChange={e => setNextDueMileage(Number(e.target.value))}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 font-mono focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Next Due Date</label>
-                <input
-                  type="date"
-                  value={nextDueDate}
-                  onChange={e => setNextDueDate(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 font-mono focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
-                />
-              </div>
-            </div>
-
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">Service Notes (Optional)</label>
+              <label className="text-xs font-medium text-[#5B574F] block mb-1.5">{t('Frequency Rule')}</label>
+              <select
+                value={frequencyType}
+                onChange={e => setFrequencyType(e.target.value as 'MILEAGE' | 'HOURS' | 'DAYS')}
+                className="nf-field"
+              >
+                <option value="MILEAGE">{t('Mileage Interval (KM)')}</option>
+                <option value="HOURS">{t('Engine Hours')}</option>
+                <option value="DAYS">{t('Calendar Days')}</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-[#5B574F] block mb-1.5">{t('Interval Value')}</label>
               <input
-                type="text"
-                value={newScheduleNotes}
-                onChange={e => setNewScheduleNotes(e.target.value)}
-                placeholder="e.g. Replace 15W-40 oil, primary/secondary filters, and inspect belts."
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
+                type="number"
+                min={1}
+                dir="ltr"
+                value={intervalValue}
+                onChange={e => setIntervalValue(Number(e.target.value))}
+                className="nf-field font-mono"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-[#5B574F] block mb-1.5">{t('Initial Status')}</label>
+              <select
+                value={initialStatus}
+                onChange={e => setInitialStatus(e.target.value as PMStatus)}
+                className="nf-field"
+              >
+                {PM_STATUS_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>
+                    {t(opt.shortLabel)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            <div>
+              <label className="text-xs font-medium text-[#5B574F] block mb-1.5">{t('Last Service (KM)')}</label>
+              <input
+                type="number"
+                min={0}
+                dir="ltr"
+                value={lastServiceMileage}
+                onChange={e => setLastServiceMileage(Number(e.target.value))}
+                className="nf-field font-mono"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-[#5B574F] block mb-1.5">{t('Next Due (KM)')}</label>
+              <input
+                type="number"
+                min={0}
+                dir="ltr"
+                value={nextDueMileage}
+                onChange={e => setNextDueMileage(Number(e.target.value))}
+                className="nf-field font-mono"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-[#5B574F] block mb-1.5">{t('Next Due Date')}</label>
+              <input
+                type="date"
+                dir="ltr"
+                value={nextDueDate}
+                onChange={e => setNextDueDate(e.target.value)}
+                className="nf-field font-mono"
               />
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200">
-            <button
-              type="button"
-              onClick={() => setIsCreateModalOpen(false)}
-              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-lg border border-slate-200 transition active:scale-95 cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-lg shadow-xs transition active:scale-95 cursor-pointer"
-            >
-              Save Schedule
-            </button>
+          <div>
+            <label className="text-xs font-medium text-[#5B574F] block mb-1.5">{t('Service Notes (Optional)')}</label>
+            <input
+              type="text"
+              value={newScheduleNotes}
+              onChange={e => setNewScheduleNotes(e.target.value)}
+              placeholder={t('e.g. Replace 15W-40 oil, primary/secondary filters, and inspect belts.')}
+              className="nf-field"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#DDD8CB]">
+            <SecondaryButton onClick={() => setIsCreateModalOpen(false)}>{t('Cancel')}</SecondaryButton>
+            <PrimaryButton type="submit">{t('Save Schedule')}</PrimaryButton>
           </div>
         </form>
       </Modal>
-    </div>
+    </PageContainer>
   );
 };

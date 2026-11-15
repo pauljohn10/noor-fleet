@@ -25,6 +25,7 @@ const getBreadcrumb = (tab: NavItemKey, isRTL: boolean): { section: string; page
     gpsSync:        { section: 'GPS',          sectionAr: 'GPS',         page: 'GPS Diagnostics',         pageAr: 'تشخيص GPS' },
     drivers:        { section: 'Operations',   sectionAr: 'العمليات',    page: 'Drivers',                 pageAr: 'السائقون' },
     inspections:    { section: 'Operations',   sectionAr: 'العمليات',    page: 'Reports Inbox',           pageAr: 'صندوق التقارير' },
+    statusMatrix:   { section: 'Operations',   sectionAr: 'العمليات',    page: 'Vehicle Status Matrix',   pageAr: 'مصفوفة حالة المركبات' },
     workOrders:     { section: 'Maintenance',  sectionAr: 'الصيانة',     page: 'Job Cards',               pageAr: 'بطاقات العمل' },
     preventive:     { section: 'Maintenance',  sectionAr: 'الصيانة',     page: 'Preventive',              pageAr: 'الصيانة الوقائية' },
     inventory:      { section: 'Maintenance',  sectionAr: 'الصيانة',     page: 'Spare Parts',             pageAr: 'قطع الغيار' },
@@ -71,6 +72,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', onOpenS
   }, []);
 
   const { section, page } = getBreadcrumb(activeTab, isRTL);
+  const uiFont = isRTL ? 'var(--font-arabic)' : 'var(--font-ui)';
 
   const headerStyle: React.CSSProperties = {
     position: 'sticky',
@@ -83,7 +85,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', onOpenS
     padding: '0 20px',
     background: 'var(--color-page-bg)',
     borderBottom: '1px solid var(--color-border)',
-    fontFamily: 'var(--font-ui)',
+    fontFamily: uiFont,
     flexShrink: 0,
   };
 
@@ -98,7 +100,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', onOpenS
     border: 'none',
     borderRadius: 4,
     cursor: 'pointer',
-    fontFamily: 'var(--font-ui)',
+    fontFamily: uiFont,
     transition: 'background 0.12s',
     whiteSpace: 'nowrap' as const,
   };
@@ -185,7 +187,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab = 'dashboard', onOpenS
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontFamily: 'var(--font-ui)',
+              fontFamily: uiFont,
             }}
             title={currentProfile.full_name}
           >
@@ -246,6 +248,7 @@ const MenuRow: React.FC<{
   danger?: boolean;
 }> = ({ icon, label, onClick, danger }) => {
   const [hovered, setHovered] = useState(false);
+  const { isRTL } = useI18n();
   return (
     <button
       onClick={onClick}
@@ -264,7 +267,7 @@ const MenuRow: React.FC<{
         background: hovered ? (danger ? '#FEF2F2' : 'var(--color-sidebar-hover)') : 'none',
         border: 'none',
         cursor: 'pointer',
-        fontFamily: 'var(--font-ui)',
+        fontFamily: isRTL ? 'var(--font-arabic)' : 'var(--font-ui)',
         transition: 'background 0.12s',
       }}
     >

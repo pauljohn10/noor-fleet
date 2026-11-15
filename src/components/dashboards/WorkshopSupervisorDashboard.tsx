@@ -1,241 +1,329 @@
 import React, { useState } from 'react';
-import { 
-  Wrench, Plus, Users, ShieldCheck, Clock, AlertTriangle, Package, Calendar, ArrowRight
+import {
+  Wrench,
+  Plus,
+  Users,
+  ShieldCheck,
+  Clock,
+  AlertTriangle,
+  Package,
+  Calendar,
 } from 'lucide-react';
 import { useFleet } from '../../context/FleetContext';
+import { useI18n } from '../../context/I18nContext';
 import { StatCard } from '../common/StatCard';
 import { Badge } from '../common/Badge';
 import { JobCardFormModal } from '../workOrders/JobCardFormModal';
-import { WorkOrder, WOStatus } from '../../types';
+import { WOStatus } from '../../types';
+import {
+  EDITORIAL_STATUS,
+  PageContainer,
+  PageHeader,
+  EditorialSection,
+  DataTable,
+  DataRow,
+  PrimaryButton,
+  SecondaryButton,
+  GhostButton,
+} from '../common/EditorialUI';
 
 interface WorkshopSupervisorDashboardProps {
   onNavigateTab: (tab: any) => void;
 }
 
-export const WorkshopSupervisorDashboard: React.FC<WorkshopSupervisorDashboardProps> = ({ onNavigateTab }) => {
-  const { workOrders, technicians, vehicles, parts } = useFleet();
+export const WorkshopSupervisorDashboard: React.FC<WorkshopSupervisorDashboardProps> = ({
+  onNavigateTab,
+}) => {
+  const { workOrders, technicians, vehicles } = useFleet();
+  const { isRTL } = useI18n();
   const [isWOModalOpen, setIsWOModalOpen] = useState(false);
 
-  const openWOs = workOrders.filter(w => w.status !== 'RELEASED' && w.status !== 'CANCELLED');
-  const criticalJobs = workOrders.filter(w => w.priority === 'CRITICAL' && w.status !== 'RELEASED');
-  const inProgressJobs = workOrders.filter(w => w.status === 'IN_PROGRESS');
-  const waitingPartsJobs = workOrders.filter(w => w.status === 'WAITING_FOR_PARTS');
-  const qcPendingJobs = workOrders.filter(w => w.status === 'QC_INSPECTION');
-  const completedTodayJobs = workOrders.filter(w => w.status === 'COMPLETED' || w.status === 'RELEASED');
-  
+  const openWOs = workOrders.filter((w) => w.status !== 'RELEASED' && w.status !== 'CANCELLED');
+  const criticalJobs = workOrders.filter((w) => w.priority === 'CRITICAL' && w.status !== 'RELEASED');
+  const inProgressJobs = workOrders.filter((w) => w.status === 'IN_PROGRESS');
+  const waitingPartsJobs = workOrders.filter((w) => w.status === 'WAITING_FOR_PARTS');
+  const qcPendingJobs = workOrders.filter((w) => w.status === 'QC_INSPECTION');
+  const completedTodayJobs = workOrders.filter(
+    (w) => w.status === 'COMPLETED' || w.status === 'RELEASED'
+  );
+
   const today = new Date();
-  const overdueJobs = workOrders.filter(w => {
+  const overdueJobs = workOrders.filter((w) => {
     if (!w.estimated_completion) return false;
-    return new Date(w.estimated_completion) < today && w.status !== 'RELEASED' && w.status !== 'COMPLETED';
+    return (
+      new Date(w.estimated_completion) < today && w.status !== 'RELEASED' && w.status !== 'COMPLETED'
+    );
   });
 
   const pipelineStages: { status: WOStatus; label: string }[] = [
-    { status: 'REPORTED', label: 'Reported' },
-    { status: 'INSPECTION', label: 'Inspection' },
-    { status: 'ASSIGNED', label: 'Assigned' },
-    { status: 'IN_PROGRESS', label: 'In Progress' },
-    { status: 'WAITING_FOR_PARTS', label: 'Waiting Parts' },
-    { status: 'QC_INSPECTION', label: 'QC' },
-    { status: 'RELEASED', label: 'Released' }
+    { status: 'REPORTED', label: isRTL ? 'تم البلاغ' : 'Reported' },
+    { status: 'INSPECTION', label: isRTL ? 'قيد الفحص' : 'Inspection' },
+    { status: 'ASSIGNED', label: isRTL ? 'تم التكليف' : 'Assigned' },
+    { status: 'IN_PROGRESS', label: isRTL ? 'قيد التنفيذ' : 'In Progress' },
+    { status: 'WAITING_FOR_PARTS', label: isRTL ? 'بانتظار القطع' : 'Waiting Parts' },
+    { status: 'QC_INSPECTION', label: isRTL ? 'فحص الجودة' : 'QC' },
+    { status: 'RELEASED', label: isRTL ? 'تم التسليم' : 'Released' },
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Supervisor Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-5 rounded-xl">
-        <div>
-          <div className="flex items-center gap-2">
-            <Wrench className="w-6 h-6 text-amber-400" />
-            <h2 className="text-xl font-black tracking-tight text-slate-100">Workshop Control & Repair Operations</h2>
-            <span className="px-2 py-0.5 text-xs font-bold bg-amber-500/20 text-amber-300 rounded border border-amber-500/40 uppercase">
-              Workshop Supervisor Focus
-            </span>
-          </div>
-          <p className="text-xs text-slate-400 mt-1">
-            Job card dispatch, mechanic assignment, QC sign-offs, and workshop bay throughput tracking.
-          </p>
-        </div>
-
-        {/* Supervisor Quick Actions */}
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setIsWOModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-500 text-slate-950 font-extrabold text-xs rounded-lg hover:bg-amber-400 transition"
-          >
-            <Plus className="w-4 h-4" /> Open Job Card
-          </button>
-          <button
-            onClick={() => onNavigateTab('technicians')}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 text-slate-200 font-bold text-xs rounded-lg hover:bg-slate-700 transition"
-          >
-            <Users className="w-4 h-4 text-sky-400" /> Technicians Roster
-          </button>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title={isRTL ? 'إدارة الورشة وعمليات الإصلاح' : 'Workshop Control & Repair Operations'}
+        subtitle={
+          isRTL
+            ? 'توجيه بطاقات العمل، توزيع الفنيين، اعتماد فحص الجودة، ومتابعة طاقة الورشة.'
+            : 'Job card dispatch, mechanic assignment, QC sign-offs, and workshop bay throughput tracking.'
+        }
+        badge={
+          <Badge variant="amber" size="sm">
+            {isRTL ? 'لوحة مشرف الورشة' : 'Workshop Supervisor Focus'}
+          </Badge>
+        }
+        actions={
+          <>
+            <SecondaryButton onClick={() => onNavigateTab('technicians')}>
+              <Users className="w-4 h-4" /> {isRTL ? 'سجل الفنيين' : 'Technicians Roster'}
+            </SecondaryButton>
+            <PrimaryButton onClick={() => setIsWOModalOpen(true)}>
+              <Plus className="w-4 h-4" /> {isRTL ? 'فتح بطاقة عمل' : 'Open Job Card'}
+            </PrimaryButton>
+          </>
+        }
+      />
 
       {/* Workshop Operational KPIs */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
         <StatCard
-          title="OPEN JOB CARDS"
+          title={isRTL ? 'بطاقات العمل المفتوحة' : 'Open job cards'}
           value={openWOs.length}
-          subtitle="Active Repairs"
-          icon={<Wrench className="w-4 h-4 text-amber-400" />}
+          subtitle={isRTL ? 'إصلاحات نشطة' : 'Active Repairs'}
+          icon={<Wrench className="w-4 h-4" />}
           color="amber"
           onClick={() => onNavigateTab('workOrders')}
         />
         <StatCard
-          title="CRITICAL JOBS"
+          title={isRTL ? 'أعمال حرجة' : 'Critical jobs'}
           value={criticalJobs.length}
-          subtitle="Urgent Fixes"
-          icon={<AlertTriangle className="w-4 h-4 text-rose-400" />}
+          subtitle={isRTL ? 'إصلاحات عاجلة' : 'Urgent Fixes'}
+          icon={<AlertTriangle className="w-4 h-4" />}
           color="rose"
           onClick={() => onNavigateTab('workOrders')}
         />
         <StatCard
-          title="IN PROGRESS"
+          title={isRTL ? 'قيد التنفيذ' : 'In progress'}
           value={inProgressJobs.length}
-          subtitle="Active Bays"
-          icon={<Clock className="w-4 h-4 text-blue-400" />}
+          subtitle={isRTL ? 'حارات نشطة' : 'Active Bays'}
+          icon={<Clock className="w-4 h-4" />}
           color="blue"
           onClick={() => onNavigateTab('workOrders')}
         />
         <StatCard
-          title="WAITING PARTS"
+          title={isRTL ? 'بانتظار القطع' : 'Waiting parts'}
           value={waitingPartsJobs.length}
-          subtitle="Store Requisition"
-          icon={<Package className="w-4 h-4 text-rose-400" />}
+          subtitle={isRTL ? 'طلبات المخزن' : 'Store Requisition'}
+          icon={<Package className="w-4 h-4" />}
           color="rose"
           onClick={() => onNavigateTab('workOrders')}
         />
         <StatCard
-          title="QC PENDING"
+          title={isRTL ? 'بانتظار فحص الجودة' : 'QC pending'}
           value={qcPendingJobs.length}
-          subtitle="Awaiting Inspection"
-          icon={<ShieldCheck className="w-4 h-4 text-purple-400" />}
+          subtitle={isRTL ? 'بانتظار الفحص' : 'Awaiting Inspection'}
+          icon={<ShieldCheck className="w-4 h-4" />}
           color="purple"
           onClick={() => onNavigateTab('workOrders')}
         />
         <StatCard
-          title="COMPLETED TODAY"
+          title={isRTL ? 'مكتمل اليوم' : 'Completed today'}
           value={completedTodayJobs.length}
-          subtitle="Throughput"
-          icon={<ShieldCheck className="w-4 h-4 text-emerald-400" />}
+          subtitle={isRTL ? 'الإنتاجية' : 'Throughput'}
+          icon={<ShieldCheck className="w-4 h-4" />}
           color="emerald"
           onClick={() => onNavigateTab('workOrders')}
         />
         <StatCard
-          title="OVERDUE JOBS"
+          title={isRTL ? 'أعمال متأخرة' : 'Overdue jobs'}
           value={overdueJobs.length}
-          subtitle="Delayed Fixes"
-          icon={<AlertTriangle className="w-4 h-4 text-rose-400" />}
+          subtitle={isRTL ? 'تأخر التسليم' : 'Delayed Fixes'}
+          icon={<AlertTriangle className="w-4 h-4" />}
           color="rose"
           onClick={() => onNavigateTab('workOrders')}
         />
         <StatCard
-          title="CALENDAR"
+          title={isRTL ? 'الجدول الزمني' : 'Calendar'}
           value="8"
-          subtitle="Scheduled Services"
-          icon={<Calendar className="w-4 h-4 text-sky-400" />}
+          subtitle={isRTL ? 'صيانات مجدولة' : 'Scheduled Services'}
+          icon={<Calendar className="w-4 h-4" />}
           color="cyan"
           onClick={() => onNavigateTab('analytics')}
         />
       </div>
 
       {/* Workshop Visual Pipeline Widget */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
-        <h3 className="text-sm font-black uppercase tracking-wider text-slate-200 flex items-center gap-2">
-          <Wrench className="w-4 h-4 text-amber-400" /> Workshop Throughput Pipeline Status
-        </h3>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-          {pipelineStages.map(stage => {
-            const count = workOrders.filter(w => w.status === stage.status).length;
+      <EditorialSection
+        title={isRTL ? 'حالة مراحل خط عمل الورشة' : 'Workshop Throughput Pipeline Status'}
+        marginTop={0}
+      >
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+          {pipelineStages.map((stage) => {
+            const count = workOrders.filter((w) => w.status === stage.status).length;
+            const stripe =
+              stage.status === 'RELEASED'
+                ? EDITORIAL_STATUS.green.stripe
+                : stage.status === 'WAITING_FOR_PARTS'
+                ? EDITORIAL_STATUS.amber.stripe
+                : EDITORIAL_STATUS.blue.stripe;
             return (
-              <div key={stage.status} className="p-3 bg-slate-950 border border-slate-800 rounded-xl text-center">
-                <span className="text-[10px] font-bold text-slate-400 uppercase">{stage.label}</span>
-                <p className="text-2xl font-black font-mono text-amber-400 mt-1">{count}</p>
+              <div
+                key={stage.status}
+                style={{
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
+                  borderTop: `2px solid ${stripe}`,
+                  borderRadius: 'var(--radius-sm)',
+                  padding: 12,
+                }}
+                className="text-center"
+              >
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-muted)' }}>
+                  {stage.label}
+                </span>
+                <p
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 22,
+                    fontWeight: 700,
+                    color: 'var(--color-ink)',
+                    marginTop: 4,
+                  }}
+                >
+                  {count}
+                </p>
               </div>
             );
           })}
         </div>
-      </div>
+      </EditorialSection>
 
       {/* Technician Workload & Critical Repairs */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Technician Workload */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-black uppercase tracking-wider text-slate-200 flex items-center gap-2">
-              <Users className="w-4 h-4 text-sky-400" /> Technician Bay Workload
-            </h3>
-            <button
-              onClick={() => onNavigateTab('technicians')}
-              className="text-xs font-bold text-amber-400 hover:text-amber-300"
-            >
-              View Roster →
-            </button>
-          </div>
-
-          <div className="space-y-3 text-xs">
-            {technicians.map(t => {
-              const activeCount = workOrders.filter(w => w.assigned_technician_id === t.id && w.status !== 'RELEASED').length;
+        <EditorialSection
+          title={isRTL ? 'عبء العمل على الفنيين' : 'Technician Bay Workload'}
+          action={
+            <GhostButton onClick={() => onNavigateTab('technicians')}>
+              {isRTL ? 'عرض القائمة ←' : 'View Roster →'}
+            </GhostButton>
+          }
+          marginTop={0}
+        >
+          <DataTable
+            columns={[
+              { label: isRTL ? 'الفني' : 'Technician' },
+              { label: isRTL ? 'المهام النشطة' : 'Workload', align: 'end' },
+            ]}
+            hasActionsColumn={false}
+            isEmpty={technicians.length === 0}
+            emptyMessage={isRTL ? 'لا يوجد فنيون مسجلون.' : 'No technicians registered.'}
+          >
+            {technicians.map((tech) => {
+              const activeCount = workOrders.filter(
+                (w) => w.assigned_technician_id === tech.id && w.status !== 'RELEASED'
+              ).length;
               return (
-                <div key={t.id} className="p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl flex items-center justify-between">
-                  <div>
-                    <span className="font-bold text-slate-100">{t.full_name}</span>
-                    <p className="text-[10px] text-slate-400 mt-0.5">{t.specialization}</p>
-                  </div>
-                  <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-400 font-bold font-mono border border-amber-500/30">
-                    {activeCount} Active Jobs
-                  </span>
-                </div>
+                <DataRow
+                  key={tech.id}
+                  stripeColor={
+                    activeCount > 0 ? EDITORIAL_STATUS.amber.stripe : EDITORIAL_STATUS.green.stripe
+                  }
+                  onClick={() => onNavigateTab('technicians')}
+                >
+                  <td className="py-3 pe-3">
+                    <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>
+                      {tech.full_name}
+                    </span>
+                    <p style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 2 }}>
+                      {tech.specialization}
+                    </p>
+                  </td>
+                  <td className="py-3 text-end whitespace-nowrap">
+                    <Badge variant={activeCount > 0 ? 'amber' : 'slate'} size="sm">
+                      {isRTL ? `${activeCount} مهام نشطة` : `${activeCount} Active Jobs`}
+                    </Badge>
+                  </td>
+                </DataRow>
               );
             })}
-          </div>
-        </div>
+          </DataTable>
+        </EditorialSection>
 
         {/* Critical Repairs List */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-black uppercase tracking-wider text-slate-200 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-rose-400" /> Urgent Critical Repair Orders
-            </h3>
-            <button
-              onClick={() => onNavigateTab('workOrders')}
-              className="text-xs font-bold text-amber-400 hover:text-amber-300"
-            >
-              View Job Cards →
-            </button>
-          </div>
-
-          <div className="space-y-3 text-xs">
-            {criticalJobs.length === 0 ? (
-              <div className="p-6 text-center text-slate-500">No critical emergency repairs currently pending.</div>
-            ) : (
-              criticalJobs.map(w => {
-                const veh = vehicles.find(v => v.id === w.vehicle_id);
-                return (
-                  <div key={w.id} className="p-3.5 bg-slate-950/60 border border-rose-500/30 rounded-xl flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-rose-400">{w.work_order_number}</span>
-                        <span className="font-bold text-slate-200">{veh?.vehicle_id}</span>
-                      </div>
-                      <p className="text-slate-300 text-[11px] mt-1 line-clamp-1">{w.problem_description}</p>
+        <EditorialSection
+          title={isRTL ? 'أوامر الإصلاح الحرجة والعاجلة' : 'Urgent Critical Repair Orders'}
+          action={
+            <GhostButton onClick={() => onNavigateTab('workOrders')}>
+              {isRTL ? 'عرض البطاقات ←' : 'View Job Cards →'}
+            </GhostButton>
+          }
+          marginTop={0}
+        >
+          <DataTable
+            columns={[
+              { label: isRTL ? 'الأمر والمركبة' : 'Order & vehicle' },
+              { label: isRTL ? 'الحالة' : 'Status', align: 'end' },
+            ]}
+            hasActionsColumn={false}
+            isEmpty={criticalJobs.length === 0}
+            emptyMessage={
+              isRTL
+                ? 'لا توجد إصلاحات طارئة حرجة معلقة حالياً.'
+                : 'No critical emergency repairs currently pending.'
+            }
+          >
+            {criticalJobs.map((w) => {
+              const veh = vehicles.find((v) => v.id === w.vehicle_id);
+              return (
+                <DataRow
+                  key={w.id}
+                  stripeColor={EDITORIAL_STATUS.red.stripe}
+                  onClick={() => onNavigateTab('workOrders')}
+                >
+                  <td className="py-3 pe-3">
+                    <div className="flex items-center gap-2">
+                      <span
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontWeight: 600,
+                          fontSize: 12,
+                          color: EDITORIAL_STATUS.red.text,
+                        }}
+                      >
+                        {w.work_order_number}
+                      </span>
+                      <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>
+                        {veh?.vehicle_id}
+                      </span>
                     </div>
-                    <Badge variant="purple">{w.status}</Badge>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
+                    <p
+                      className="line-clamp-1"
+                      style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}
+                    >
+                      {w.problem_description}
+                    </p>
+                  </td>
+                  <td className="py-3 text-end whitespace-nowrap">
+                    <Badge variant="purple" size="sm">
+                      {w.status}
+                    </Badge>
+                  </td>
+                </DataRow>
+              );
+            })}
+          </DataTable>
+        </EditorialSection>
       </div>
 
-      <JobCardFormModal
-        isOpen={isWOModalOpen}
-        onClose={() => setIsWOModalOpen(false)}
-      />
-    </div>
+      <JobCardFormModal isOpen={isWOModalOpen} onClose={() => setIsWOModalOpen(false)} />
+    </PageContainer>
   );
 };

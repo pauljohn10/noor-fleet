@@ -12,15 +12,24 @@ interface DrawerProps {
   width?: 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl';
 }
 
+const WIDTH_PX: Record<NonNullable<DrawerProps['width']>, number> = {
+  md: 448,
+  lg: 512,
+  xl: 576,
+  '2xl': 672,
+  '3xl': 768,
+  '4xl': 896,
+};
+
 export const Drawer: React.FC<DrawerProps> = ({
   isOpen,
   onClose,
   title,
   subtitle,
   children,
-  width = '2xl'
+  width = '2xl',
 }) => {
-  const { isRTL } = useI18n();
+  const { isRTL, t } = useI18n();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -38,46 +47,88 @@ export const Drawer: React.FC<DrawerProps> = ({
 
   if (!isOpen) return null;
 
-  const widthMap = {
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl',
-    '2xl': 'max-w-2xl',
-    '3xl': 'max-w-3xl',
-    '4xl': 'max-w-4xl'
-  };
-
   const drawerNode = (
-    <div className="fixed inset-0 z-[100] overflow-hidden bg-slate-900/65 backdrop-blur-[2px] transition-opacity animate-fade-in">
-      <div className="absolute inset-0 overflow-hidden" onClick={onClose}>
-        <div className={`pointer-events-none fixed inset-y-0 ${isRTL ? 'left-0 pr-10' : 'right-0 pl-10'} flex max-w-full`}>
-          <div
-            className={`pointer-events-auto w-screen ${widthMap[width]} bg-white border-slate-200 shadow-2xl flex flex-col ${isRTL ? 'border-r' : 'border-l'}`}
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Top Accent Strip */}
-            <div className="h-1 w-full bg-gradient-to-r from-amber-500 via-amber-400 to-sky-500 shrink-0" />
-
-            {/* Drawer Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/90 bg-slate-50/90 shrink-0">
-              <div>
-                <h2 className="text-base font-extrabold text-slate-900 tracking-tight">{title}</h2>
-                {subtitle && <p className="text-xs text-slate-500 mt-0.5 font-medium">{subtitle}</p>}
-              </div>
-              <button
-                type="button"
-                onClick={onClose}
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 rounded-lg transition active:scale-95 cursor-pointer"
-                title="Close"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Drawer Body */}
-            <div className="flex-1 overflow-y-auto p-6">{children}</div>
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 100,
+        backgroundColor: 'rgba(22, 21, 19, 0.35)',
+        display: 'flex',
+        justifyContent: 'flex-end',
+      }}
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        onClick={e => e.stopPropagation()}
+        style={{
+          width: '100%',
+          maxWidth: WIDTH_PX[width],
+          height: '100%',
+          background: 'var(--color-page-bg)',
+          color: 'var(--color-ink)',
+          borderInlineStart: '1px solid var(--color-border)',
+          display: 'flex',
+          flexDirection: 'column',
+          fontFamily: isRTL ? 'var(--font-arabic)' : 'var(--font-ui)',
+        }}
+      >
+        {/* Drawer Header */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            gap: 16,
+            padding: '20px 24px',
+            borderBottom: '1px solid var(--color-row-divider)',
+            background: 'var(--color-surface)',
+            flexShrink: 0,
+          }}
+        >
+          <div>
+            <h2
+              style={{
+                margin: 0,
+                fontFamily: isRTL ? 'var(--font-arabic)' : 'var(--font-brand)',
+                fontSize: 20,
+                fontWeight: 700,
+                letterSpacing: isRTL ? '0' : '-0.02em',
+                color: 'var(--color-ink)',
+              }}
+            >
+              {t(title, title)}
+            </h2>
+            {subtitle && (
+              <p style={{ margin: '4px 0 0', fontSize: 12.5, color: 'var(--color-text-muted)' }}>
+                {t(subtitle, subtitle)}
+              </p>
+            )}
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            title={t('Close', 'Close')}
+            style={{
+              padding: 6,
+              background: 'transparent',
+              border: '1px solid var(--color-border)',
+              borderRadius: 4,
+              color: 'var(--color-text-secondary)',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <X size={16} />
+          </button>
         </div>
+
+        {/* Drawer Body */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}>{children}</div>
       </div>
     </div>
   );

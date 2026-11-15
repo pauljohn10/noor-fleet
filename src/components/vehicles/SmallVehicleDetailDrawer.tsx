@@ -273,7 +273,7 @@ export const SmallVehicleDetailDrawer: React.FC<SmallVehicleDetailDrawerProps> =
               <Clock size={12} />
               <span>
                 {isRTL ? 'تاريخ التسجيل:' : 'Registered:'}{' '}
-                {new Date(vehicle.created_at).toLocaleString()}
+                <span dir="ltr">{new Date(vehicle.created_at).toLocaleString(isRTL ? 'ar-SA-u-ca-gregory' : 'en-US')}</span>
               </span>
             </div>
             {vehicle.updated_at && vehicle.updated_at !== vehicle.created_at && (
@@ -281,7 +281,7 @@ export const SmallVehicleDetailDrawer: React.FC<SmallVehicleDetailDrawerProps> =
                 <Clock size={12} />
                 <span>
                   {isRTL ? 'آخر تحديث:' : 'Last Updated:'}{' '}
-                  {new Date(vehicle.updated_at).toLocaleString()}
+                  <span dir="ltr">{new Date(vehicle.updated_at).toLocaleString(isRTL ? 'ar-SA-u-ca-gregory' : 'en-US')}</span>
                 </span>
               </div>
             )}

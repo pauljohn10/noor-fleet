@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { 
-  ShieldCheck, AlertTriangle, CheckCircle2, XCircle, Camera, Check, Flame
-} from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import { useFleet } from '../../context/FleetContext';
 import { useAuth } from '../../context/AuthContext';
+import { useI18n } from '../../context/I18nContext';
 import { InspectionResult, SeverityLevel } from '../../types';
+import {
+  EDITORIAL_STATUS,
+  PrimaryButton,
+  SecondaryButton,
+} from '../common/EditorialUI';
 
 interface InspectionFormMobileProps {
   onComplete: () => void;
@@ -21,6 +25,7 @@ interface ChecklistItemState {
 export const InspectionFormMobile: React.FC<InspectionFormMobileProps> = ({ onComplete }) => {
   const { vehicles, trailers, submitInspection } = useFleet();
   const { currentProfile } = useAuth();
+  const { t } = useI18n();
 
   const [vehicleId, setVehicleId] = useState('');
   const [trailerId, setTrailerId] = useState('');
@@ -41,7 +46,7 @@ export const InspectionFormMobile: React.FC<InspectionFormMobileProps> = ({ onCo
     { category: 'COUPLING', name: 'Fifth Wheel Kingpin & Safety Latch', result: 'PASS', severity: 'LOW', comment: '' },
     { category: 'SAFETY EQUIPMENT', name: 'ATEX Grounding Reel & Clamp', result: 'PASS', severity: 'LOW', comment: '' },
     { category: 'FIRE EXTINGUISHER', name: 'Fire Extinguisher Charge & Tag', result: 'PASS', severity: 'LOW', comment: '' },
-    { category: 'GENERAL CONDITION', name: 'Overall Cabin & Safety Reflectors', result: 'PASS', severity: 'LOW', comment: '' }
+    { category: 'GENERAL CONDITION', name: 'Overall Cabin & Safety Reflectors', result: 'PASS', severity: 'LOW', comment: '' },
   ];
 
   const [items, setItems] = useState<ChecklistItemState[]>(initialItems);
@@ -67,12 +72,12 @@ export const InspectionFormMobile: React.FC<InspectionFormMobileProps> = ({ onCo
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!vehicleId) {
-      alert('Please select the Tractor Head Truck');
+      alert(t('Please select the Tractor Head Truck'));
       return;
     }
 
-    const hasFailed = items.some(i => i.result === 'FAIL');
-    const hasCritical = items.some(i => i.result === 'FAIL' && i.severity === 'CRITICAL');
+    const hasFailed = items.some((i) => i.result === 'FAIL');
+    const hasCritical = items.some((i) => i.result === 'FAIL' && i.severity === 'CRITICAL');
 
     submitInspection({
       vehicle_id: vehicleId,
@@ -83,193 +88,290 @@ export const InspectionFormMobile: React.FC<InspectionFormMobileProps> = ({ onCo
       overall_status: hasFailed ? 'FAIL' : 'PASS',
       has_critical_failure: hasCritical,
       supervisor_approved: false,
-      items: items.map(i => ({
+      items: items.map((i) => ({
         id: 'ii-' + Math.random(),
         category: i.category,
         item_name: i.name,
         result: i.result,
         severity: i.severity,
-        comment: i.comment
-      }))
+        comment: i.comment,
+      })),
     });
 
     if (hasCritical) {
-      alert('CRITICAL FAILURE DETECTED! A high-priority Workshop Work Order has been generated automatically.');
+      alert(
+        t('CRITICAL FAILURE DETECTED! A high-priority Workshop Work Order has been generated automatically.')
+      );
     } else {
-      alert('Vehicle inspection submitted successfully!');
+      alert(t('Vehicle inspection submitted successfully!'));
     }
 
     onComplete();
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5 font-sans">
-      <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl flex items-center gap-4">
-        <div className="p-3 bg-amber-500/15 text-amber-600 rounded-xl border border-amber-500/20 shrink-0">
-          <ShieldCheck className="w-6 h-6" />
+    <div className="max-w-2xl mx-auto space-y-5">
+      <div
+        className="p-4 flex items-center gap-4"
+        style={{
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
+          borderInlineStart: '3px solid var(--color-brand-accent)',
+          borderRadius: 'var(--radius-sm)',
+        }}
+      >
+        <div
+          className="p-2.5 shrink-0"
+          style={{
+            background: 'var(--color-page-bg)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-sm)',
+            color: 'var(--color-brand-accent)',
+          }}
+        >
+          <ShieldCheck className="w-5 h-5" />
         </div>
         <div>
-          <h2 className="text-sm font-extrabold text-slate-900">Safety & Hazmat Pre-Trip Checklist</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Verify all tractor and fuel tanker components prior to depot dispatch.</p>
+          <h2 className="text-sm font-semibold" style={{ color: 'var(--color-ink)' }}>
+            {t('Safety & Hazmat Pre-Trip Checklist')}
+          </h2>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+            {t('Verify all tractor and fuel tanker components prior to depot dispatch.')}
+          </p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5 text-xs">
         {/* Header Metadata */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50/70 border border-slate-200 p-4 rounded-xl">
+        <div
+          className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4"
+          style={{
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-sm)',
+          }}
+        >
           <div>
-            <label className="text-xs font-bold text-slate-700 block mb-1.5">
-              Select Truck <span className="text-rose-500">*</span>
+            <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--color-ink)' }}>
+              {t('Select Truck')} <span style={{ color: EDITORIAL_STATUS.red.text }}>*</span>
             </label>
             <select
               required
               value={vehicleId}
-              onChange={e => setVehicleId(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs text-slate-900 font-bold focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
+              onChange={(e) => setVehicleId(e.target.value)}
+              className="nf-field w-full"
             >
-              <option value="">-- Select Tractor Head --</option>
-              {vehicles.map(v => (
-                <option key={v.id} value={v.id}>{v.vehicle_id} ({v.plate_number})</option>
+              <option value="">{t('-- Select Tractor Head --')}</option>
+              {vehicles.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.vehicle_id} ({v.plate_number})
+                </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-slate-700 block mb-1.5">Tanker Trailer</label>
+            <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--color-ink)' }}>
+              {t('Tanker Trailer')}
+            </label>
             <select
               value={trailerId}
-              onChange={e => setTrailerId(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs text-slate-900 font-semibold focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
+              onChange={(e) => setTrailerId(e.target.value)}
+              className="nf-field w-full"
             >
-              <option value="">-- Uncoupled / None --</option>
-              {trailers.map(t => (
-                <option key={t.id} value={t.id}>{t.trailer_id} ({t.plate_number})</option>
+              <option value="">{t('-- Uncoupled / None --')}</option>
+              {trailers.map((tr) => (
+                <option key={tr.id} value={tr.id}>
+                  {tr.trailer_id} ({tr.plate_number})
+                </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-slate-700 block mb-1.5">Current Odometer (KM)</label>
+            <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--color-ink)' }}>
+              {t('Current Odometer (KM)')}
+            </label>
             <input
               type="number"
+              dir="ltr"
               value={odometer}
-              onChange={e => setOdometer(Number(e.target.value))}
-              className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs text-slate-900 font-mono font-bold focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
+              onChange={(e) => setOdometer(Number(e.target.value))}
+              className="nf-field w-full font-semibold"
+              style={{ fontFamily: 'var(--font-mono)' }}
             />
           </div>
         </div>
 
         {/* Inspection Items List */}
         <div className="space-y-2.5">
-          {items.map((item, idx) => (
-            <div
-              key={idx}
-              className={`p-3.5 rounded-xl border transition ${
-                item.result === 'FAIL'
-                  ? item.severity === 'CRITICAL'
-                    ? 'bg-rose-50/70 border-rose-300'
-                    : 'bg-amber-50/70 border-amber-300'
-                  : 'bg-white border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">{item.category}</span>
-                  <h4 className="font-bold text-slate-900 text-xs mt-0.5">{item.name}</h4>
-                </div>
+          {items.map((item, idx) => {
+            const stripe =
+              item.result === 'FAIL'
+                ? item.severity === 'CRITICAL'
+                  ? EDITORIAL_STATUS.red.stripe
+                  : EDITORIAL_STATUS.amber.stripe
+                : item.result === 'PASS'
+                ? EDITORIAL_STATUS.green.stripe
+                : EDITORIAL_STATUS.muted.stripe;
 
-                {/* Radio Selector */}
-                <div className="flex items-center gap-1 bg-slate-100 p-1 border border-slate-200 rounded-lg">
-                  <button
-                    type="button"
-                    onClick={() => handleResultChange(idx, 'PASS')}
-                    className={`px-3 py-1 text-xs font-bold rounded-md transition cursor-pointer ${
-                      item.result === 'PASS' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    PASS
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleResultChange(idx, 'FAIL')}
-                    className={`px-3 py-1 text-xs font-bold rounded-md transition cursor-pointer ${
-                      item.result === 'FAIL' ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    FAIL
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleResultChange(idx, 'NA')}
-                    className={`px-2.5 py-1 text-xs font-bold rounded-md transition cursor-pointer ${
-                      item.result === 'NA' ? 'bg-slate-700 text-white shadow-xs' : 'text-slate-500 hover:text-slate-800'
-                    }`}
-                  >
-                    N/A
-                  </button>
-                </div>
-              </div>
-
-              {/* If FAIL: Require Severity & Comment */}
-              {item.result === 'FAIL' && (
-                <div className="mt-3 pt-3 border-t border-slate-200/80 space-y-3">
+            return (
+              <div
+                key={idx}
+                className="p-3.5 transition-colors"
+                style={{
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
+                  borderInlineStart: `3px solid ${stripe}`,
+                  borderRadius: 'var(--radius-sm)',
+                }}
+              >
+                <div className="flex items-center justify-between gap-2">
                   <div>
-                    <label className="text-xs font-bold text-rose-700 block mb-1.5">
-                      Defect Severity Level <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as SeverityLevel[]).map(sev => (
-                        <button
-                          key={sev}
-                          type="button"
-                          onClick={() => handleSeverityChange(idx, sev)}
-                          className={`py-1.5 font-extrabold text-[11px] rounded-lg border transition cursor-pointer ${
-                            item.severity === sev
-                              ? sev === 'CRITICAL'
-                                ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
-                                : 'bg-amber-500 text-slate-950 border-amber-500 shadow-xs'
-                              : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'
-                          }`}
-                        >
-                          {sev}
-                        </button>
-                      ))}
+                    <span className="text-[11px] font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                      {t(item.category)}
+                    </span>
+                    <h4 className="font-semibold text-xs mt-0.5" style={{ color: 'var(--color-ink)' }}>
+                      {t(item.name)}
+                    </h4>
+                  </div>
+
+                  {/* Radio Selector */}
+                  <div
+                    className="flex items-center gap-1 p-1 shrink-0"
+                    style={{
+                      background: 'var(--color-page-bg)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 'var(--radius-sm)',
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleResultChange(idx, 'PASS')}
+                      style={{
+                        background:
+                          item.result === 'PASS' ? EDITORIAL_STATUS.green.stripe : 'transparent',
+                        color: item.result === 'PASS' ? '#FFFDF8' : 'var(--color-text-secondary)',
+                        borderRadius: 'var(--radius-sm)',
+                      }}
+                      className="px-3 py-1 text-xs font-semibold transition-colors cursor-pointer"
+                    >
+                      {t('PASS')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleResultChange(idx, 'FAIL')}
+                      style={{
+                        background:
+                          item.result === 'FAIL' ? EDITORIAL_STATUS.red.stripe : 'transparent',
+                        color: item.result === 'FAIL' ? '#FFFDF8' : 'var(--color-text-secondary)',
+                        borderRadius: 'var(--radius-sm)',
+                      }}
+                      className="px-3 py-1 text-xs font-semibold transition-colors cursor-pointer"
+                    >
+                      {t('FAIL')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleResultChange(idx, 'NA')}
+                      style={{
+                        background: item.result === 'NA' ? 'var(--color-ink)' : 'transparent',
+                        color:
+                          item.result === 'NA'
+                            ? 'var(--color-page-bg)'
+                            : 'var(--color-text-muted)',
+                        borderRadius: 'var(--radius-sm)',
+                      }}
+                      className="px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer"
+                    >
+                      {t('N/A')}
+                    </button>
+                  </div>
+                </div>
+
+                {/* If FAIL: Require Severity & Comment */}
+                {item.result === 'FAIL' && (
+                  <div
+                    className="mt-3 pt-3 space-y-3"
+                    style={{ borderTop: '1px solid var(--color-row-divider)' }}
+                  >
+                    <div>
+                      <label
+                        className="text-xs font-semibold block mb-1.5"
+                        style={{ color: EDITORIAL_STATUS.red.text }}
+                      >
+                        {t('Defect Severity Level')} <span>*</span>
+                      </label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as SeverityLevel[]).map((sev) => {
+                          const isSelected = item.severity === sev;
+                          const sevStripe =
+                            sev === 'CRITICAL'
+                              ? EDITORIAL_STATUS.red.stripe
+                              : sev === 'HIGH'
+                              ? EDITORIAL_STATUS.amber.stripe
+                              : sev === 'MEDIUM'
+                              ? EDITORIAL_STATUS.blue.stripe
+                              : EDITORIAL_STATUS.muted.stripe;
+                          return (
+                            <button
+                              key={sev}
+                              type="button"
+                              onClick={() => handleSeverityChange(idx, sev)}
+                              style={{
+                                background: isSelected
+                                  ? 'var(--color-ink)'
+                                  : 'var(--color-page-bg)',
+                                color: isSelected
+                                  ? 'var(--color-page-bg)'
+                                  : 'var(--color-text-secondary)',
+                                border: isSelected
+                                  ? '1px solid var(--color-ink)'
+                                  : '1px solid var(--color-border)',
+                                borderInlineStart: `3px solid ${sevStripe}`,
+                                borderRadius: 'var(--radius-sm)',
+                              }}
+                              className="py-1.5 font-semibold text-[11px] transition-colors cursor-pointer"
+                            >
+                              {t(sev)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label
+                        className="text-xs font-semibold block mb-1.5"
+                        style={{ color: 'var(--color-ink)' }}
+                      >
+                        {t('Defect Description / Remark')}{' '}
+                        <span style={{ color: EDITORIAL_STATUS.red.text }}>*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required={item.result === 'FAIL'}
+                        placeholder={t('Specify defect reason (e.g., API seal leak, low air pressure)...')}
+                        value={item.comment}
+                        onChange={(e) => handleCommentChange(idx, e.target.value)}
+                        className="nf-field w-full"
+                      />
                     </div>
                   </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                      Defect Description / Remark <span className="text-rose-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required={item.result === 'FAIL'}
-                      placeholder="Specify defect reason (e.g., API seal leak, low air pressure)..."
-                      value={item.comment}
-                      onChange={e => handleCommentChange(idx, e.target.value)}
-                      className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+                )}
+              </div>
+            );
+          })}
         </div>
 
-        <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200">
-          <button
-            type="button"
-            onClick={onComplete}
-            className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition active:scale-95 cursor-pointer"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-xs transition active:scale-95 cursor-pointer"
-          >
-            Submit Digital Inspection Report
-          </button>
+        <div
+          className="flex items-center justify-end gap-2.5 pt-3"
+          style={{ borderTop: '1px solid var(--color-row-divider)' }}
+        >
+          <SecondaryButton type="button" onClick={onComplete}>
+            {t('Cancel')}
+          </SecondaryButton>
+          <PrimaryButton type="submit">{t('Submit Digital Inspection Report')}</PrimaryButton>
         </div>
       </form>
     </div>

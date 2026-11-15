@@ -81,7 +81,7 @@ export const SmallVehicleFormModal: React.FC<SmallVehicleFormModalProps> = ({
       // Duplicate check
       const dupPlate = smallVehicles.find(
         v => v.plate_number.toLowerCase() === cleanPlate.toLowerCase() &&
-             (!isEditing || v.id !== initialVehicle?.id)
+          (!isEditing || v.id !== initialVehicle?.id)
       );
       if (dupPlate) {
         errs.plateNumber = isRTL
@@ -98,7 +98,7 @@ export const SmallVehicleFormModal: React.FC<SmallVehicleFormModalProps> = ({
       // Duplicate check
       const dupVeh = smallVehicles.find(
         v => v.vehicle_number.toLowerCase() === cleanVehNum.toLowerCase() &&
-             (!isEditing || v.id !== initialVehicle?.id)
+          (!isEditing || v.id !== initialVehicle?.id)
       );
       if (dupVeh) {
         errs.vehicleNumber = isRTL
@@ -334,11 +334,9 @@ export const SmallVehicleFormModal: React.FC<SmallVehicleFormModalProps> = ({
               </span>
               <span
                 style={{
-                  fontSize: 10,
-                  textTransform: 'uppercase',
+                  fontSize: 11,
                   fontWeight: 600,
-                  letterSpacing: '0.05em',
-                  color: 'var(--color-brand-accent, #2563eb)',
+                  color: 'var(--color-brand-accent, #0F5C4D)',
                 }}
               >
                 Auto Identity
@@ -504,7 +502,7 @@ export const SmallVehicleFormModal: React.FC<SmallVehicleFormModalProps> = ({
                     width: '100%',
                     padding: '8px 10px',
                     fontSize: 13,
-                    fontFamily: 'var(--font-ui, sans-serif)',
+                    fontFamily: 'inherit',
                     borderRadius: 4,
                     border: '1px solid var(--color-input-border, #cbd5e1)',
                     background: 'var(--color-surface, #ffffff)',
@@ -543,7 +541,7 @@ export const SmallVehicleFormModal: React.FC<SmallVehicleFormModalProps> = ({
                   width: '100%',
                   padding: '8px 10px',
                   fontSize: 13,
-                  fontFamily: 'var(--font-ui, sans-serif)',
+                  fontFamily: 'inherit',
                   borderRadius: 4,
                   border: '1px solid var(--color-input-border, #cbd5e1)',
                   background: 'var(--color-surface, #ffffff)',
@@ -576,7 +574,7 @@ export const SmallVehicleFormModal: React.FC<SmallVehicleFormModalProps> = ({
                   width: '100%',
                   padding: '8px 10px',
                   fontSize: 13,
-                  fontFamily: 'var(--font-ui, sans-serif)',
+                  fontFamily: 'inherit',
                   borderRadius: 4,
                   border: '1px solid var(--color-input-border, #cbd5e1)',
                   background: 'var(--color-surface, #ffffff)',
@@ -613,7 +611,7 @@ export const SmallVehicleFormModal: React.FC<SmallVehicleFormModalProps> = ({
                 fontWeight: 500,
                 color: 'var(--color-text-secondary, #475569)',
                 cursor: submitting ? 'not-allowed' : 'pointer',
-                fontFamily: 'var(--font-ui, sans-serif)',
+                fontFamily: 'inherit',
               }}
             >
               {isRTL ? 'إلغاء' : 'Cancel'}
@@ -630,7 +628,7 @@ export const SmallVehicleFormModal: React.FC<SmallVehicleFormModalProps> = ({
                 fontSize: 13,
                 fontWeight: 600,
                 cursor: submitting ? 'not-allowed' : 'pointer',
-                fontFamily: 'var(--font-ui, sans-serif)',
+                fontFamily: 'inherit',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 6,
@@ -642,8 +640,8 @@ export const SmallVehicleFormModal: React.FC<SmallVehicleFormModalProps> = ({
                 {submitting
                   ? (isRTL ? 'جاري الحفظ...' : 'Saving...')
                   : isEditing
-                  ? (isRTL ? 'حفظ التعديلات' : 'Update Vehicle')
-                  : (isRTL ? 'إضافة المركبة' : 'Add Vehicle')}
+                    ? (isRTL ? 'حفظ التعديلات' : 'Update Vehicle')
+                    : (isRTL ? 'إضافة المركبة' : 'Add Vehicle')}
               </span>
             </button>
           </div>

@@ -72,7 +72,7 @@ export const LoginPage: React.FC = () => {
       setIsSetupModalOpen(false);
       await signInWithEmail(setupEmail, setupPassword);
     } else {
-      setSetupError(res.error || 'Failed to initialize Super Admin.');
+      setSetupError(res.error || (isRTL ? 'فشل تهيئة حساب المشرف الأعلى.' : 'Failed to initialize Super Admin.'));
     }
     setIsSettingUp(false);
   };
@@ -270,8 +270,6 @@ export const LoginPage: React.FC = () => {
                     style={{
                       fontSize: 12,
                       fontWeight: 700,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.04em',
                       color: T.colors.ink,
                     }}
                   >
@@ -1120,7 +1118,7 @@ export const LoginPage: React.FC = () => {
       {/* ================================================================= */}
       {isSetupModalOpen && isSetupRequired && (
         <div
-          dir="ltr"
+          dir={isRTL ? 'rtl' : 'ltr'}
           style={{
             position: 'fixed',
             inset: 0,
@@ -1144,8 +1142,8 @@ export const LoginPage: React.FC = () => {
               borderRadius: T.radius,
               padding: 28,
               color: T.colors.ink,
-              fontFamily: T.fonts.ui,
-              textAlign: 'left',
+              fontFamily: fontStack,
+              textAlign: isRTL ? 'right' : 'left',
             }}
           >
             <div
@@ -1161,13 +1159,13 @@ export const LoginPage: React.FC = () => {
                 <h3
                   id="setup-modal-title"
                   style={{
-                    fontFamily: T.fonts.brand,
+                    fontFamily: isRTL ? T.fonts.arabic : T.fonts.brand,
                     fontSize: 18,
                     fontWeight: 700,
                     margin: 0,
                   }}
                 >
-                  Initialize Super Admin Account
+                  {isRTL ? 'تهيئة حساب المشرف الأعلى' : 'Initialize Super Admin Account'}
                 </h3>
                 <p
                   style={{
@@ -1176,13 +1174,13 @@ export const LoginPage: React.FC = () => {
                     margin: '2px 0 0',
                   }}
                 >
-                  One-time system activation
+                  {isRTL ? 'تفعيل النظام لمرة واحدة' : 'One-time system activation'}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsSetupModalOpen(false)}
-                aria-label="Close setup dialog"
+                aria-label={isRTL ? 'إغلاق نافذة الإعداد' : 'Close setup dialog'}
                 className="nf-focus-ring"
                 style={{
                   background: 'none',
@@ -1208,9 +1206,17 @@ export const LoginPage: React.FC = () => {
                 color: T.colors.textSecondary,
               }}
             >
-              <strong>Security protocol:</strong> This master account has full
-              authority over the fleet system and database. Once provisioned, this
-              wizard locks permanently.
+              {isRTL ? (
+                <>
+                  <strong>البروتوكول الأمني:</strong> يتمتع هذا الحساب الرئيسي بكامل الصلاحيات على نظام الأسطول وقاعدة البيانات. بعد الإنشاء، يُقفل معالج التهيئة بشكل دائم.
+                </>
+              ) : (
+                <>
+                  <strong>Security protocol:</strong> This master account has full
+                  authority over the fleet system and database. Once provisioned, this
+                  wizard locks permanently.
+                </>
+              )}
             </div>
 
             {setupError && (
@@ -1253,13 +1259,13 @@ export const LoginPage: React.FC = () => {
                     marginBottom: 5,
                   }}
                 >
-                  Full Legal Name *
+                  {isRTL ? 'الاسم القانوني الكامل *' : 'Full Legal Name *'}
                 </label>
                 <input
                   id="setup-full-name"
                   type="text"
                   required
-                  placeholder="e.g. Faisal Al-Noor"
+                  placeholder={isRTL ? 'مثال: فيصل النور' : 'e.g. Faisal Al-Noor'}
                   value={setupFullName}
                   onChange={(e) => setSetupFullName(e.target.value)}
                   className="nf-input"
@@ -1276,17 +1282,18 @@ export const LoginPage: React.FC = () => {
                     marginBottom: 5,
                   }}
                 >
-                  Corporate Email Address *
+                  {isRTL ? 'البريد الإلكتروني المؤسسي *' : 'Corporate Email Address *'}
                 </label>
                 <input
                   id="setup-email"
                   type="email"
                   required
+                  dir="ltr"
                   placeholder="e.g. admin@alnoortransport.com"
                   value={setupEmail}
                   onChange={(e) => setSetupEmail(e.target.value)}
                   className="nf-input"
-                  style={{ fontFamily: T.fonts.mono, fontSize: 13 }}
+                  style={{ fontFamily: T.fonts.mono, fontSize: 13, textAlign: 'left' }}
                 />
               </div>
 
@@ -1300,7 +1307,7 @@ export const LoginPage: React.FC = () => {
                     marginBottom: 5,
                   }}
                 >
-                  Master Password *
+                  {isRTL ? 'كلمة المرور الرئيسية *' : 'Master Password *'}
                 </label>
                 <div style={{ position: 'relative' }}>
                   <input
@@ -1308,14 +1315,14 @@ export const LoginPage: React.FC = () => {
                     type={showSetupPassword ? 'text' : 'password'}
                     required
                     minLength={8}
-                    placeholder="Minimum 8 characters"
+                    placeholder={isRTL ? '8 أحرف على الأقل' : 'Minimum 8 characters'}
                     value={setupPassword}
                     onChange={(e) => setSetupPassword(e.target.value)}
                     className="nf-input"
                     style={{
                       fontFamily: T.fonts.mono,
                       fontSize: 13,
-                      paddingRight: 64,
+                      paddingInlineEnd: 64,
                     }}
                   />
                   <button
@@ -1324,7 +1331,7 @@ export const LoginPage: React.FC = () => {
                     className="nf-focus-ring"
                     style={{
                       position: 'absolute',
-                      right: 12,
+                      insetInlineEnd: 12,
                       top: '50%',
                       transform: 'translateY(-50%)',
                       background: 'none',
@@ -1335,9 +1342,10 @@ export const LoginPage: React.FC = () => {
                       color: T.colors.textSecondary,
                       textDecoration: 'underline',
                       cursor: 'pointer',
+                      fontFamily: fontStack,
                     }}
                   >
-                    {showSetupPassword ? 'Hide' : 'Show'}
+                    {showSetupPassword ? (isRTL ? 'إخفاء' : 'Hide') : (isRTL ? 'إظهار' : 'Show')}
                   </button>
                 </div>
               </div>
@@ -1352,7 +1360,7 @@ export const LoginPage: React.FC = () => {
                     marginBottom: 5,
                   }}
                 >
-                  Department
+                  {isRTL ? 'القسم' : 'Department'}
                 </label>
                 <input
                   id="setup-department"
@@ -1389,7 +1397,7 @@ export const LoginPage: React.FC = () => {
                     cursor: 'pointer',
                   }}
                 >
-                  Cancel
+                  {isRTL ? 'إلغاء' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
@@ -1413,10 +1421,10 @@ export const LoginPage: React.FC = () => {
                   {isSettingUp ? (
                     <>
                       <Loader2 size={14} className="animate-spin" />
-                      <span>Activating...</span>
+                      <span>{isRTL ? 'جارٍ التفعيل...' : 'Activating...'}</span>
                     </>
                   ) : (
-                    <span>Activate &amp; Sign In</span>
+                    <span>{isRTL ? 'تفعيل وتسجيل الدخول' : 'Activate & Sign In'}</span>
                   )}
                 </button>
               </div>

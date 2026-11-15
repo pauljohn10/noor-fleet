@@ -1,43 +1,65 @@
 import React, { useState } from 'react';
-import { 
-  Wrench, Clock, CheckCircle2, Package, Camera, Play, Pause, FileText, AlertTriangle, ChevronRight
+import {
+  Wrench,
+  Clock,
+  CheckCircle2,
+  Package,
+  Play,
+  Pause,
+  ChevronRight,
 } from 'lucide-react';
 import { useFleet } from '../../context/FleetContext';
 import { useAuth } from '../../context/AuthContext';
+import { useI18n } from '../../context/I18nContext';
 import { StatCard } from '../common/StatCard';
 import { Badge } from '../common/Badge';
 import { Drawer } from '../common/Drawer';
 import { WorkOrder } from '../../types';
+import {
+  EDITORIAL_STATUS,
+  PageContainer,
+  PageHeader,
+  EditorialSection,
+  DataTable,
+  DataRow,
+  RowAction,
+  PlateChip,
+  PrimaryButton,
+  SecondaryButton,
+} from '../common/EditorialUI';
 
 interface MechanicDashboardProps {
   onNavigateTab: (tab: any) => void;
 }
 
-export const MechanicDashboard: React.FC<MechanicDashboardProps> = ({ onNavigateTab }) => {
-  const { workOrders, vehicles, trailers, parts, updateWorkOrderStatus, addWorkOrderPart, addWorkOrderLabor } = useFleet();
+export const MechanicDashboard: React.FC<MechanicDashboardProps> = ({ onNavigateTab: _onNavigateTab }) => {
+  const { workOrders, vehicles, trailers, parts, updateWorkOrderStatus, addWorkOrderPart, addWorkOrderLabor } =
+    useFleet();
   const { currentProfile } = useAuth();
+  const { isRTL } = useI18n();
 
   const [selectedWO, setSelectedWO] = useState<WorkOrder | null>(null);
 
   // Local workbench state
   const [diagnosisText, setDiagnosisText] = useState('');
-  const [repairText, setRepairText] = useState('');
+  const [_repairText, setRepairText] = useState('');
   const [selectedPartId, setSelectedPartId] = useState('');
   const [partQty, setPartQty] = useState(1);
   const [laborHours, setLaborHours] = useState(2);
 
   // Filter jobs for active mechanic
-  const myAssignedJobs = workOrders.filter(w => 
-    w.assigned_technician_id === 't1111111-1111-1111-1111-111111111111' || 
-    w.assigned_technician_id === currentProfile.id ||
-    w.status === 'IN_PROGRESS' || 
-    w.status === 'ASSIGNED'
+  const myAssignedJobs = workOrders.filter(
+    (w) =>
+      w.assigned_technician_id === 't1111111-1111-1111-1111-111111111111' ||
+      w.assigned_technician_id === currentProfile.id ||
+      w.status === 'IN_PROGRESS' ||
+      w.status === 'ASSIGNED'
   );
 
-  const myOpenJobs = myAssignedJobs.filter(w => w.status !== 'RELEASED' && w.status !== 'CANCELLED');
-  const inProgressJobs = myAssignedJobs.filter(w => w.status === 'IN_PROGRESS');
-  const waitingPartsJobs = myAssignedJobs.filter(w => w.status === 'WAITING_FOR_PARTS');
-  const completedTodayJobs = myAssignedJobs.filter(w => w.status === 'COMPLETED' || w.status === 'RELEASED');
+  const myOpenJobs = myAssignedJobs.filter((w) => w.status !== 'RELEASED' && w.status !== 'CANCELLED');
+  const inProgressJobs = myAssignedJobs.filter((w) => w.status === 'IN_PROGRESS');
+  const waitingPartsJobs = myAssignedJobs.filter((w) => w.status === 'WAITING_FOR_PARTS');
+  const completedTodayJobs = myAssignedJobs.filter((w) => w.status === 'COMPLETED' || w.status === 'RELEASED');
 
   const handleStartJob = (woId: string) => {
     updateWorkOrderStatus(woId, 'IN_PROGRESS', 'Repair started by mechanic', currentProfile.full_name);
@@ -68,215 +90,303 @@ export const MechanicDashboard: React.FC<MechanicDashboardProps> = ({ onNavigate
     alert('Labor hours logged successfully!');
   };
 
+  const openWorkbench = (wo: WorkOrder) => {
+    setSelectedWO(wo);
+    setDiagnosisText(wo.diagnosis_notes || '');
+    setRepairText(wo.repair_summary || '');
+  };
+
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Mechanic Mobile-Friendly Header */}
-      <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-black tracking-tight text-slate-100">
-            Good Morning, {currentProfile.full_name}
-          </h2>
-          <p className="text-xs text-amber-400 font-semibold mt-0.5">
-            Heavy Diesel & Tanker Mechanic Workbench
-          </p>
-        </div>
-        <div className="p-3 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-xl">
-          <Wrench className="w-6 h-6" />
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title={isRTL ? `صباح الخير، ${currentProfile.full_name}` : `Good Morning, ${currentProfile.full_name}`}
+        subtitle={
+          isRTL
+            ? 'منصة عمل فني الشاحنات الثقيلة والصهاريج'
+            : 'Heavy Diesel & Tanker Mechanic Workbench'
+        }
+        badge={
+          <Badge variant="info" size="sm">
+            {isRTL ? 'منصة الفني' : 'Workbench'}
+          </Badge>
+        }
+      />
 
       {/* Mechanic KPIs - Simple & Mobile Focused */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <StatCard
-          title="MY OPEN JOBS"
+          title={isRTL ? 'أعمالي المفتوحة' : 'My open jobs'}
           value={myOpenJobs.length}
-          subtitle="Assigned to Me"
-          icon={<Wrench className="w-4 h-4 text-amber-400" />}
+          subtitle={isRTL ? 'مسندة لي' : 'Assigned to Me'}
+          icon={<Wrench className="w-4 h-4" />}
           color="amber"
         />
         <StatCard
-          title="IN PROGRESS"
+          title={isRTL ? 'قيد التنفيذ' : 'In progress'}
           value={inProgressJobs.length}
-          subtitle="Active Bay"
-          icon={<Clock className="w-4 h-4 text-blue-400" />}
+          subtitle={isRTL ? 'حارة نشطة' : 'Active Bay'}
+          icon={<Clock className="w-4 h-4" />}
           color="blue"
         />
         <StatCard
-          title="WAITING PARTS"
+          title={isRTL ? 'بانتظار القطع' : 'Waiting parts'}
           value={waitingPartsJobs.length}
-          subtitle="Store Request"
-          icon={<Package className="w-4 h-4 text-rose-400" />}
+          subtitle={isRTL ? 'طلب مخزن' : 'Store Request'}
+          icon={<Package className="w-4 h-4" />}
           color="rose"
         />
         <StatCard
-          title="COMPLETED TODAY"
+          title={isRTL ? 'مكتمل اليوم' : 'Completed today'}
           value={completedTodayJobs.length}
-          subtitle="Finished"
-          icon={<CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+          subtitle={isRTL ? 'منجز' : 'Finished'}
+          icon={<CheckCircle2 className="w-4 h-4" />}
           color="emerald"
         />
       </div>
 
       {/* Main Section: MY ASSIGNED JOBS */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
-        <h3 className="text-sm font-black uppercase tracking-wider text-slate-200 flex items-center gap-2">
-          <Wrench className="w-4 h-4 text-amber-400" /> My Assigned Work Orders
-        </h3>
+      <EditorialSection
+        title={isRTL ? 'أوامر العمل المكلف بها' : 'My Assigned Work Orders'}
+        marginTop={0}
+      >
+        <DataTable
+          columns={[
+            { label: isRTL ? 'أمر العمل' : 'Work order' },
+            { label: isRTL ? 'المركبة والمقطورة' : 'Vehicle & trailer' },
+            { label: isRTL ? 'وصف العطل' : 'Problem description' },
+            { label: isRTL ? 'تاريخ البلاغ' : 'Reported' },
+            { label: isRTL ? 'الحالة' : 'Status', align: 'end' },
+          ]}
+          isEmpty={myAssignedJobs.length === 0}
+          emptyMessage={
+            isRTL
+              ? 'لا توجد أوامر إصلاح مفتوحة مكلف بها حالياً.'
+              : 'You currently have no open repair jobs assigned.'
+          }
+        >
+          {myAssignedJobs.map((wo) => {
+            const veh = vehicles.find((v) => v.id === wo.vehicle_id);
+            const trl = trailers.find((tr) => tr.id === wo.trailer_id);
+            const stripe =
+              wo.priority === 'CRITICAL'
+                ? EDITORIAL_STATUS.red.stripe
+                : wo.status === 'WAITING_FOR_PARTS'
+                ? EDITORIAL_STATUS.amber.stripe
+                : wo.status === 'IN_PROGRESS'
+                ? EDITORIAL_STATUS.blue.stripe
+                : EDITORIAL_STATUS.green.stripe;
 
-        <div className="space-y-3">
-          {myAssignedJobs.length === 0 ? (
-            <div className="p-8 text-center text-slate-500 text-xs">
-              You currently have no open repair jobs assigned.
-            </div>
-          ) : (
-            myAssignedJobs.map(wo => {
-              const veh = vehicles.find(v => v.id === wo.vehicle_id);
-              const trl = trailers.find(t => t.id === wo.trailer_id);
-
-              return (
-                <div
-                  key={wo.id}
-                  className="p-4 bg-slate-950/70 border border-slate-800 rounded-xl hover:border-amber-500/40 transition space-y-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-black text-amber-400 text-sm">{wo.work_order_number}</span>
-                      <Badge variant={wo.priority === 'CRITICAL' ? 'danger' : 'amber'} size="sm">{wo.priority}</Badge>
-                    </div>
-                    <Badge variant={wo.status === 'IN_PROGRESS' ? 'amber' : 'purple'} size="sm">{wo.status.replace(/_/g, ' ')}</Badge>
-                  </div>
-
-                  <div>
-                    <p className="font-bold text-slate-100 text-sm">{veh?.vehicle_id} ({veh?.plate_number}) - {veh?.make} {veh?.model}</p>
-                    {trl && <p className="text-xs text-sky-400 mt-0.5">Coupled Trailer: {trl.trailer_id} ({trl.plate_number})</p>}
-                    <p className="text-xs text-slate-300 mt-2 font-medium bg-slate-900 p-2.5 rounded-lg border border-slate-800/80">
-                      Problem: {wo.problem_description}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-800/60">
-                    <span className="text-[10px] text-slate-500 font-mono">Reported: {new Date(wo.date_reported).toLocaleDateString()}</span>
-                    <button
-                      onClick={() => {
-                        setSelectedWO(wo);
-                        setDiagnosisText(wo.diagnosis_notes || '');
-                        setRepairText(wo.repair_summary || '');
+            return (
+              <DataRow
+                key={wo.id}
+                stripeColor={stripe}
+                onClick={() => openWorkbench(wo)}
+                actions={
+                  <RowAction
+                    icon={<ChevronRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />}
+                    title={isRTL ? 'فتح مساحة العمل' : 'Open Job Workbench'}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openWorkbench(wo);
+                    }}
+                  />
+                }
+              >
+                <td className="py-3 pe-3 whitespace-nowrap">
+                  <div className="flex flex-col items-start gap-1">
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: 600,
+                        fontSize: 13,
+                        color: 'var(--color-ink)',
                       }}
-                      className="flex items-center gap-1 px-4 py-1.5 bg-amber-500 text-slate-950 font-black text-xs rounded-lg hover:bg-amber-400 transition"
                     >
-                      Open Job Workbench <ChevronRight className="w-4 h-4" />
-                    </button>
+                      {wo.work_order_number}
+                    </span>
+                    <Badge variant={wo.priority === 'CRITICAL' ? 'danger' : 'amber'} size="sm">
+                      {wo.priority}
+                    </Badge>
                   </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
+                </td>
+                <td className="py-3 pe-3">
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>
+                        {veh?.vehicle_id}
+                      </span>
+                      {veh?.plate_number && <PlateChip plate={veh.plate_number} />}
+                    </div>
+                    <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
+                      {veh?.make} {veh?.model}
+                    </span>
+                    {trl && (
+                      <span style={{ fontSize: 11, color: EDITORIAL_STATUS.blue.text }}>
+                        {isRTL ? 'المقطورة:' : 'Trailer:'} {trl.trailer_id} ({trl.plate_number})
+                      </span>
+                    )}
+                  </div>
+                </td>
+                <td className="py-3 pe-3">
+                  <p style={{ fontSize: 13, color: 'var(--color-ink)' }}>{wo.problem_description}</p>
+                </td>
+                <td className="py-3 pe-3 whitespace-nowrap">
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--color-text-muted)' }}>
+                    {isRTL
+                      ? new Date(wo.date_reported).toLocaleDateString('ar-SA')
+                      : new Date(wo.date_reported).toLocaleDateString()}
+                  </span>
+                </td>
+                <td className="py-3 text-end whitespace-nowrap">
+                  <Badge variant={wo.status === 'IN_PROGRESS' ? 'amber' : 'purple'} size="sm">
+                    {wo.status.replace(/_/g, ' ')}
+                  </Badge>
+                </td>
+              </DataRow>
+            );
+          })}
+        </DataTable>
+      </EditorialSection>
 
       {/* Mechanic Personal Job Workbench Drawer */}
       {selectedWO && (
         <Drawer
           isOpen={!!selectedWO}
           onClose={() => setSelectedWO(null)}
-          title={`Mechanic Workbench: ${selectedWO.work_order_number}`}
-          subtitle="Simple mobile-optimized repair actions and labor logging."
+          title={
+            isRTL
+              ? `منصة عمل الفني: ${selectedWO.work_order_number}`
+              : `Mechanic Workbench: ${selectedWO.work_order_number}`
+          }
+          subtitle={
+            isRTL
+              ? 'إجراءات الإصلاح السريعة وتسجيل ساعات العمل والقطع.'
+              : 'Simple mobile-optimized repair actions and labor logging.'
+          }
           width="3xl"
         >
           <div className="space-y-6 text-xs">
             {/* Quick Action Bar */}
-            <div className="flex flex-wrap items-center gap-2 p-3 bg-slate-950 border border-slate-800 rounded-xl">
-              <button
-                onClick={() => handleStartJob(selectedWO.id)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 text-slate-950 font-bold rounded-lg hover:bg-emerald-400 transition"
-              >
-                <Play className="w-3.5 h-3.5" /> Start Job
-              </button>
-              <button
-                onClick={() => handlePauseJob(selectedWO.id)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/20 text-rose-300 border border-rose-500/40 font-bold rounded-lg hover:bg-rose-500/30 transition"
-              >
-                <Pause className="w-3.5 h-3.5" /> Request Parts (Pause)
-              </button>
-              <button
+            <div
+              className="flex flex-wrap items-center gap-2 p-3"
+              style={{
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-sm)',
+              }}
+            >
+              <SecondaryButton onClick={() => handleStartJob(selectedWO.id)}>
+                <Play className="w-3.5 h-3.5" style={{ color: EDITORIAL_STATUS.green.text }} />{' '}
+                {isRTL ? 'بدء العمل' : 'Start Job'}
+              </SecondaryButton>
+              <SecondaryButton onClick={() => handlePauseJob(selectedWO.id)}>
+                <Pause className="w-3.5 h-3.5" style={{ color: EDITORIAL_STATUS.red.text }} />{' '}
+                {isRTL ? 'طلب قطع غيار (إيقاف مؤقت)' : 'Request Parts (Pause)'}
+              </SecondaryButton>
+              <PrimaryButton
                 onClick={() => handleCompleteJob(selectedWO.id)}
-                className="flex items-center gap-1.5 px-4 py-1.5 bg-amber-500 text-slate-950 font-black rounded-lg hover:bg-amber-400 transition ml-auto"
+                style={{ marginInlineStart: 'auto' }}
               >
-                <CheckCircle2 className="w-4 h-4" /> Complete Repair
-              </button>
+                <CheckCircle2 className="w-4 h-4" /> {isRTL ? 'إكمال الإصلاح' : 'Complete Repair'}
+              </PrimaryButton>
             </div>
 
             {/* Diagnosis & Repair Notes Form */}
             <div className="space-y-4">
-              <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
-                <label className="font-bold text-slate-200 block">Add Diagnostic Finding</label>
+              <div
+                className="p-4 space-y-2"
+                style={{
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-sm)',
+                }}
+              >
+                <label className="font-semibold block" style={{ color: 'var(--color-ink)' }}>
+                  {isRTL ? 'إضافة نتائج التشخيص' : 'Add Diagnostic Finding'}
+                </label>
                 <textarea
                   rows={2}
-                  placeholder="Record root cause diagnosis (e.g. Civacon API seal leak under 4 bar pressure)..."
+                  placeholder={
+                    isRTL
+                      ? 'سجل السبب الجذري للعطل...'
+                      : 'Record root cause diagnosis (e.g. Civacon API seal leak under 4 bar pressure)...'
+                  }
                   value={diagnosisText}
-                  onChange={e => setDiagnosisText(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-slate-100"
+                  onChange={(e) => setDiagnosisText(e.target.value)}
+                  className="nf-field w-full"
                 />
               </div>
 
               {/* Request Spare Part */}
-              <form onSubmit={handleIssuePart} className="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-3">
-                <h4 className="font-bold text-slate-200 flex items-center gap-1.5">
-                  <Package className="w-4 h-4 text-purple-400" /> Request Part Used from Store
+              <form
+                onSubmit={handleIssuePart}
+                className="p-4 space-y-3"
+                style={{
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-sm)',
+                }}
+              >
+                <h4 className="font-semibold flex items-center gap-1.5" style={{ color: 'var(--color-ink)' }}>
+                  <Package className="w-4 h-4" style={{ color: 'var(--color-brand-accent)' }} />{' '}
+                  {isRTL ? 'طلب قطعة غيار من المخزن' : 'Request Part Used from Store'}
                 </h4>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap sm:flex-nowrap gap-2">
                   <select
                     required
                     value={selectedPartId}
-                    onChange={e => setSelectedPartId(e.target.value)}
-                    className="flex-1 bg-slate-900 border border-slate-800 rounded-lg p-2 text-slate-100"
+                    onChange={(e) => setSelectedPartId(e.target.value)}
+                    className="nf-field flex-1"
                   >
-                    <option value="">-- Select Spare Part --</option>
-                    {parts.map(p => (
-                      <option key={p.id} value={p.id}>{p.part_number} - {p.part_name} (Stock: {p.current_stock})</option>
+                    <option value="">{isRTL ? '-- اختر قطعة الغيار --' : '-- Select Spare Part --'}</option>
+                    {parts.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.part_number} - {p.part_name} ({isRTL ? 'المخزون:' : 'Stock:'} {p.current_stock})
+                      </option>
                     ))}
                   </select>
                   <input
                     type="number"
                     min={1}
                     value={partQty}
-                    onChange={e => setPartQty(Number(e.target.value))}
-                    className="w-20 bg-slate-900 border border-slate-800 rounded-lg p-2 text-slate-100 font-mono text-center font-bold"
+                    onChange={(e) => setPartQty(Number(e.target.value))}
+                    className="nf-field w-20 text-center font-semibold"
+                    style={{ fontFamily: 'var(--font-mono)' }}
                   />
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-purple-500 text-slate-950 font-bold rounded-lg hover:bg-purple-400 transition"
-                  >
-                    Use Part
-                  </button>
+                  <PrimaryButton type="submit">{isRTL ? 'صرف القطعة' : 'Use Part'}</PrimaryButton>
                 </div>
               </form>
 
               {/* Log Labor Hours */}
-              <form onSubmit={handleLogLabor} className="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-3">
-                <h4 className="font-bold text-slate-200 flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-sky-400" /> Log Labor Hours Worked
+              <form
+                onSubmit={handleLogLabor}
+                className="p-4 space-y-3"
+                style={{
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-sm)',
+                }}
+              >
+                <h4 className="font-semibold flex items-center gap-1.5" style={{ color: 'var(--color-ink)' }}>
+                  <Clock className="w-4 h-4" style={{ color: EDITORIAL_STATUS.blue.text }} />{' '}
+                  {isRTL ? 'تسجيل ساعات العمل المنجزة' : 'Log Labor Hours Worked'}
                 </h4>
                 <div className="flex gap-2">
                   <input
                     type="number"
                     step="0.5"
                     value={laborHours}
-                    onChange={e => setLaborHours(Number(e.target.value))}
-                    className="w-28 bg-slate-900 border border-slate-800 rounded-lg p-2 text-slate-100 font-mono font-bold"
+                    onChange={(e) => setLaborHours(Number(e.target.value))}
+                    className="nf-field w-28 font-semibold"
+                    style={{ fontFamily: 'var(--font-mono)' }}
                   />
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-sky-500 text-slate-950 font-bold rounded-lg hover:bg-sky-400 transition"
-                  >
-                    Log Hours
-                  </button>
+                  <PrimaryButton type="submit">{isRTL ? 'تسجيل الساعات' : 'Log Hours'}</PrimaryButton>
                 </div>
               </form>
             </div>
           </div>
         </Drawer>
       )}
-    </div>
+    </PageContainer>
   );
 };

@@ -1,5 +1,6 @@
 import React from 'react';
-import { clsx } from 'clsx';
+import { useI18n } from '../../context/I18nContext';
+import { DESIGN_TOKENS } from '../../lib/designTokens';
 
 interface BadgeProps {
   children: React.ReactNode;
@@ -9,54 +10,57 @@ interface BadgeProps {
   dot?: boolean;
 }
 
+const VARIANT_COLORS: Record<NonNullable<BadgeProps['variant']>, { text: string; stripe: string }> = {
+  success: { text: DESIGN_TOKENS.colors.status.availableText, stripe: DESIGN_TOKENS.colors.status.availableStripe },
+  info: { text: DESIGN_TOKENS.colors.status.onTripText, stripe: DESIGN_TOKENS.colors.status.onTripStripe },
+  cyan: { text: DESIGN_TOKENS.colors.status.onTripText, stripe: DESIGN_TOKENS.colors.status.onTripStripe },
+  warning: { text: DESIGN_TOKENS.colors.status.workshopText, stripe: DESIGN_TOKENS.colors.status.workshopStripe },
+  amber: { text: DESIGN_TOKENS.colors.status.workshopText, stripe: DESIGN_TOKENS.colors.status.workshopStripe },
+  danger: { text: DESIGN_TOKENS.colors.status.outOfServiceText, stripe: DESIGN_TOKENS.colors.status.outOfServiceStripe },
+  purple: { text: '#5B21B6', stripe: '#7C3AED' },
+  slate: { text: '#5B574F', stripe: '#6B665C' },
+};
+
 export const Badge: React.FC<BadgeProps> = ({
   children,
   variant = 'slate',
   size = 'md',
-  className,
-  dot = true
+  className = '',
+  dot = true,
 }) => {
-  const variantStyles = {
-    success: 'bg-emerald-50 text-emerald-800 border-emerald-200/90 shadow-2xs',
-    warning: 'bg-amber-50 text-amber-800 border-amber-200/90 shadow-2xs',
-    danger: 'bg-rose-50 text-rose-800 border-rose-200/90 shadow-2xs',
-    info: 'bg-sky-50 text-sky-800 border-sky-200/90 shadow-2xs',
-    purple: 'bg-purple-50 text-purple-800 border-purple-200/90 shadow-2xs',
-    amber: 'bg-amber-50 text-amber-900 border-amber-300 shadow-2xs',
-    slate: 'bg-slate-100 text-slate-700 border-slate-200/90 shadow-2xs',
-    cyan: 'bg-cyan-50 text-cyan-800 border-cyan-200/90 shadow-2xs'
-  };
+  const { t } = useI18n();
+  const resolvedContent = typeof children === 'string' ? t(children, children) : children;
+  const palette = VARIANT_COLORS[variant] || VARIANT_COLORS.slate;
 
-  const dotStyles = {
-    success: 'bg-emerald-500',
-    warning: 'bg-amber-500',
-    danger: 'bg-rose-500',
-    info: 'bg-sky-500',
-    purple: 'bg-purple-500',
-    amber: 'bg-amber-500',
-    slate: 'bg-slate-400',
-    cyan: 'bg-cyan-500'
-  };
-
-  const sizeStyles = {
-    sm: 'px-2 py-0.5 text-[9px] font-bold',
-    md: 'px-2.5 py-0.5 text-[11px] font-bold',
-    lg: 'px-3 py-1 text-xs font-bold'
-  };
+  const fontSize = size === 'sm' ? 11.5 : size === 'lg' ? 13 : 12.5;
 
   return (
     <span
-      className={clsx(
-        'inline-flex items-center gap-1.5 rounded-md border tracking-wide uppercase font-mono select-none',
-        variantStyles[variant],
-        sizeStyles[size],
-        className
-      )}
+      className={className}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        fontSize,
+        fontWeight: 500,
+        color: palette.text,
+        userSelect: 'none',
+        lineHeight: 1.3,
+      }}
     >
       {dot && (
-        <span className={clsx('h-1.5 w-1.5 rounded-full shrink-0', dotStyles[variant])} />
+        <span
+          style={{
+            display: 'inline-block',
+            width: 7,
+            height: 7,
+            borderRadius: 2,
+            background: palette.stripe,
+            flexShrink: 0,
+          }}
+        />
       )}
-      <span>{children}</span>
+      <span>{resolvedContent}</span>
     </span>
   );
 };

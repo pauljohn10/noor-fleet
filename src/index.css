@@ -47,6 +47,7 @@
 
     /* Radius */
     --radius: 4px;
+    --radius-sm: 4px;
   }
 
   body {
@@ -155,6 +156,18 @@
   font-family: var(--font-arabic);
 }
 
+[dir="rtl"] tr.text-left,
+[dir="rtl"] th.text-left,
+[dir="rtl"] td.text-left,
+[dir="rtl"] thead tr.text-left th {
+  text-align: right;
+}
+
+[dir="rtl"] th.text-right,
+[dir="rtl"] td.text-right {
+  text-align: left;
+}
+
 [dir="rtl"] .space-x-1> :not([hidden])~ :not([hidden]),
 [dir="rtl"] .space-x-2> :not([hidden])~ :not([hidden]),
 [dir="rtl"] .space-x-2\.5> :not([hidden])~ :not([hidden]),
@@ -239,4 +252,57 @@
 .nf-focus-ring:focus-visible {
   outline: 2px solid var(--color-brand-accent);
   outline-offset: 2px;
+}
+
+/* Hide scrollbars cleanly on horizontal status tab rails */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Data table row hover & keyboard focus action reveal */
+.nf-data-row {
+  transition: background-color 0.1s ease;
+}
+
+.nf-data-row:hover {
+  background-color: var(--color-row-hover);
+}
+
+.nf-row-actions {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.nf-data-row:hover .nf-row-actions,
+.nf-data-row:focus-within .nf-row-actions {
+  opacity: 1;
+}
+
+/* Shared editorial field/select styling inside warm-paper forms & toolbars */
+.nf-field {
+  width: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--color-ink);
+  outline: none;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.nf-field::placeholder {
+  color: var(--color-text-muted);
+}
+
+.nf-field:focus {
+  border-color: var(--color-brand-accent);
+  box-shadow: 0 0 0 2px rgba(15, 92, 77, 0.16);
 }

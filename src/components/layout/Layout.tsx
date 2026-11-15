@@ -3,6 +3,7 @@ import { Header } from './Header';
 import { Sidebar, NavItemKey } from './Sidebar';
 import { MobileNav } from './MobileNav';
 import { GlobalSearch } from '../common/GlobalSearch';
+import { useI18n } from '../../context/I18nContext';
 
 interface LayoutProps {
   activeTab: NavItemKey;
@@ -13,9 +14,10 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ activeTab, onSelectTab, children }) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { isRTL } = useI18n();
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden" style={{ background: 'var(--color-page-bg)', color: 'var(--color-ink)', fontFamily: 'var(--font-ui)', fontSize: 14 }}>
+    <div className="flex h-screen w-screen overflow-hidden" style={{ background: 'var(--color-page-bg)', color: 'var(--color-ink)', fontFamily: isRTL ? 'var(--font-arabic)' : 'var(--font-ui)', fontSize: 14 }}>
       {/* Desktop Sidebar */}
       <div className="hidden md:flex shrink-0">
         <Sidebar 

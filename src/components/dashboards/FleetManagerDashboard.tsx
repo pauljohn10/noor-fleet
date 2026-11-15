@@ -1,24 +1,61 @@
 import React, { useState } from 'react';
-import { 
-  Truck, Plus, CalendarCheck, ShieldCheck, Eye, Wrench, Clock, CheckCircle2, AlertTriangle, AlertOctagon, HelpCircle, XCircle,
-  ZoomIn, Maximize2
+import {
+  Truck,
+  Plus,
+  CalendarCheck,
+  ShieldCheck,
+  Eye,
+  ZoomIn,
+  Maximize2,
 } from 'lucide-react';
 import { useFleet } from '../../context/FleetContext';
 import { useI18n } from '../../context/I18nContext';
+import { Badge } from '../common/Badge';
 import { Modal } from '../common/Modal';
 import { ImageLightboxModal } from '../common/ImageLightboxModal';
 import { VehicleFormModal } from '../vehicles/VehicleFormModal';
 import { TrailerFormModal } from '../trailers/TrailerFormModal';
-import { DefectReport, SeverityLevel, VehicleStatus, DefectReportStatus, PMStatus } from '../../types';
+import {
+  DefectReport,
+  SeverityLevel,
+  VehicleStatus,
+  DefectReportStatus,
+  PMStatus,
+} from '../../types';
+import {
+  EDITORIAL_STATUS,
+  PageContainer,
+  PageHeader,
+  MetricStrip,
+  EditorialSection,
+  DataTable,
+  DataRow,
+  RowAction,
+  PlateChip,
+  StatusText,
+  EditorialSelect,
+  PrimaryButton,
+  SecondaryButton,
+  GhostButton,
+} from '../common/EditorialUI';
 
 interface FleetManagerDashboardProps {
   onNavigateTab: (tab: any) => void;
 }
 
 export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ onNavigateTab }) => {
-  const { 
-    vehicles, trailers, schedules, workOrders, defectReports, drivers,
-    addWorkOrder, addMaintenanceSchedule, updateMaintenanceScheduleStatus, updateVehicle, updateDefectReport, refreshData 
+  const {
+    vehicles,
+    trailers,
+    schedules,
+    defectReports,
+    drivers,
+    addWorkOrder,
+    addMaintenanceSchedule,
+    updateMaintenanceScheduleStatus,
+    updateVehicle,
+    updateDefectReport,
+    refreshData,
   } = useFleet();
   const { t, isRTL } = useI18n();
 
@@ -58,19 +95,19 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
   };
 
   const closeLightbox = () => {
-    setLightboxData(prev => ({ ...prev, isOpen: false }));
+    setLightboxData((prev) => ({ ...prev, isOpen: false }));
   };
 
   // Status Metrics
-  const availableCount = vehicles.filter(v => v.status === 'AVAILABLE').length;
-  const onTripCount = vehicles.filter(v => v.status === 'ON_TRIP').length;
-  const inWorkshopCount = vehicles.filter(v => v.status === 'IN_WORKSHOP').length;
-  const requiresInspectionCount = vehicles.filter(v => v.status === 'REQUIRES INSPECTION').length;
-  const outOfServiceCount = vehicles.filter(v => v.status === 'OUT_OF_SERVICE').length;
+  const availableCount = vehicles.filter((v) => v.status === 'AVAILABLE').length;
+  const onTripCount = vehicles.filter((v) => v.status === 'ON_TRIP').length;
+  const inWorkshopCount = vehicles.filter((v) => v.status === 'IN_WORKSHOP').length;
+  const requiresInspectionCount = vehicles.filter((v) => v.status === 'REQUIRES INSPECTION').length;
+  const outOfServiceCount = vehicles.filter((v) => v.status === 'OUT_OF_SERVICE').length;
 
   // Fleet Manager Action Handlers
   const handleCreateWorkOrder = async (rep: DefectReport) => {
-    const veh = vehicles.find(v => v.vehicle_id === rep.vehicle_id || v.id === rep.vehicle_id);
+    const veh = vehicles.find((v) => v.vehicle_id === rep.vehicle_id || v.id === rep.vehicle_id);
     const wo = await addWorkOrder({
       vehicle_id: veh?.id || rep.vehicle_id,
       trailer_id: rep.trailer_id,
@@ -78,28 +115,30 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
       problem_description: `[DEFECT REPORT ${rep.report_number}]: ${rep.category} - ${rep.description}`,
       priority: rep.severity === 'CRITICAL' ? 'CRITICAL' : rep.severity === 'HIGH' ? 'HIGH' : 'MEDIUM',
       reported_by: rep.driver_name,
-      status: 'REPORTED'
+      status: 'REPORTED',
     });
 
     await updateDefectReport(rep.id, {
       status: 'WORK_ORDER_CREATED' as DefectReportStatus,
       work_order_id: wo.id,
       action_taken: `Work Order ${wo.work_order_number} created by Fleet Manager.`,
-      workshop_response: `Work order created by Fleet Manager.`
+      workshop_response: `Work order created by Fleet Manager.`,
     });
 
     if (veh) {
       await updateVehicle(veh.id, { status: 'IN_WORKSHOP' });
     }
 
-    alert(`Work Order ${wo.work_order_number} created successfully! Vehicle ${rep.vehicle_id} set to IN WORKSHOP.`);
+    alert(
+      `Work Order ${wo.work_order_number} created successfully! Vehicle ${rep.vehicle_id} set to IN WORKSHOP.`
+    );
     setSelectedReport(null);
     setActionNotes('');
     await refreshData();
   };
 
   const handleSchedulePM = async (rep: DefectReport) => {
-    const veh = vehicles.find(v => v.vehicle_id === rep.vehicle_id || v.id === rep.vehicle_id);
+    const veh = vehicles.find((v) => v.vehicle_id === rep.vehicle_id || v.id === rep.vehicle_id);
     await addMaintenanceSchedule({
       vehicle_id: veh?.id,
       title: `Scheduled Repair: ${rep.category} (${rep.report_number})`,
@@ -110,13 +149,13 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
       next_due_mileage: (veh?.current_mileage || 0) + 1000,
       next_due_date: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
       status: 'DUE_SOON',
-      notes: `Defect Report ${rep.report_number}: ${rep.description}`
+      notes: `Defect Report ${rep.report_number}: ${rep.description}`,
     });
 
     await updateDefectReport(rep.id, {
       status: 'SCHEDULED' as DefectReportStatus,
       action_taken: 'Scheduled maintenance item created.',
-      workshop_response: 'Scheduled for workshop repair within 7 days.'
+      workshop_response: 'Scheduled for workshop repair within 7 days.',
     });
 
     alert(`Maintenance scheduled for vehicle ${rep.vehicle_id}.`);
@@ -125,7 +164,7 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
     await refreshData();
   };
 
-  const handleRequestMoreInfo = async (rep: DefectReport) => {
+  const _handleRequestMoreInfo = async (rep: DefectReport) => {
     if (!actionNotes.trim()) {
       alert('Please provide notes specifying what additional information is needed from the driver.');
       return;
@@ -134,7 +173,7 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
     await updateDefectReport(rep.id, {
       status: 'MORE_INFO_REQUESTED' as DefectReportStatus,
       fleet_manager_notes: actionNotes,
-      workshop_response: `Fleet Manager request: ${actionNotes}`
+      workshop_response: `Fleet Manager request: ${actionNotes}`,
     });
 
     alert(`Information request sent to Driver ${rep.driver_name}.`);
@@ -142,13 +181,14 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
     setActionNotes('');
     await refreshData();
   };
+  void _handleRequestMoreInfo;
 
   const handleMarkResolved = async (rep: DefectReport) => {
     const note = actionNotes.trim() || 'Reviewed by Fleet Manager. Issue addressed.';
     await updateDefectReport(rep.id, {
       status: 'RESOLVED' as DefectReportStatus,
       fleet_manager_notes: note,
-      workshop_response: note
+      workshop_response: note,
     });
 
     alert(`Defect report ${rep.report_number} marked as RESOLVED.`);
@@ -157,10 +197,10 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
     await refreshData();
   };
 
-  const handleMarkDuplicate = async (rep: DefectReport) => {
+  const _handleMarkDuplicate = async (rep: DefectReport) => {
     await updateDefectReport(rep.id, {
       status: 'DUPLICATE' as DefectReportStatus,
-      workshop_response: 'Closed as duplicate report.'
+      workshop_response: 'Closed as duplicate report.',
     });
 
     alert(`Defect report ${rep.report_number} marked as DUPLICATE.`);
@@ -168,9 +208,10 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
     setActionNotes('');
     await refreshData();
   };
+  void _handleMarkDuplicate;
 
   const handleUpdateVehicleStatus = (rep: DefectReport, newStatus: VehicleStatus) => {
-    const veh = vehicles.find(v => v.vehicle_id === rep.vehicle_id);
+    const veh = vehicles.find((v) => v.vehicle_id === rep.vehicle_id);
     if (veh) {
       updateVehicle(veh.id, { status: newStatus });
       alert(`Vehicle ${rep.vehicle_id} status updated to ${newStatus}.`);
@@ -182,314 +223,499 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
 
   const getSeverityBadge = (sev: SeverityLevel) => {
     switch (sev) {
-      case 'CRITICAL': return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">{t('CRITICAL', 'CRITICAL')}</span>;
-      case 'HIGH': return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">{t('HIGH', 'HIGH')}</span>;
-      case 'MEDIUM': return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-200">{t('MEDIUM', 'MEDIUM')}</span>;
-      case 'LOW': return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">{t('LOW', 'LOW')}</span>;
+      case 'CRITICAL':
+        return (
+          <Badge variant="danger" size="sm">
+            {t('CRITICAL', 'CRITICAL')}
+          </Badge>
+        );
+      case 'HIGH':
+        return (
+          <Badge variant="amber" size="sm">
+            {t('HIGH', 'HIGH')}
+          </Badge>
+        );
+      case 'MEDIUM':
+        return (
+          <Badge variant="info" size="sm">
+            {t('MEDIUM', 'MEDIUM')}
+          </Badge>
+        );
+      case 'LOW':
+        return (
+          <Badge variant="slate" size="sm">
+            {t('LOW', 'LOW')}
+          </Badge>
+        );
+    }
+  };
+
+  const getVehicleStripe = (status: VehicleStatus) => {
+    switch (status) {
+      case 'AVAILABLE':
+        return EDITORIAL_STATUS.green.stripe;
+      case 'ON_TRIP':
+        return EDITORIAL_STATUS.blue.stripe;
+      case 'IN_WORKSHOP':
+      case 'REQUIRES INSPECTION':
+        return EDITORIAL_STATUS.amber.stripe;
+      case 'OUT_OF_SERVICE':
+        return EDITORIAL_STATUS.red.stripe;
+      default:
+        return EDITORIAL_STATUS.muted.stripe;
     }
   };
 
   return (
-    <div className="space-y-4 font-sans text-xs">
-      {/* Page Header & Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200/90 p-4 rounded-xl shadow-2xs">
-        <div>
-          <h2 className="text-base font-black text-slate-900 tracking-tight">{t('fleet_workspace_title', 'FLEET OPERATIONS WORKSPACE')}</h2>
-          <p className="text-xs text-slate-500 mt-0.5">{t('fleet_workspace_desc', 'Control center for vehicle status, driver defect reports, and maintenance schedules.')}</p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setIsVehicleModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg transition shadow-2xs active:scale-95 cursor-pointer"
-          >
-            <Plus className="w-4 h-4" /> {t('add_vehicle', 'Add Vehicle')}
-          </button>
-          <button
-            onClick={() => setIsTrailerModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-white text-slate-700 font-bold text-xs rounded-lg border border-slate-200 hover:bg-slate-50 transition shadow-2xs active:scale-95 cursor-pointer"
-          >
-            <Plus className="w-4 h-4 text-slate-500" /> {t('add_trailer', 'Add Trailer')}
-          </button>
-          <button
-            onClick={() => onNavigateTab('drivers')}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-white text-slate-700 font-bold text-xs rounded-lg border border-slate-200 hover:bg-slate-50 transition shadow-2xs active:scale-95 cursor-pointer"
-          >
-            {t('assign_driver', 'Assign Driver')}
-          </button>
-          <a
-            href="/driver-report"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-amber-300 font-bold text-xs rounded-lg transition shadow-2xs active:scale-95"
-          >
-            {isRTL ? 'رابط بلاغات السائقين العام ↗' : 'Public Driver Report Link ↗'}
-          </a>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title={
+          <>
+            {isRTL ? 'مساحة عمل' : 'Fleet Operations'}
+            <br />
+            {isRTL ? 'عمليات الأسطول' : 'Control Workspace'}
+          </>
+        }
+        subtitle={t(
+          'fleet_workspace_desc',
+          'Control center for vehicle status, driver defect reports, and maintenance schedules.'
+        )}
+        actions={
+          <>
+            <SecondaryButton onClick={() => onNavigateTab('drivers')}>
+              {t('assign_driver', 'Assign Driver')}
+            </SecondaryButton>
+            <SecondaryButton onClick={() => setIsTrailerModalOpen(true)}>
+              {isRTL ? `+ ${t('add_trailer', 'Add Trailer')}` : '+ Add trailer'}
+            </SecondaryButton>
+            <PrimaryButton onClick={() => setIsVehicleModalOpen(true)}>
+              {isRTL ? `+ ${t('add_vehicle', 'Add Vehicle')}` : '+ Add fuel truck'}
+            </PrimaryButton>
+          </>
+        }
+      />
 
       {/* COMPACT ERP FLEET STATUS SUMMARY BAR */}
-      <div className="bg-white border border-slate-200/90 rounded-xl p-4 shadow-2xs">
-        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center justify-between">
-          <span>{t('fleet_status_summary', 'FLEET OPERATIONAL STATUS SUMMARY')}</span>
-          <span className="text-[10px] font-mono text-slate-400">Live Telemetry</span>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
-          <div 
-            onClick={() => onNavigateTab('vehicles')}
-            className="p-3 bg-gradient-to-b from-emerald-50/80 to-white border border-emerald-200/80 rounded-xl cursor-pointer hover:border-emerald-300 hover:shadow-xs transition group"
+      <EditorialSection
+        title={t('fleet_status_summary', 'Fleet operational status summary')}
+        action={
+          <span
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 11,
+              color: 'var(--color-text-muted)',
+            }}
           >
-            <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block">{t('AVAILABLE', 'AVAILABLE')}</span>
-            <span className="font-mono font-black text-emerald-950 text-2xl mt-1 block group-hover:scale-105 transition-transform">{availableCount}</span>
-          </div>
-
-          <div 
-            onClick={() => onNavigateTab('vehicles')}
-            className="p-3 bg-gradient-to-b from-sky-50/80 to-white border border-sky-200/80 rounded-xl cursor-pointer hover:border-sky-300 hover:shadow-xs transition group"
-          >
-            <span className="text-[10px] font-bold text-sky-800 uppercase tracking-wider block">{t('ON_TRIP', 'ON TRIP')}</span>
-            <span className="font-mono font-black text-sky-950 text-2xl mt-1 block group-hover:scale-105 transition-transform">{onTripCount}</span>
-          </div>
-
-          <div 
-            onClick={() => onNavigateTab('workOrders')}
-            className="p-3 bg-gradient-to-b from-amber-50/80 to-white border border-amber-200/80 rounded-xl cursor-pointer hover:border-amber-300 hover:shadow-xs transition group"
-          >
-            <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider block">{t('IN_WORKSHOP', 'IN WORKSHOP')}</span>
-            <span className="font-mono font-black text-amber-950 text-2xl mt-1 block group-hover:scale-105 transition-transform">{inWorkshopCount}</span>
-          </div>
-
-          <div 
-            onClick={() => onNavigateTab('vehicles')}
-            className="p-3 bg-gradient-to-b from-orange-50/80 to-white border border-orange-200/80 rounded-xl cursor-pointer hover:border-orange-300 hover:shadow-xs transition group"
-          >
-            <span className="text-[10px] font-bold text-orange-800 uppercase tracking-wider block">{t('REQUIRES INSPECTION', 'REQUIRES INSPECT')}</span>
-            <span className="font-mono font-black text-orange-950 text-2xl mt-1 block group-hover:scale-105 transition-transform">{requiresInspectionCount}</span>
-          </div>
-
-          <div 
-            onClick={() => onNavigateTab('vehicles')}
-            className="p-3 bg-gradient-to-b from-rose-50/80 to-white border border-rose-200/80 rounded-xl cursor-pointer hover:border-rose-300 hover:shadow-xs transition group"
-          >
-            <span className="text-[10px] font-bold text-rose-800 uppercase tracking-wider block">{t('OUT_OF_SERVICE', 'OUT OF SERVICE')}</span>
-            <span className="font-mono font-black text-rose-950 text-2xl mt-1 block group-hover:scale-105 transition-transform">{outOfServiceCount}</span>
-          </div>
-        </div>
-      </div>
+            {isRTL ? 'مراقبة مباشرة' : 'Live Telemetry'}
+          </span>
+        }
+        marginTop={0}
+      >
+        <MetricStrip
+          items={[
+            {
+              label: isRTL ? 'متاح' : 'Available',
+              value: availableCount,
+              mono: true,
+              stripe: EDITORIAL_STATUS.green.stripe,
+              onClick: () => onNavigateTab('vehicles'),
+            },
+            {
+              label: isRTL ? 'في رحلة' : 'On trip',
+              value: onTripCount,
+              mono: true,
+              stripe: EDITORIAL_STATUS.blue.stripe,
+              onClick: () => onNavigateTab('vehicles'),
+            },
+            {
+              label: isRTL ? 'في الورشة' : 'In workshop',
+              value: inWorkshopCount,
+              mono: true,
+              stripe: EDITORIAL_STATUS.amber.stripe,
+              onClick: () => onNavigateTab('workOrders'),
+            },
+            {
+              label: isRTL ? 'يتطلب فحص' : 'Requires inspection',
+              value: requiresInspectionCount,
+              mono: true,
+              stripe: EDITORIAL_STATUS.amber.stripe,
+              onClick: () => onNavigateTab('vehicles'),
+            },
+            {
+              label: isRTL ? 'خارج الخدمة' : 'Out of service',
+              value: outOfServiceCount,
+              mono: true,
+              stripe: EDITORIAL_STATUS.red.stripe,
+              onClick: () => onNavigateTab('vehicles'),
+            },
+          ]}
+        />
+      </EditorialSection>
 
       {/* DATA TABLE 1: DRIVER REPORTS */}
-      <div className="bg-white border border-slate-200/90 rounded-xl overflow-hidden shadow-2xs">
-        <div className="px-4 py-3 bg-slate-50/90 border-b border-slate-200/80 flex items-center justify-between">
-          <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-amber-600" /> {t('driver_problem_reports_inbox', 'DRIVER PROBLEM REPORTS INBOX')}
-          </h3>
-          <button
-            onClick={() => onNavigateTab('inspections')}
-            className="text-xs font-bold text-amber-700 hover:text-amber-800 transition"
-          >
+      <EditorialSection
+        title={
+          <span className="inline-flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4" style={{ color: 'var(--color-brand-accent)' }} />
+            {t('driver_problem_reports_inbox', 'Driver problem reports inbox')}
+          </span>
+        }
+        action={
+          <GhostButton onClick={() => onNavigateTab('inspections')}>
             {t('view_all_reports', 'View All Reports')} {isRTL ? '←' : '→'}
-          </button>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left rtl:text-right text-xs border-collapse">
-            <thead className="bg-slate-100/70 border-b border-slate-200 text-[11px] font-extrabold uppercase text-slate-500 tracking-wider">
-              <tr>
-                <th className="p-3">{t('priority', 'Priority')}</th>
-                <th className="p-3">{t('report_num', 'Report #')}</th>
-                <th className="p-3">{t('driver', 'Driver')}</th>
-                <th className="p-3">{t('vehicles', 'Vehicle')}</th>
-                <th className="p-3">{t('problem_summary', 'Problem Summary')}</th>
-                <th className="p-3">{t('date', 'Date')}</th>
-                <th className="p-3">{t('status', 'Status')}</th>
-                <th className="p-3 text-right rtl:text-left">{t('action', 'Action')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 font-medium">
-              {defectReports.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="p-8 text-center text-slate-400">{t('no_defect_reports', 'No driver defect reports found.')}</td>
-                </tr>
-              ) : (
-                defectReports.slice(0, 5).map(rep => (
-                  <tr key={rep.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="p-3">{getSeverityBadge(rep.severity)}</td>
-                    <td className="p-3 font-mono font-bold text-slate-900">{rep.report_number}</td>
-                    <td className="p-3 font-semibold text-slate-800">{rep.driver_name}</td>
-                    <td className="p-3 font-bold text-slate-900">
-                      {rep.plate_number ? `${rep.plate_number} (${rep.vehicle_id})` : rep.vehicle_id} {rep.trailer_id ? `• ${rep.trailer_id}` : ''}
-                    </td>
-                    <td className="p-3 font-medium text-slate-700 max-w-xs truncate">{rep.description}</td>
-                    <td className="p-3 font-mono text-slate-500 text-[11px]">{new Date(rep.created_at).toLocaleDateString()}</td>
-                    <td className="p-3">
-                      <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-                        rep.status === 'NEW' || rep.status === 'REPORTED' ? 'bg-amber-50 text-amber-800 border border-amber-200' :
-                        rep.status === 'UNDER_REVIEW' ? 'bg-sky-50 text-sky-800 border border-sky-200' :
-                        rep.status === 'IN_PROGRESS' || rep.status === 'WORK_ORDER_CREATED' ? 'bg-indigo-50 text-indigo-800 border border-indigo-200' :
-                        rep.status === 'RESOLVED' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' :
-                        rep.status === 'REJECTED' ? 'bg-rose-50 text-rose-800 border border-rose-200' :
-                        'bg-slate-100 text-slate-700 border border-slate-200'
-                      }`}>
-                        {rep.status === 'REPORTED' ? 'NEW' : t(rep.status, rep.status.replace(/_/g, ' '))}
-                      </span>
-                    </td>
-                    <td className="p-3 text-right rtl:text-left">
-                      <button
-                        onClick={() => {
-                          setSelectedReport(rep);
-                          setActionNotes(rep.fleet_manager_notes || '');
-                        }}
-                        className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg shadow-2xs transition active:scale-95 cursor-pointer"
-                      >
-                        {t('process', 'Process')}
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+          </GhostButton>
+        }
+        marginTop={8}
+      >
+        <DataTable
+          columns={[
+            { label: t('priority', 'Priority') },
+            { label: t('report_num', 'Report #') },
+            { label: t('driver', 'Driver') },
+            { label: t('vehicles', 'Vehicle') },
+            { label: t('problem_summary', 'Problem Summary') },
+            { label: t('date', 'Date') },
+            { label: t('status', 'Status') },
+          ]}
+          isEmpty={defectReports.length === 0}
+          emptyMessage={t('no_defect_reports', 'No driver defect reports found.')}
+        >
+          {defectReports.slice(0, 5).map((rep) => (
+            <DataRow
+              key={rep.id}
+              stripeColor={
+                rep.severity === 'CRITICAL'
+                  ? EDITORIAL_STATUS.red.stripe
+                  : rep.severity === 'HIGH'
+                  ? EDITORIAL_STATUS.amber.stripe
+                  : rep.status === 'RESOLVED'
+                  ? EDITORIAL_STATUS.green.stripe
+                  : EDITORIAL_STATUS.blue.stripe
+              }
+              onClick={() => {
+                setSelectedReport(rep);
+                setActionNotes(rep.fleet_manager_notes || '');
+              }}
+              actions={
+                <RowAction
+                  icon={<Eye className="w-4 h-4" />}
+                  title={t('process', 'Process')}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedReport(rep);
+                    setActionNotes(rep.fleet_manager_notes || '');
+                  }}
+                />
+              }
+            >
+              <td className="py-3 pe-3 whitespace-nowrap">{getSeverityBadge(rep.severity)}</td>
+              <td className="py-3 pe-3 whitespace-nowrap">
+                <span
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontWeight: 600,
+                    color: 'var(--color-ink)',
+                    fontSize: 12,
+                  }}
+                >
+                  {rep.report_number}
+                </span>
+              </td>
+              <td className="py-3 pe-3 whitespace-nowrap">
+                <span style={{ fontWeight: 500, color: 'var(--color-ink)', fontSize: 13 }}>
+                  {rep.driver_name}
+                </span>
+              </td>
+              <td className="py-3 pe-3 whitespace-nowrap">
+                <span style={{ fontWeight: 600, color: 'var(--color-ink)', fontSize: 12 }}>
+                  {rep.plate_number ? `${rep.plate_number} (${rep.vehicle_id})` : rep.vehicle_id}
+                  {rep.trailer_id ? ` • ${rep.trailer_id}` : ''}
+                </span>
+              </td>
+              <td className="py-3 pe-3">
+                <span
+                  className="block max-w-xs truncate"
+                  style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}
+                >
+                  {rep.description}
+                </span>
+              </td>
+              <td className="py-3 pe-3 whitespace-nowrap">
+                <span
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    color: 'var(--color-text-muted)',
+                    fontSize: 11,
+                  }}
+                >
+                  {new Date(rep.created_at).toLocaleDateString()}
+                </span>
+              </td>
+              <td className="py-3 pe-3 whitespace-nowrap">
+                <Badge
+                  variant={
+                    rep.status === 'NEW' || rep.status === 'REPORTED'
+                      ? 'amber'
+                      : rep.status === 'UNDER_REVIEW'
+                      ? 'info'
+                      : rep.status === 'IN_PROGRESS' || rep.status === 'WORK_ORDER_CREATED'
+                      ? 'purple'
+                      : rep.status === 'RESOLVED'
+                      ? 'success'
+                      : rep.status === 'REJECTED'
+                      ? 'danger'
+                      : 'slate'
+                  }
+                  size="sm"
+                >
+                  {rep.status === 'REPORTED'
+                    ? 'New'
+                    : t(rep.status, rep.status.replace(/_/g, ' '))}
+                </Badge>
+              </td>
+            </DataRow>
+          ))}
+        </DataTable>
+      </EditorialSection>
 
       {/* DATA TABLE 2: VEHICLE STATUS MATRIX */}
-      <div className="bg-white border border-slate-200/90 rounded-xl overflow-hidden shadow-2xs">
-        <div className="px-4 py-3 bg-slate-50/90 border-b border-slate-200/80 flex items-center justify-between">
-          <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-2">
-            <Truck className="w-4 h-4 text-amber-600" /> {t('fleet_vehicle_status_matrix', 'FLEET VEHICLE STATUS MATRIX')}
-          </h3>
-          <button
-            onClick={() => onNavigateTab('vehicles')}
-            className="text-xs font-bold text-amber-700 hover:text-amber-800 transition"
-          >
+      <EditorialSection
+        title={
+          <span className="inline-flex items-center gap-2">
+            <Truck className="w-4 h-4" style={{ color: 'var(--color-brand-accent)' }} />
+            {t('fleet_vehicle_status_matrix', 'Fleet vehicle status matrix')}
+          </span>
+        }
+        action={
+          <GhostButton onClick={() => onNavigateTab('vehicles')}>
             {t('manage_fleet', 'Manage Fleet')} {isRTL ? '←' : '→'}
-          </button>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left rtl:text-right text-xs border-collapse">
-            <thead className="bg-slate-100/70 border-b border-slate-200 text-[11px] font-extrabold uppercase text-slate-500 tracking-wider">
-              <tr>
-                <th className="p-3">{t('vehicles', 'Vehicle')}</th>
-                <th className="p-3">{t('plate_number', 'Plate Number')}</th>
-                <th className="p-3">{t('coupled_trailer', 'Coupled Trailer')}</th>
-                <th className="p-3">{t('assigned_driver', 'Assigned Driver')}</th>
-                <th className="p-3">{t('odometer', 'Odometer')}</th>
-                <th className="p-3">{t('status', 'Status')}</th>
-                <th className="p-3 text-right rtl:text-left">{t('action', 'Action')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 font-medium">
-              {vehicles.map(v => {
-                const driver = drivers.find(d => d.id === v.assigned_driver_id);
-                return (
-                  <tr key={v.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="p-3 font-bold text-slate-900">{v.vehicle_id}</td>
-                    <td className="p-3 font-mono text-slate-700">{v.plate_number}</td>
-                    <td className="p-3 font-semibold text-slate-600">{v.assigned_trailer_id || t('none_coupled', 'Uncoupled')}</td>
-                    <td className="p-3 font-semibold text-slate-800">{driver ? driver.full_name : t('unassigned_driver', 'Unassigned')}</td>
-                    <td className="p-3 font-mono text-slate-600">{(v.current_mileage || 0).toLocaleString()} KM</td>
-                    <td className="p-3">
-                      <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-                        v.status === 'AVAILABLE' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' :
-                        v.status === 'ON_TRIP' ? 'bg-sky-50 text-sky-800 border border-sky-200' :
-                        v.status === 'IN_WORKSHOP' ? 'bg-amber-50 text-amber-800 border border-amber-200' :
-                        v.status === 'OUT_OF_SERVICE' ? 'bg-rose-50 text-rose-800 border border-rose-200' :
-                        'bg-orange-50 text-orange-800 border border-orange-200'
-                      }`}>
-                        {t(v.status, v.status.replace(/_/g, ' '))}
-                      </span>
-                    </td>
-                    <td className="p-3 text-right rtl:text-left">
-                      <button
-                        onClick={() => onNavigateTab('vehicles')}
-                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-lg border border-slate-200 shadow-2xs transition active:scale-95 cursor-pointer"
-                      >
-                        {t('details', 'View Record')}
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+          </GhostButton>
+        }
+        marginTop={28}
+      >
+        <DataTable
+          columns={[
+            { label: t('vehicles', 'Vehicle') },
+            { label: t('plate_number', 'Plate Number') },
+            { label: t('coupled_trailer', 'Coupled Trailer') },
+            { label: t('assigned_driver', 'Assigned Driver') },
+            { label: t('odometer', 'Odometer') },
+            { label: t('status', 'Status') },
+          ]}
+          isEmpty={vehicles.length === 0}
+          emptyMessage={t('no_vehicles', 'No vehicles registered.')}
+        >
+          {vehicles.map((v) => {
+            const driver = drivers.find((d) => d.id === v.assigned_driver_id);
+            const stripe = getVehicleStripe(v.status);
+            return (
+              <DataRow
+                key={v.id}
+                stripeColor={stripe}
+                onClick={() => onNavigateTab('vehicles')}
+                actions={
+                  <RowAction
+                    icon={<Eye className="w-4 h-4" />}
+                    title={t('details', 'View Record')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onNavigateTab('vehicles');
+                    }}
+                  />
+                }
+              >
+                <td className="py-3 pe-3 whitespace-nowrap">
+                  <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>
+                    {v.vehicle_id}
+                  </span>
+                </td>
+                <td className="py-3 pe-3 whitespace-nowrap">
+                  <PlateChip plate={v.plate_number} accentColor={stripe} />
+                </td>
+                <td className="py-3 pe-3 whitespace-nowrap">
+                  <span style={{ color: 'var(--color-text-secondary)', fontSize: 13 }}>
+                    {v.assigned_trailer_id || t('none_coupled', 'Uncoupled')}
+                  </span>
+                </td>
+                <td className="py-3 pe-3 whitespace-nowrap">
+                  <span style={{ color: 'var(--color-ink)', fontWeight: 500, fontSize: 13 }}>
+                    {driver ? driver.full_name : t('unassigned_driver', 'Unassigned')}
+                  </span>
+                </td>
+                <td className="py-3 pe-3 whitespace-nowrap">
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      color: 'var(--color-text-secondary)',
+                      fontSize: 12,
+                    }}
+                  >
+                    {(v.current_mileage || 0).toLocaleString()} KM
+                  </span>
+                </td>
+                <td className="py-3 pe-3 whitespace-nowrap">
+                  <StatusText
+                    label={t(v.status, v.status.replace(/_/g, ' '))}
+                    color={
+                      v.status === 'AVAILABLE'
+                        ? EDITORIAL_STATUS.green.text
+                        : v.status === 'ON_TRIP'
+                        ? EDITORIAL_STATUS.blue.text
+                        : v.status === 'OUT_OF_SERVICE'
+                        ? EDITORIAL_STATUS.red.text
+                        : EDITORIAL_STATUS.amber.text
+                    }
+                  />
+                </td>
+              </DataRow>
+            );
+          })}
+        </DataTable>
+      </EditorialSection>
 
       {/* DATA TABLE 3: UPCOMING MAINTENANCE */}
-      <div className="bg-white border border-slate-200/90 rounded-xl overflow-hidden shadow-2xs">
-        <div className="px-4 py-3 bg-slate-50/90 border-b border-slate-200/80 flex items-center justify-between">
-          <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-2">
-            <CalendarCheck className="w-4 h-4 text-purple-600" /> {t('upcoming_pm', 'UPCOMING PREVENTIVE MAINTENANCE')}
-          </h3>
-          <button
-            onClick={() => onNavigateTab('preventive')}
-            className="text-xs font-bold text-amber-700 hover:text-amber-800 transition"
-          >
+      <EditorialSection
+        title={
+          <span className="inline-flex items-center gap-2">
+            <CalendarCheck className="w-4 h-4" style={{ color: 'var(--color-brand-accent)' }} />
+            {t('upcoming_pm', 'Upcoming preventive maintenance')}
+          </span>
+        }
+        action={
+          <GhostButton onClick={() => onNavigateTab('preventive')}>
             {t('view_all', 'View PM Rules')} {isRTL ? '←' : '→'}
-          </button>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left rtl:text-right text-xs border-collapse">
-            <thead className="bg-slate-100/70 border-b border-slate-200 text-[11px] font-extrabold uppercase text-slate-500 tracking-wider">
-              <tr>
-                <th className="p-3">{isRTL ? 'عنوان الخدمة المجدولة' : 'Schedule Service Title'}</th>
-                <th className="p-3">{isRTL ? 'الشاحنة المستهدفة' : 'Target Unit'}</th>
-                <th className="p-3">{isRTL ? 'الفترة' : 'Interval'}</th>
-                <th className="p-3">{isRTL ? 'تاريخ الاستحقاق' : 'Due Date Target'}</th>
-                <th className="p-3">{t('status', 'Status')}</th>
-                <th className="p-3 text-right rtl:text-left">{t('action', 'Change Status')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 font-medium">
-              {schedules.map(s => {
-                const veh = vehicles.find(v => v.id === s.vehicle_id);
-                const trl = trailers.find(tr => tr.id === s.trailer_id);
-                return (
-                  <tr key={s.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="p-3 font-bold text-slate-900">{s.title}</td>
-                    <td className="p-3 font-semibold text-slate-800">
-                      {veh ? veh.vehicle_id : trl ? trl.trailer_id : (isRTL ? 'عام للأسطول' : 'Fleet General')}
-                    </td>
-                    <td className="p-3 font-mono text-slate-600">{(s.interval_value || 0).toLocaleString()} {s.frequency_type === 'MILEAGE' ? (isRTL ? 'كم' : 'KM') : (isRTL ? 'يوم' : 'Days')}</td>
-                    <td className="p-3 font-mono text-slate-600">{s.next_due_date || (isRTL ? 'شرط المسافة' : 'KM Trigger')}</td>
-                    <td className="p-3">
-                      <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-                        s.status === 'OVERDUE' ? 'bg-rose-50 text-rose-800 border border-rose-200' :
-                        s.status === 'DUE' ? 'bg-orange-50 text-orange-800 border border-orange-200' :
-                        s.status === 'DUE_SOON' ? 'bg-amber-50 text-amber-800 border border-amber-200' :
-                        s.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' :
-                        'bg-sky-50 text-sky-800 border border-sky-200'
-                      }`}>
-                        {s.status === 'OVERDUE' ? (isRTL ? 'متأخر' : 'OVERDUE') :
-                         s.status === 'DUE' ? (isRTL ? 'يستحق الآن' : 'DUE NOW') :
-                         s.status === 'DUE_SOON' ? (isRTL ? 'يستحق قريباً' : 'DUE SOON') :
-                         s.status === 'COMPLETED' ? (isRTL ? 'مكتمل' : 'COMPLETED') :
-                         (isRTL ? 'مجدول' : 'UPCOMING')}
-                      </span>
-                    </td>
-                    <td className="p-3 text-right rtl:text-left">
-                      <select
-                        aria-label={`Change status for ${s.title}`}
-                        value={s.status}
-                        onChange={e => updateMaintenanceScheduleStatus(s.id, e.target.value as PMStatus)}
-                        className="rounded-lg border border-slate-200 bg-slate-50 hover:bg-white px-2.5 py-1 text-[11px] font-bold text-slate-800 focus:border-amber-500 focus:bg-white focus:outline-none transition cursor-pointer"
-                      >
-                        <option value="UPCOMING">UPCOMING</option>
-                        <option value="DUE_SOON">DUE SOON</option>
-                        <option value="DUE">DUE NOW</option>
-                        <option value="OVERDUE">OVERDUE</option>
-                        <option value="COMPLETED">COMPLETED</option>
-                      </select>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+          </GhostButton>
+        }
+        marginTop={28}
+      >
+        <DataTable
+          columns={[
+            { label: isRTL ? 'عنوان الخدمة المجدولة' : 'Schedule Service Title' },
+            { label: isRTL ? 'الشاحنة المستهدفة' : 'Target Unit' },
+            { label: isRTL ? 'الفترة' : 'Interval' },
+            { label: isRTL ? 'تاريخ الاستحقاق' : 'Due Date Target' },
+            { label: t('status', 'Status') },
+            { label: t('action', 'Change Status'), align: 'end' },
+          ]}
+          hasActionsColumn={false}
+          isEmpty={schedules.length === 0}
+          emptyMessage={isRTL ? 'لا توجد خطط صيانة وقائية.' : 'No preventive maintenance schedules.'}
+        >
+          {schedules.map((s) => {
+            const veh = vehicles.find((v) => v.id === s.vehicle_id);
+            const trl = trailers.find((tr) => tr.id === s.trailer_id);
+            const stripe =
+              s.status === 'OVERDUE'
+                ? EDITORIAL_STATUS.red.stripe
+                : s.status === 'DUE' || s.status === 'DUE_SOON'
+                ? EDITORIAL_STATUS.amber.stripe
+                : s.status === 'COMPLETED'
+                ? EDITORIAL_STATUS.green.stripe
+                : EDITORIAL_STATUS.blue.stripe;
+            return (
+              <DataRow key={s.id} stripeColor={stripe}>
+                <td className="py-3 pe-3">
+                  <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>
+                    {s.title}
+                  </span>
+                </td>
+                <td className="py-3 pe-3 whitespace-nowrap">
+                  <span style={{ fontWeight: 500, fontSize: 13, color: 'var(--color-text-secondary)' }}>
+                    {veh
+                      ? veh.vehicle_id
+                      : trl
+                      ? trl.trailer_id
+                      : isRTL
+                      ? 'عام للأسطول'
+                      : 'Fleet General'}
+                  </span>
+                </td>
+                <td className="py-3 pe-3 whitespace-nowrap">
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 12,
+                      color: 'var(--color-text-secondary)',
+                    }}
+                  >
+                    {(s.interval_value || 0).toLocaleString()}{' '}
+                    {s.frequency_type === 'MILEAGE'
+                      ? isRTL
+                        ? 'كم'
+                        : 'KM'
+                      : isRTL
+                      ? 'يوم'
+                      : 'Days'}
+                  </span>
+                </td>
+                <td className="py-3 pe-3 whitespace-nowrap">
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 12,
+                      color: 'var(--color-text-secondary)',
+                    }}
+                  >
+                    {s.next_due_date || (isRTL ? 'شرط المسافة' : 'KM Trigger')}
+                  </span>
+                </td>
+                <td className="py-3 pe-3 whitespace-nowrap">
+                  <Badge
+                    variant={
+                      s.status === 'OVERDUE'
+                        ? 'danger'
+                        : s.status === 'DUE' || s.status === 'DUE_SOON'
+                        ? 'amber'
+                        : s.status === 'COMPLETED'
+                        ? 'success'
+                        : 'info'
+                    }
+                    size="sm"
+                  >
+                    {s.status === 'OVERDUE'
+                      ? isRTL
+                        ? 'متأخر'
+                        : 'Overdue'
+                      : s.status === 'DUE'
+                      ? isRTL
+                        ? 'يستحق الآن'
+                        : 'Due now'
+                      : s.status === 'DUE_SOON'
+                      ? isRTL
+                        ? 'يستحق قريباً'
+                        : 'Due soon'
+                      : s.status === 'COMPLETED'
+                      ? isRTL
+                        ? 'مكتمل'
+                        : 'Completed'
+                      : isRTL
+                      ? 'مجدول'
+                      : 'Upcoming'}
+                  </Badge>
+                </td>
+                <td className="py-3 text-end whitespace-nowrap">
+                  <EditorialSelect
+                    aria-label={
+                      isRTL ? `تغيير حالة ${s.title}` : `Change status for ${s.title}`
+                    }
+                    value={s.status}
+                    onChange={(e) =>
+                      updateMaintenanceScheduleStatus(s.id, e.target.value as PMStatus)
+                    }
+                    width={140}
+                  >
+                    <option value="UPCOMING">{isRTL ? 'قادم (مجدول)' : 'UPCOMING'}</option>
+                    <option value="DUE_SOON">{isRTL ? 'يستحق قريباً' : 'DUE SOON'}</option>
+                    <option value="DUE">{isRTL ? 'يستحق الآن' : 'DUE NOW'}</option>
+                    <option value="OVERDUE">{isRTL ? 'متأخر' : 'OVERDUE'}</option>
+                    <option value="COMPLETED">{isRTL ? 'مكتمل' : 'COMPLETED'}</option>
+                  </EditorialSelect>
+                </td>
+              </DataRow>
+            );
+          })}
+        </DataTable>
+      </EditorialSection>
 
       {/* PROCESS DEFECT REPORT ACTION MODAL */}
       {selectedReport && (
@@ -497,63 +723,128 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
           isOpen={!!selectedReport}
           isHidden={lightboxData.isOpen}
           onClose={() => setSelectedReport(null)}
-          title={`Defect Audit Record: ${selectedReport.report_number}`}
-          subtitle={`Driver: ${selectedReport.driver_name} | Unit: ${selectedReport.vehicle_id}`}
+          title={
+            isRTL
+              ? `سجل تدقيق البلاغ: ${selectedReport.report_number}`
+              : `Defect Audit Record: ${selectedReport.report_number}`
+          }
+          subtitle={
+            isRTL
+              ? `السائق: ${selectedReport.driver_name} | الوحدة: ${selectedReport.vehicle_id}`
+              : `Driver: ${selectedReport.driver_name} | Unit: ${selectedReport.vehicle_id}`
+          }
           maxWidth="2xl"
         >
-          <div className="space-y-4 text-xs font-sans">
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+          <div className="space-y-4 text-xs">
+            <div
+              className="p-4 space-y-2.5"
+              style={{
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-sm)',
+              }}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="font-extrabold text-slate-900 text-sm">{selectedReport.category} Defect</span>
-                  <span className="text-[11px] text-slate-500 font-mono">({new Date(selectedReport.created_at).toLocaleDateString()})</span>
+                  <span className="font-semibold text-sm" style={{ color: 'var(--color-ink)' }}>
+                    {isRTL
+                      ? `عطل: ${selectedReport.category}`
+                      : `${selectedReport.category} Defect`}
+                  </span>
+                  <span
+                    className="text-[11px]"
+                    style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)' }}
+                  >
+                    ({new Date(selectedReport.created_at).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')})
+                  </span>
                 </div>
                 {getSeverityBadge(selectedReport.severity)}
               </div>
-              <p className="text-slate-800 font-medium leading-relaxed bg-white p-3 rounded-lg border border-slate-200">
+              <p
+                className="p-3 leading-relaxed"
+                style={{
+                  background: 'var(--color-page-bg)',
+                  border: '1px solid var(--color-row-divider)',
+                  borderRadius: 'var(--radius-sm)',
+                  color: 'var(--color-ink)',
+                }}
+              >
                 {selectedReport.description}
               </p>
               {selectedReport.photo_url && (
                 <div className="pt-2 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase text-slate-500 block">
-                      Attached Issue Photo:
+                    <span
+                      className="text-[11px] font-semibold block"
+                      style={{ color: 'var(--color-text-muted)' }}
+                    >
+                      {isRTL ? 'صورة العطل المرفقة:' : 'Attached Issue Photo:'}
                     </span>
-                    <button
+                    <SecondaryButton
                       type="button"
-                      onClick={() => openLightbox(
-                        selectedReport.photo_url!,
-                        `Issue Photo: ${selectedReport.report_number}`,
-                        `Driver: ${selectedReport.driver_name} • Unit: ${selectedReport.vehicle_id}`,
-                        selectedReport.report_number,
-                        selectedReport.created_at
-                      )}
-                      className="text-[10px] font-bold text-amber-800 hover:text-amber-900 bg-amber-100 hover:bg-amber-200 px-2 py-0.5 rounded transition flex items-center gap-1 cursor-pointer"
+                      onClick={() =>
+                        openLightbox(
+                          selectedReport.photo_url!,
+                          isRTL
+                            ? `صورة البلاغ: ${selectedReport.report_number}`
+                            : `Issue Photo: ${selectedReport.report_number}`,
+                          isRTL
+                            ? `السائق: ${selectedReport.driver_name} • الوحدة: ${selectedReport.vehicle_id}`
+                            : `Driver: ${selectedReport.driver_name} • Unit: ${selectedReport.vehicle_id}`,
+                          selectedReport.report_number,
+                          selectedReport.created_at
+                        )
+                      }
+                      style={{ height: 28, padding: '2px 10px', fontSize: 11 }}
                     >
                       <Maximize2 className="w-3 h-3" />
-                      <span>Click to Open Full Size & Zoom</span>
-                    </button>
+                      <span>
+                        {isRTL ? 'اضغط للتكبير والعرض الكامل' : 'Click to Open Full Size & Zoom'}
+                      </span>
+                    </SecondaryButton>
                   </div>
                   <div
-                    onClick={() => openLightbox(
-                      selectedReport.photo_url!,
-                      `Issue Photo: ${selectedReport.report_number}`,
-                      `Driver: ${selectedReport.driver_name} • Unit: ${selectedReport.vehicle_id}`,
-                      selectedReport.report_number,
-                      selectedReport.created_at
-                    )}
-                    className="group relative cursor-pointer overflow-hidden rounded-xl border border-slate-200 bg-white hover:border-amber-400 transition shadow-xs max-w-sm"
-                    title="Click to open full-screen viewer with zoom"
+                    onClick={() =>
+                      openLightbox(
+                        selectedReport.photo_url!,
+                        isRTL
+                          ? `صورة البلاغ: ${selectedReport.report_number}`
+                          : `Issue Photo: ${selectedReport.report_number}`,
+                        isRTL
+                          ? `السائق: ${selectedReport.driver_name} • الوحدة: ${selectedReport.vehicle_id}`
+                          : `Driver: ${selectedReport.driver_name} • Unit: ${selectedReport.vehicle_id}`,
+                        selectedReport.report_number,
+                        selectedReport.created_at
+                      )
+                    }
+                    style={{
+                      background: 'var(--color-page-bg)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 'var(--radius-sm)',
+                    }}
+                    className="group relative cursor-pointer overflow-hidden max-w-sm"
+                    title={
+                      isRTL
+                        ? 'اضغط لعرض الصورة بالحجم الكامل'
+                        : 'Click to open full-screen viewer with zoom'
+                    }
                   >
                     <img
                       src={selectedReport.photo_url}
-                      alt="Driver reported issue"
-                      className="max-h-48 w-auto rounded-lg object-contain mx-auto transition-transform duration-200 group-hover:scale-[1.02]"
+                      alt={isRTL ? 'صورة العطل المبلغ عنه' : 'Driver reported issue'}
+                      className="max-h-48 w-auto object-contain mx-auto"
                     />
-                    <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/30 transition-all flex items-center justify-center">
-                      <span className="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 rounded-full bg-slate-900/90 backdrop-blur-xs text-white text-xs font-bold shadow-lg flex items-center gap-1.5">
-                        <ZoomIn className="w-4 h-4 text-amber-400" />
-                        View Full-Screen Lightbox
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
+                      <span
+                        className="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 text-xs font-semibold flex items-center gap-1.5"
+                        style={{
+                          background: 'var(--color-ink)',
+                          color: 'var(--color-page-bg)',
+                          borderRadius: 'var(--radius-sm)',
+                        }}
+                      >
+                        <ZoomIn className="w-3.5 h-3.5" />
+                        {isRTL ? 'عرض في عارض الصور' : 'View Full-Screen Lightbox'}
                       </span>
                     </div>
                   </div>
@@ -561,91 +852,98 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
               )}
             </div>
 
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
-                Update Vehicle Operational Status:
+            <div
+              className="p-3 space-y-2"
+              style={{
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-sm)',
+              }}
+            >
+              <span
+                className="text-[11px] font-semibold block"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                {isRTL ? 'تحديث الحالة التشغيلية للمركبة:' : 'Update Vehicle Operational Status:'}
               </span>
               <div className="flex flex-wrap gap-2">
-                <button
+                <SecondaryButton
                   type="button"
                   onClick={() => handleUpdateVehicleStatus(selectedReport, 'REQUIRES INSPECTION')}
-                  className="px-3 py-1.5 bg-amber-100/80 hover:bg-amber-200/80 text-amber-900 font-bold rounded-lg border border-amber-300 transition text-xs cursor-pointer active:scale-95"
+                  style={{ height: 30, fontSize: 12 }}
                 >
-                  Set REQUIRES INSPECTION
-                </button>
-                <button
+                  {isRTL ? 'تعيين: يتطلب فحص' : 'Set Requires Inspection'}
+                </SecondaryButton>
+                <SecondaryButton
                   type="button"
                   onClick={() => handleUpdateVehicleStatus(selectedReport, 'OUT_OF_SERVICE')}
-                  className="px-3 py-1.5 bg-rose-100/80 hover:bg-rose-200/80 text-rose-900 font-bold rounded-lg border border-rose-300 transition text-xs cursor-pointer active:scale-95"
+                  style={{
+                    height: 30,
+                    fontSize: 12,
+                    color: EDITORIAL_STATUS.red.text,
+                  }}
                 >
-                  Set OUT OF SERVICE
-                </button>
-                <button
+                  {isRTL ? 'تعيين: خارج الخدمة' : 'Set Out of Service'}
+                </SecondaryButton>
+                <SecondaryButton
                   type="button"
                   onClick={() => handleUpdateVehicleStatus(selectedReport, 'AVAILABLE')}
-                  className="px-3 py-1.5 bg-emerald-100/80 hover:bg-emerald-200/80 text-emerald-900 font-bold rounded-lg border border-emerald-300 transition text-xs cursor-pointer active:scale-95"
+                  style={{
+                    height: 30,
+                    fontSize: 12,
+                    color: EDITORIAL_STATUS.green.text,
+                  }}
                 >
-                  Set AVAILABLE
-                </button>
+                  {isRTL ? 'تعيين: متاح للخدمة' : 'Set Available'}
+                </SecondaryButton>
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                Resolution & Supervisor Response Notes
+              <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--color-ink)' }}>
+                {isRTL ? 'ملاحظات المعالجة ورد المشرف' : 'Resolution & Supervisor Response Notes'}
               </label>
               <textarea
                 rows={3}
-                placeholder="Enter actions taken, workshop instructions, or inspection results..."
+                placeholder={
+                  isRTL
+                    ? 'أدخل الإجراءات المتخذة أو توجيهات الورشة أو نتائج الفحص...'
+                    : 'Enter actions taken, workshop instructions, or inspection results...'
+                }
                 value={actionNotes}
-                onChange={e => setActionNotes(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition resize-none"
+                onChange={(e) => setActionNotes(e.target.value)}
+                className="nf-field w-full resize-none"
               />
             </div>
 
-            <div className="pt-3 border-t border-slate-200 flex flex-wrap items-center justify-end gap-2.5">
-              <button
+            <div
+              className="pt-3 flex flex-wrap items-center justify-end gap-2.5"
+              style={{ borderTop: '1px solid var(--color-row-divider)' }}
+            >
+              <SecondaryButton
                 type="button"
                 onClick={() => setSelectedReport(null)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition active:scale-95 cursor-pointer mr-auto"
+                style={{ marginInlineEnd: 'auto' }}
               >
-                Close
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSchedulePM(selectedReport)}
-                className="px-4 py-2 bg-slate-100 text-slate-800 font-bold rounded-xl border border-slate-200 hover:bg-slate-200 transition text-xs cursor-pointer active:scale-95"
-              >
-                Schedule PM Repair
-              </button>
-              <button
-                type="button"
-                onClick={() => handleCreateWorkOrder(selectedReport)}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl shadow-xs transition text-xs cursor-pointer active:scale-95"
-              >
-                Create Work Order
-              </button>
-              <button
-                type="button"
-                onClick={() => handleMarkResolved(selectedReport)}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl shadow-xs transition text-xs cursor-pointer active:scale-95"
-              >
-                Mark Resolved
-              </button>
+                {t('Close', 'Close')}
+              </SecondaryButton>
+              <SecondaryButton type="button" onClick={() => handleSchedulePM(selectedReport)}>
+                {isRTL ? 'جدولة صيانة وقائية' : 'Schedule PM Repair'}
+              </SecondaryButton>
+              <SecondaryButton type="button" onClick={() => handleCreateWorkOrder(selectedReport)}>
+                {isRTL ? 'إنشاء أمر عمل' : 'Create Work Order'}
+              </SecondaryButton>
+              <PrimaryButton type="button" onClick={() => handleMarkResolved(selectedReport)}>
+                {isRTL ? 'اعتماد الحل' : 'Mark Resolved'}
+              </PrimaryButton>
             </div>
           </div>
         </Modal>
       )}
 
-      <VehicleFormModal
-        isOpen={isVehicleModalOpen}
-        onClose={() => setIsVehicleModalOpen(false)}
-      />
+      <VehicleFormModal isOpen={isVehicleModalOpen} onClose={() => setIsVehicleModalOpen(false)} />
 
-      <TrailerFormModal
-        isOpen={isTrailerModalOpen}
-        onClose={() => setIsTrailerModalOpen(false)}
-      />
+      <TrailerFormModal isOpen={isTrailerModalOpen} onClose={() => setIsTrailerModalOpen(false)} />
 
       {/* Full-Screen Image Lightbox Viewer with Zoom & Pan */}
       <ImageLightboxModal
@@ -657,6 +955,6 @@ export const FleetManagerDashboard: React.FC<FleetManagerDashboardProps> = ({ on
         reportNumber={lightboxData.reportNumber}
         createdAt={lightboxData.createdAt}
       />
-    </div>
+    </PageContainer>
   );
 };

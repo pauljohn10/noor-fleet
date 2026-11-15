@@ -1,75 +1,211 @@
 import React, { useState } from 'react';
-import { Users, Wrench, Clock, CheckCircle2, Star, Plus } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { useFleet } from '../../context/FleetContext';
-import { Badge } from '../common/Badge';
+import { useI18n } from '../../context/I18nContext';
+import { DESIGN_TOKENS } from '../../lib/designTokens';
+import {
+  PageContainer,
+  PageHeader,
+  StatusTabs,
+  DataTable,
+  DataRow,
+  StatusText,
+  TableFooter,
+} from '../common/EditorialUI';
 
 export const TechnicianList: React.FC = () => {
   const { technicians, workOrders } = useFleet();
+  const { t, isRTL } = useI18n();
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL');
+
+  const filtered = technicians.filter(tech => {
+    const q = search.toLowerCase();
+    const matchesSearch =
+      tech.full_name.toLowerCase().includes(q) ||
+      tech.employee_id.toLowerCase().includes(q) ||
+      tech.specialization.toLowerCase().includes(q) ||
+      (tech.department || '').toLowerCase().includes(q);
+    const matchesStatus = statusFilter === 'ALL' || tech.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const activeCount = technicians.filter(tech => tech.status === 'ACTIVE').length;
+  const inactiveCount = technicians.filter(tech => tech.status !== 'ACTIVE').length;
 
   return (
-    <div className="space-y-6">
-      {/* Header Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-4 rounded-xl">
-        <div>
-          <h2 className="text-xl font-black tracking-tight text-slate-100 flex items-center gap-2">
-            <Users className="w-6 h-6 text-amber-400" /> Workshop Technicians & Mechanics Roster
-          </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Track mechanic specializations, assigned work orders, repair completion rate, and hourly rates.
-          </p>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title={isRTL ? 'سجل الفنيين والميكانيكيين' : 'Workshop Technicians\n& Mechanics Roster'}
+        subtitle={t('Track mechanic specializations, assigned work orders, repair completion rate, and hourly rates.')}
+      />
 
-      {/* Technician Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {technicians.length === 0 ? (
-          <div className="col-span-full bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-400">
-            <Users className="w-8 h-8 mx-auto mb-2 text-slate-600 opacity-50" />
-            <p className="text-sm font-bold text-slate-300">No technicians registered yet</p>
-            <p className="text-xs text-slate-500 mt-1">Workshop technicians will appear here once added in the database.</p>
-          </div>
-        ) : (
-          technicians.map(t => {
-            const techWOs = workOrders.filter(w => w.assigned_technician_id === t.id);
-            const activeWOs = techWOs.filter(w => w.status !== 'RELEASED' && w.status !== 'CANCELLED');
-            const completedWOs = techWOs.filter(w => w.status === 'RELEASED' || w.status === 'COMPLETED');
+      <StatusTabs
+        tabs={[
+          { key: 'ALL', label: isRTL ? 'الكل' : 'All', count: technicians.length },
+          {
+            key: 'ACTIVE',
+            label: isRTL ? 'نشط' : 'Active',
+            count: activeCount,
+            stripe: DESIGN_TOKENS.colors.status.availableStripe,
+          },
+          {
+            key: 'INACTIVE',
+            label: isRTL ? 'غير نشط' : 'Inactive',
+            count: inactiveCount,
+            stripe: DESIGN_TOKENS.colors.status.outOfServiceStripe,
+          },
+        ]}
+        activeKey={statusFilter}
+        onChange={k => setStatusFilter(k as 'ALL' | 'ACTIVE' | 'INACTIVE')}
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder={isRTL ? 'بحث بالاسم، الرقم، التخصص...' : 'Search name, ID, specialization...'}
+      />
 
-            return (
-              <div key={t.id} className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-sm">
-                      {t.full_name.charAt(0)}
+      <DataTable
+        columns={[
+          { label: isRTL ? 'الفني' : 'Technician', align: 'start' },
+          { label: isRTL ? 'الرقم الوظيفي' : 'Employee ID', align: 'start' },
+          { label: isRTL ? 'التخصص والقسم' : 'Specialization', align: 'start' },
+          { label: isRTL ? 'التكلفة بالساعة' : 'Hourly rate', align: 'end' },
+          { label: isRTL ? 'مهام نشطة' : 'Active jobs', align: 'end' },
+          { label: isRTL ? 'مهام مكتملة' : 'Completed', align: 'end' },
+          { label: isRTL ? 'الحالة' : 'Status', align: 'start' },
+        ]}
+        hasActionsColumn={false}
+        isEmpty={filtered.length === 0}
+        emptyMessage={t('No technicians registered yet')}
+        onClearFilters={
+          search || statusFilter !== 'ALL'
+            ? () => {
+                setSearch('');
+                setStatusFilter('ALL');
+              }
+            : undefined
+        }
+      >
+        {filtered.map(tech => {
+          const techWOs = workOrders.filter(w => w.assigned_technician_id === tech.id);
+          const activeWOs = techWOs.filter(w => w.status !== 'RELEASED' && w.status !== 'CANCELLED');
+          const completedWOs = techWOs.filter(w => w.status === 'RELEASED' || w.status === 'COMPLETED');
+          const isActive = tech.status === 'ACTIVE';
+
+          return (
+            <DataRow
+              key={tech.id}
+              stripeColor={
+                isActive
+                  ? DESIGN_TOKENS.colors.status.availableStripe
+                  : DESIGN_TOKENS.colors.status.outOfServiceStripe
+              }
+            >
+              <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span
+                    style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: 4,
+                      background: 'var(--color-surface)',
+                      border: '1px solid var(--color-border)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 600,
+                      fontSize: 13,
+                      color: 'var(--color-ink)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {tech.full_name.charAt(0) || <Users size={14} />}
+                  </span>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-ink)' }}>
+                      {tech.full_name}
                     </div>
-                    <div>
-                      <h3 className="font-bold text-slate-100 text-sm">{t.full_name}</h3>
-                      <p className="text-[10px] text-slate-400 font-mono">Emp ID: {t.employee_id}</p>
-                    </div>
+                    {tech.phone && (
+                      <div
+                        dir="ltr"
+                        style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, color: 'var(--color-text-muted)' }}
+                      >
+                        {tech.phone}
+                      </div>
+                    )}
                   </div>
-                  <Badge variant="success">ACTIVE</Badge>
                 </div>
+              </td>
+              <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                <span dir="ltr" style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--color-ink)' }}>
+                  {tech.employee_id}
+                </span>
+              </td>
+              <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--color-ink)' }}>
+                  {tech.specialization}
+                </div>
+                {tech.department && (
+                  <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>
+                    {tech.department}
+                  </div>
+                )}
+              </td>
+              <td style={{ padding: '14px 16px', verticalAlign: 'middle', textAlign: 'end' }}>
+                <span dir="ltr" style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--color-ink)' }}>
+                  {tech.hourly_rate} {t('SAR / Hour')}
+                </span>
+              </td>
+              <td style={{ padding: '14px 16px', verticalAlign: 'middle', textAlign: 'end' }}>
+                <span
+                  dir="ltr"
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color:
+                      activeWOs.length > 0
+                        ? DESIGN_TOKENS.colors.status.onTripText
+                        : 'var(--color-text-muted)',
+                  }}
+                >
+                  {activeWOs.length}
+                </span>
+              </td>
+              <td style={{ padding: '14px 16px', verticalAlign: 'middle', textAlign: 'end' }}>
+                <span
+                  dir="ltr"
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: DESIGN_TOKENS.colors.status.availableText,
+                  }}
+                >
+                  {completedWOs.length}
+                </span>
+              </td>
+              <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                <StatusText
+                  label={isActive ? (isRTL ? 'نشط' : 'Active') : (isRTL ? 'غير نشط' : 'Inactive')}
+                  color={
+                    isActive
+                      ? DESIGN_TOKENS.colors.status.availableText
+                      : DESIGN_TOKENS.colors.status.outOfServiceText
+                  }
+                />
+              </td>
+            </DataRow>
+          );
+        })}
+      </DataTable>
 
-                <div className="p-3 bg-slate-950 border border-slate-800/80 rounded-lg text-xs space-y-1">
-                  <p className="text-slate-400 text-[10px] uppercase font-bold">Specialization</p>
-                  <p className="font-bold text-amber-400">{t.specialization}</p>
-                  <p className="text-slate-500 text-[10px]">Hourly Billing Rate: {t.hourly_rate} SAR / Hour</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 text-center text-xs">
-                  <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-lg">
-                    <p className="text-[10px] text-slate-400 uppercase font-bold">Active Jobs</p>
-                    <p className="font-mono font-bold text-sky-400 text-sm mt-0.5">{activeWOs.length}</p>
-                  </div>
-                  <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-lg">
-                    <p className="text-[10px] text-slate-400 uppercase font-bold">Completed</p>
-                    <p className="font-mono font-bold text-emerald-400 text-sm mt-0.5">{completedWOs.length}</p>
-                  </div>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-    </div>
+      <TableFooter
+        summaryText={
+          isRTL
+            ? `${filtered.length} من ${technicians.length} فني`
+            : `${filtered.length} of ${technicians.length} technicians`
+        }
+      />
+    </PageContainer>
   );
 };

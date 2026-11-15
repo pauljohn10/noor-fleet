@@ -1,103 +1,183 @@
 import React, { useState } from 'react';
-import { History, Search, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { useFleet } from '../../context/FleetContext';
 import { useAuth } from '../../context/AuthContext';
+import { useI18n } from '../../context/I18nContext';
+import { DESIGN_TOKENS } from '../../lib/designTokens';
+import {
+  PageContainer,
+  PageHeader,
+  StatusTabs,
+  DataTable,
+  DataRow,
+  StatusText,
+  TableFooter,
+} from '../common/EditorialUI';
 
 export const AuditLogView: React.FC = () => {
   const { auditLogs } = useFleet();
   const { hasPermission } = useAuth();
+  const { t, isRTL } = useI18n();
   const [search, setSearch] = useState('');
+  const [moduleFilter, setModuleFilter] = useState('ALL');
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 25;
 
   if (!hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER', 'MANAGEMENT'])) {
     return (
-      <div className="p-12 text-center bg-white border border-slate-200 rounded-lg shadow-xs">
-        <Lock className="w-12 h-12 text-rose-600 mx-auto mb-3" />
-        <h3 className="text-lg font-bold text-slate-900">Access Restricted</h3>
-        <p className="text-xs text-slate-500 mt-1">Only authorized Management and Super Admin roles can inspect system audit logs.</p>
-      </div>
+      <PageContainer>
+        <div
+          style={{
+            padding: 48,
+            textAlign: 'center',
+            border: '1px solid var(--color-border)',
+            borderRadius: 4,
+            background: 'var(--color-surface)',
+          }}
+        >
+          <Lock size={28} style={{ color: DESIGN_TOKENS.colors.status.outOfServiceText, margin: '0 auto 12px' }} />
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: 'var(--color-ink)' }}>
+            {t('Access Restricted')}
+          </h3>
+          <p style={{ marginTop: 6, fontSize: 13, color: 'var(--color-text-muted)' }}>
+            {t('Only authorized Management and Super Admin roles can inspect system audit logs.')}
+          </p>
+        </div>
+      </PageContainer>
     );
   }
 
-  const filteredLogs = auditLogs.filter(log =>
-    log.action.toLowerCase().includes(search.toLowerCase()) ||
-    log.module.toLowerCase().includes(search.toLowerCase()) ||
-    log.record_id.toLowerCase().includes(search.toLowerCase()) ||
-    log.user_name.toLowerCase().includes(search.toLowerCase())
-  );
+  const modules = Array.from(new Set(auditLogs.map(l => l.module))).slice(0, 6);
+
+  const filteredLogs = auditLogs.filter(log => {
+    const q = search.toLowerCase();
+    const matchesSearch =
+      log.action.toLowerCase().includes(q) ||
+      log.module.toLowerCase().includes(q) ||
+      log.record_id.toLowerCase().includes(q) ||
+      log.user_name.toLowerCase().includes(q);
+    const matchesModule = moduleFilter === 'ALL' || log.module === moduleFilter;
+    return matchesSearch && matchesModule;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filteredLogs.length / PAGE_SIZE));
+  const pagedLogs = filteredLogs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-slate-200 p-4 rounded-lg shadow-xs">
-        <div>
-          <h2 className="text-lg font-bold tracking-tight text-slate-900 flex items-center gap-2">
-            <History className="w-5 h-5 text-amber-600" /> System Audit Trail & Security Logs
-          </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Immutable log tracking all system data mutations, work order updates, inventory transactions, and vehicle modifications.
-          </p>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title={isRTL ? 'سجل التدقيق والأمان' : 'System Audit Trail\n& Security Logs'}
+        subtitle={t('Immutable log tracking all system data mutations, work order updates, inventory transactions, and vehicle modifications.')}
+      />
 
-      {/* Search Bar */}
-      <div className="flex items-center gap-3 bg-white border border-slate-200 p-3 rounded-lg shadow-xs">
-        <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-          <input
-            type="text"
-            placeholder="Search action, user, record ID..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 rounded-md pl-9 pr-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-amber-500 focus:outline-none"
-          />
-        </div>
-      </div>
+      <StatusTabs
+        tabs={[
+          { key: 'ALL', label: isRTL ? 'الكل' : 'All events', count: auditLogs.length },
+          ...modules.map(mod => ({
+            key: mod,
+            label: t(mod),
+            count: auditLogs.filter(l => l.module === mod).length,
+          })),
+        ]}
+        activeKey={moduleFilter}
+        onChange={k => {
+          setModuleFilter(k);
+          setPage(1);
+        }}
+        searchValue={search}
+        onSearchChange={val => {
+          setSearch(val);
+          setPage(1);
+        }}
+        searchPlaceholder={t('Search action, user, record ID...')}
+      />
 
-      {/* Audit Log Table */}
-      <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-700">
-            <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase text-slate-500 tracking-wider">
-              <tr>
-                <th className="p-3">Timestamp</th>
-                <th className="p-3">User Name</th>
-                <th className="p-3">Role</th>
-                <th className="p-3">Action</th>
-                <th className="p-3">Module</th>
-                <th className="p-3">Record ID</th>
-                <th className="p-3">IP Address</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 font-medium">
-              {filteredLogs.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="p-8 text-center text-slate-400">
-                    No audit log records found matching search query.
-                  </td>
-                </tr>
-              ) : (
-                filteredLogs.map(log => (
-                  <tr key={log.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="p-3 font-mono text-slate-500 text-[11px]">
-                      {new Date(log.created_at).toLocaleString()}
-                    </td>
-                    <td className="p-3 font-bold text-slate-900">{log.user_name}</td>
-                    <td className="p-3">
-                      <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-bold text-[10px] border border-slate-200">
-                        {log.user_role}
-                      </span>
-                    </td>
-                    <td className="p-3 font-bold text-emerald-700">{log.action}</td>
-                    <td className="p-3 font-bold text-slate-700">{log.module}</td>
-                    <td className="p-3 font-mono font-bold text-slate-900">{log.record_id}</td>
-                    <td className="p-3 font-mono text-slate-400 text-[11px]">{log.ip_address || '127.0.0.1'}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+      <DataTable
+        columns={[
+          { label: isRTL ? 'التوقيت' : 'Timestamp', align: 'start' },
+          { label: isRTL ? 'المستخدم' : 'User name', align: 'start' },
+          { label: isRTL ? 'الدور' : 'Role', align: 'start' },
+          { label: isRTL ? 'الإجراء' : 'Action', align: 'start' },
+          { label: isRTL ? 'الوحدة' : 'Module', align: 'start' },
+          { label: isRTL ? 'معرّف السجل' : 'Record ID', align: 'start' },
+          { label: isRTL ? 'عنوان IP' : 'IP address', align: 'start' },
+        ]}
+        hasActionsColumn={false}
+        isEmpty={pagedLogs.length === 0}
+        emptyMessage={t('No audit log records found matching search query.')}
+        onClearFilters={() => {
+          setSearch('');
+          setModuleFilter('ALL');
+          setPage(1);
+        }}
+      >
+        {pagedLogs.map(log => {
+          const isDelete = log.action.toLowerCase().includes('delete');
+          const stripe = isDelete
+            ? DESIGN_TOKENS.colors.status.outOfServiceStripe
+            : DESIGN_TOKENS.colors.accent;
+
+          return (
+            <DataRow key={log.id} stripeColor={stripe}>
+              <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                <span
+                  dir="ltr"
+                  style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-text-secondary)' }}
+                >
+                  {new Date(log.created_at).toLocaleString(isRTL ? 'ar-SA-u-ca-gregory' : 'en-US')}
+                </span>
+              </td>
+              <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--color-ink)' }}>
+                  {log.user_name}
+                </span>
+              </td>
+              <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                <span style={{ fontSize: 12.5, color: 'var(--color-text-secondary)' }}>
+                  {t(log.user_role)}
+                </span>
+              </td>
+              <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                <StatusText
+                  label={t(log.action)}
+                  color={
+                    isDelete
+                      ? DESIGN_TOKENS.colors.status.outOfServiceText
+                      : DESIGN_TOKENS.colors.status.availableText
+                  }
+                />
+              </td>
+              <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-ink)' }}>
+                  {t(log.module)}
+                </span>
+              </td>
+              <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                <span dir="ltr" style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--color-ink)' }}>
+                  {log.record_id}
+                </span>
+              </td>
+              <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                <span dir="ltr" style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-text-muted)' }}>
+                  {log.ip_address || '127.0.0.1'}
+                </span>
+              </td>
+            </DataRow>
+          );
+        })}
+      </DataTable>
+
+      <TableFooter
+        summaryText={
+          isRTL
+            ? `${filteredLogs.length} من ${auditLogs.length} حدث تدقيق`
+            : `${filteredLogs.length} of ${auditLogs.length} audit events`
+        }
+        page={page}
+        totalPages={totalPages}
+        onPrev={() => setPage(p => Math.max(1, p - 1))}
+        onNext={() => setPage(p => Math.min(totalPages, p + 1))}
+      />
+    </PageContainer>
   );
 };

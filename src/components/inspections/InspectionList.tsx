@@ -1,48 +1,45 @@
 import React, { useState } from 'react';
 import {
-  ShieldCheck, Plus, Search, AlertTriangle, CheckCircle2,
-  FileSpreadsheet, FileText, Wrench, User, Truck, History, Camera,
-  Link2, Copy, Share2, ExternalLink, Check, Users, Maximize2, ZoomIn
+  ShieldCheck, Plus, AlertTriangle, CheckCircle2,
+  FileSpreadsheet, FileText, Truck, History, Camera,
+  Link2, Copy, Share2, ExternalLink, Check, Users, Maximize2, ZoomIn, Eye
 } from 'lucide-react';
 import { useFleet } from '../../context/FleetContext';
 import { useAuth } from '../../context/AuthContext';
+import { useI18n } from '../../context/I18nContext';
 import { Badge } from '../common/Badge';
 import { Modal } from '../common/Modal';
 import { ImageLightboxModal } from '../common/ImageLightboxModal';
 import { InspectionFormMobile } from './InspectionFormMobile';
 import { exportToExcel, exportToPDFReport } from '../../lib/exportUtils';
 import { DefectReport, SeverityLevel, VehicleStatus, DefectReportStatus } from '../../types';
+import {
+  PageContainer,
+  PageHeader,
+  PrimaryButton,
+  SecondaryButton,
+  GhostButton,
+  StatusTabs,
+  EditorialSelect,
+  DataTable,
+  DataRow,
+  RowAction,
+  PlateChip,
+  StatusText,
+  TableFooter,
+  EDITORIAL_STATUS,
+} from '../common/EditorialUI';
 
 const REPORT_STATUS_OPTIONS: {
   value: DefectReportStatus;
   label: string;
-  badgeClass: string;
+  tone: 'amber' | 'blue' | 'green' | 'red';
 }[] = [
-  {
-    value: 'NEW',
-    label: 'New',
-    badgeClass: 'bg-amber-100 text-amber-900 border border-amber-300',
-  },
-  {
-    value: 'UNDER_REVIEW',
-    label: 'Under Review',
-    badgeClass: 'bg-sky-100 text-sky-900 border border-sky-300',
-  },
-  {
-    value: 'IN_PROGRESS',
-    label: 'In Progress',
-    badgeClass: 'bg-indigo-100 text-indigo-900 border border-indigo-300',
-  },
-  {
-    value: 'RESOLVED',
-    label: 'Resolved',
-    badgeClass: 'bg-emerald-100 text-emerald-900 border border-emerald-300',
-  },
-  {
-    value: 'REJECTED',
-    label: 'Rejected',
-    badgeClass: 'bg-rose-100 text-rose-900 border border-rose-300',
-  },
+  { value: 'NEW', label: 'New', tone: 'amber' },
+  { value: 'UNDER_REVIEW', label: 'Under Review', tone: 'blue' },
+  { value: 'IN_PROGRESS', label: 'In Progress', tone: 'blue' },
+  { value: 'RESOLVED', label: 'Resolved', tone: 'green' },
+  { value: 'REJECTED', label: 'Rejected', tone: 'red' },
 ];
 
 export const InspectionList: React.FC = () => {
@@ -61,6 +58,7 @@ export const InspectionList: React.FC = () => {
     refreshData,
   } = useFleet();
   const { currentProfile, hasPermission } = useAuth();
+  const { t, isRTL } = useI18n();
   const canManage = hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER']);
 
   const [activeMainTab, setActiveMainTab] = useState<'DEFECT_REPORTS' | 'CHECKLISTS'>('DEFECT_REPORTS');
@@ -98,7 +96,7 @@ export const InspectionList: React.FC = () => {
     setLightboxData({
       isOpen: true,
       imageUrl,
-      title: title || 'Attached Incident Photo',
+      title: title || t('Attached Incident Photo'),
       subtitle,
       reportNumber,
       createdAt,
@@ -143,7 +141,7 @@ export const InspectionList: React.FC = () => {
 
   const handleShareWhatsApp = () => {
     const text = encodeURIComponent(
-      `Noor Fleet — Report a Vehicle Issue (No Login Required):\n${publicReportUrl}`
+      `${t('Noor Fleet — Report a Vehicle Issue (No Login Required)')}:\n${publicReportUrl}`
     );
     window.open(`https://wa.me/?text=${text}`, '_blank', 'noopener,noreferrer');
   };
@@ -200,6 +198,7 @@ export const InspectionList: React.FC = () => {
 
   // Inline or modal status update
   const handleQuickStatusUpdate = async (rep: DefectReport, newStatus: DefectReportStatus) => {
+    const statusLabel = REPORT_STATUS_OPTIONS.find(s => s.value === newStatus)?.label || newStatus.replace(/_/g, ' ');
     await updateDefectReport(
       rep.id,
       {
@@ -208,12 +207,13 @@ export const InspectionList: React.FC = () => {
       },
       currentProfile.full_name
     );
-    setFeedbackMessage(`Report ${rep.report_number} status updated to ${newStatus.replace(/_/g, ' ')}.`);
+    setFeedbackMessage(`${t('Report')} ${rep.report_number} ${t('status updated to')} ${t(statusLabel)}.`);
     setTimeout(() => setFeedbackMessage(null), 4000);
   };
 
   const handleSaveReportReview = async () => {
     if (!selectedReport) return;
+    const statusLabel = REPORT_STATUS_OPTIONS.find(s => s.value === modalStatus)?.label || modalStatus.replace(/_/g, ' ');
 
     await updateDefectReport(
       selectedReport.id,
@@ -230,7 +230,7 @@ export const InspectionList: React.FC = () => {
     );
 
     setFeedbackMessage(
-      `Saved review for ${selectedReport.report_number} (Status: ${modalStatus.replace(/_/g, ' ')}).`
+      `${t('Saved review for')} ${selectedReport.report_number} (${t('Status')}: ${t(statusLabel)}).`
     );
     setTimeout(() => setFeedbackMessage(null), 4000);
     setSelectedReport(null);
@@ -268,7 +268,7 @@ export const InspectionList: React.FC = () => {
       updateVehicle(veh.id, { status: 'IN_WORKSHOP' });
     }
 
-    setFeedbackMessage(`Work Order ${woId} created for vehicle ${rep.vehicle_id} and status set to IN PROGRESS.`);
+    setFeedbackMessage(`${t('Work Order')} ${woId} ${t('created for vehicle')} ${rep.vehicle_id} ${t('and status set to IN PROGRESS')}.`);
     setTimeout(() => setFeedbackMessage(null), 4500);
     setSelectedReport(null);
     refreshData();
@@ -303,7 +303,7 @@ export const InspectionList: React.FC = () => {
       currentProfile.full_name
     );
 
-    setFeedbackMessage(`Maintenance scheduled for vehicle ${rep.vehicle_id}.`);
+    setFeedbackMessage(`${t('Maintenance scheduled for vehicle')} ${rep.vehicle_id}.`);
     setTimeout(() => setFeedbackMessage(null), 4000);
     setSelectedReport(null);
     refreshData();
@@ -315,58 +315,73 @@ export const InspectionList: React.FC = () => {
     );
     if (veh) {
       updateVehicle(veh.id, { status: newStatus });
-      setFeedbackMessage(`Vehicle ${veh.vehicle_id} (${veh.plate_number}) status updated to ${newStatus}.`);
+      setFeedbackMessage(`${t('Vehicle')} ${veh.vehicle_id} (${veh.plate_number}) ${t('status updated to')} ${t(newStatus)}.`);
       setTimeout(() => setFeedbackMessage(null), 4000);
     }
     refreshData();
   };
 
   const handleExportExcel = () => {
+    const dateLocale = isRTL ? 'ar-SA-u-ca-gregory' : 'en-US';
     if (activeMainTab === 'DEFECT_REPORTS') {
       const data = filteredReports.map(r => {
         const veh = vehicles.find(v => v.vehicle_id === r.vehicle_id || v.plate_number === r.plate_number);
+        const norm = normalizeStatus(r.status);
+        const statusMeta = REPORT_STATUS_OPTIONS.find(s => s.value === norm);
         return {
-          'Report #': r.report_number,
-          'Driver Name': r.driver_name,
-          'Plate Number': r.plate_number || veh?.plate_number || 'N/A',
-          'Vehicle ID': r.vehicle_id,
-          'Category': r.category,
-          'Severity': r.severity,
-          'Description': r.description,
-          'Assigned Team': r.assigned_maintenance_team || 'Unassigned',
-          'Status': normalizeStatus(r.status),
-          'Internal Notes': r.internal_notes || r.fleet_manager_notes || '',
-          'Date': new Date(r.created_at).toLocaleString(),
+          [t('Report #')]: r.report_number,
+          [t('Driver Name')]: r.driver_name,
+          [t('Plate Number')]: r.plate_number || veh?.plate_number || t('N/A'),
+          [t('Vehicle ID')]: r.vehicle_id,
+          [t('Category')]: t(r.category),
+          [t('Severity')]: t(r.severity),
+          [t('Description')]: r.description,
+          [t('Assigned Team')]: r.assigned_maintenance_team ? t(r.assigned_maintenance_team) : t('Unassigned'),
+          [t('Status')]: t(statusMeta?.label || norm),
+          [t('Internal Notes')]: r.internal_notes || r.fleet_manager_notes || '',
+          [t('Date')]: new Date(r.created_at).toLocaleString(dateLocale),
         };
       });
       exportToExcel(data, 'Driver_Issue_Reports');
     } else {
       const data = filteredChecklists.map(i => ({
-        'Inspection #': i.inspection_number,
-        'Vehicle ID': vehicles.find(v => v.id === i.vehicle_id)?.vehicle_id || 'N/A',
-        'Odometer': i.odometer_reading,
-        'Result': i.overall_status,
-        'Critical Failure': i.has_critical_failure ? 'YES' : 'NO',
-        'Date': new Date(i.inspection_date).toLocaleString(),
+        [t('Inspection #')]: i.inspection_number,
+        [t('Vehicle ID')]: vehicles.find(v => v.id === i.vehicle_id)?.vehicle_id || t('N/A'),
+        [t('Odometer')]: i.odometer_reading,
+        [t('Result')]: t(i.overall_status),
+        [t('Critical Failure')]: i.has_critical_failure ? t('YES') : t('NO'),
+        [t('Date')]: new Date(i.inspection_date).toLocaleString(dateLocale),
       }));
       exportToExcel(data, 'Vehicle_Inspections');
     }
   };
 
   const handleExportPDF = () => {
+    const dateLocale = isRTL ? 'ar-SA-u-ca-gregory' : 'en-US';
     if (activeMainTab === 'DEFECT_REPORTS') {
-      const headers = ['Report #', 'Driver Name', 'Plate Number', 'Category', 'Severity', 'Issue Description', 'Status', 'Date Reported'];
+      const headers = [
+        t('Report #'),
+        t('Driver Name'),
+        t('Plate Number'),
+        t('Category'),
+        t('Severity'),
+        t('Issue Description'),
+        t('Status'),
+        t('Date Reported'),
+      ];
       const rows = filteredReports.map(r => {
         const veh = vehicles.find(v => v.vehicle_id === r.vehicle_id || v.plate_number === r.plate_number);
+        const norm = normalizeStatus(r.status);
+        const statusMeta = REPORT_STATUS_OPTIONS.find(s => s.value === norm);
         return [
           r.report_number,
           r.driver_name,
-          r.plate_number || veh?.plate_number || r.vehicle_id || 'N/A',
-          r.category,
-          r.severity || 'MEDIUM',
+          r.plate_number || veh?.plate_number || r.vehicle_id || t('N/A'),
+          t(r.category),
+          t(r.severity || 'MEDIUM'),
           r.description,
-          normalizeStatus(r.status),
-          new Date(r.created_at).toLocaleDateString(),
+          t(statusMeta?.label || norm),
+          new Date(r.created_at).toLocaleDateString(dateLocale),
         ];
       });
 
@@ -375,39 +390,48 @@ export const InspectionList: React.FC = () => {
       const resCount = defectReports.filter(r => normalizeStatus(r.status) === 'RESOLVED').length;
 
       exportToPDFReport(
-        'Driver Issue & Defect Reports Register',
+        t('Driver Issue & Defect Reports Register'),
         headers,
         rows,
         'Driver_Issue_Reports',
         {
           orientation: 'landscape',
-          subtitle: 'Commercial driver issue logs submitted via Public Driver Portal & Workshop Dispatch',
+          subtitle: t('Commercial driver issue logs submitted via Public Driver Portal & Workshop Dispatch'),
           summaryKPIs: [
-            { label: 'Total Reports', value: defectReports.length, color: 'slate' },
-            { label: 'Critical Severity', value: critCount, color: 'rose' },
-            { label: 'Pending / In Review', value: newCount, color: 'amber' },
-            { label: 'Resolved', value: resCount, color: 'emerald' }
+            { label: t('Total Reports'), value: defectReports.length, color: 'slate' },
+            { label: t('Critical Severity'), value: critCount, color: 'rose' },
+            { label: t('Pending / In Review'), value: newCount, color: 'amber' },
+            { label: t('Resolved'), value: resCount, color: 'emerald' }
           ],
           metadata: [
-            { label: 'Status Filter', value: statusFilter },
-            { label: 'Category Filter', value: categoryFilter },
-            { label: 'Export Scope', value: `${filteredReports.length} records` }
+            { label: t('Status Filter'), value: statusFilter === 'ALL' ? t('All Statuses') : t(REPORT_STATUS_OPTIONS.find(s => s.value === statusFilter)?.label || statusFilter) },
+            { label: t('Category Filter'), value: categoryFilter === 'ALL' ? t('All Categories') : t(categoryFilter) },
+            { label: t('Export Scope'), value: `${filteredReports.length} ${t('records')}` }
           ]
         }
       );
     } else {
-      const headers = ['Inspection #', 'Vehicle ID', 'Plate Number', 'Inspector ID', 'Odometer', 'Overall Status', 'Critical Safety Fail', 'Inspection Date'];
+      const headers = [
+        t('Inspection #'),
+        t('Vehicle ID'),
+        t('Plate Number'),
+        t('Inspector ID'),
+        t('Odometer'),
+        t('Overall Status'),
+        t('Critical Safety Fail'),
+        t('Inspection Date'),
+      ];
       const rows = filteredChecklists.map(i => {
         const veh = vehicles.find(v => v.id === i.vehicle_id);
         return [
           i.inspection_number,
-          veh ? veh.vehicle_id : 'N/A',
-          veh ? veh.plate_number : 'N/A',
-          i.inspector_id || 'Authorized Safety Inspector',
-          `${(i.odometer_reading || 0).toLocaleString()} KM`,
-          i.overall_status,
-          i.has_critical_failure ? 'CRITICAL FAIL' : 'PASS',
-          new Date(i.inspection_date).toLocaleDateString(),
+          veh ? veh.vehicle_id : t('N/A'),
+          veh ? veh.plate_number : t('N/A'),
+          i.inspector_id || t('Authorized Safety Inspector'),
+          `${(i.odometer_reading || 0).toLocaleString()} ${t('KM')}`,
+          t(i.overall_status),
+          i.has_critical_failure ? t('CRITICAL FAIL') : t('PASS'),
+          new Date(i.inspection_date).toLocaleDateString(dateLocale),
         ];
       });
 
@@ -415,48 +439,55 @@ export const InspectionList: React.FC = () => {
       const failCount = inspections.filter(i => i.overall_status === 'FAIL' || i.has_critical_failure).length;
 
       exportToPDFReport(
-        'Vehicle Pre-Trip & Safety Inspection Log',
+        t('Vehicle Pre-Trip & Safety Inspection Log'),
         headers,
         rows,
         'Vehicle_Inspections_Report',
         {
           orientation: 'landscape',
-          subtitle: 'Mandatory Saudi DOT (Muroor) & Aramco Terminal Pre-Trip Vehicle Safety Verifications',
+          subtitle: t('Mandatory Saudi DOT (Muroor) & Aramco Terminal Pre-Trip Vehicle Safety Verifications'),
           summaryKPIs: [
-            { label: 'Total Inspections', value: inspections.length, color: 'slate' },
-            { label: 'Safety Passed', value: passCount, color: 'emerald' },
-            { label: 'Safety Failed', value: failCount, color: 'rose' }
+            { label: t('Total Inspections'), value: inspections.length, color: 'slate' },
+            { label: t('Safety Passed'), value: passCount, color: 'emerald' },
+            { label: t('Safety Failed'), value: failCount, color: 'rose' }
           ],
           metadata: [
-            { label: 'Result Filter', value: statusFilter },
-            { label: 'Total Exported', value: `${filteredChecklists.length} inspection logs` }
+            { label: t('Result Filter'), value: statusFilter === 'ALL' ? t('All') : t(statusFilter) },
+            { label: t('Total Exported'), value: `${filteredChecklists.length} ${t('inspection logs')}` }
           ]
         }
       );
     }
   };
 
-  const getSeverityBadge = (sev: SeverityLevel) => {
+  const getToneStyle = (sev: SeverityLevel) => {
     switch (sev) {
       case 'CRITICAL':
-        return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">CRITICAL</span>;
+        return { bg: 'transparent', color: EDITORIAL_STATUS.red.text, border: 'var(--color-border)' };
       case 'HIGH':
-        return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">HIGH</span>;
+        return { bg: 'transparent', color: EDITORIAL_STATUS.amber.text, border: 'var(--color-border)' };
       case 'MEDIUM':
-        return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-200">MEDIUM</span>;
+        return { bg: 'transparent', color: EDITORIAL_STATUS.blue.text, border: 'var(--color-border)' };
       case 'LOW':
-        return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">LOW</span>;
+      default:
+        return { bg: 'transparent', color: 'var(--color-text-secondary)', border: 'var(--color-border)' };
     }
   };
 
-  const getStatusBadge = (status: DefectReportStatus) => {
+  const getSeverityBadge = (sev: SeverityLevel) => {
+    const tone = getToneStyle(sev);
+    return <StatusText label={t(sev)} color={tone.color} />;
+  };
+
+  const getStatusMeta = (status: DefectReportStatus) => {
     const norm = normalizeStatus(status);
     const meta = REPORT_STATUS_OPTIONS.find(s => s.value === norm);
-    return (
-      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${meta?.badgeClass || 'bg-slate-100 text-slate-700 border border-slate-200'}`}>
-        {meta?.label || norm.replace(/_/g, ' ')}
-      </span>
-    );
+    const tone = EDITORIAL_STATUS[meta?.tone || 'muted'];
+    return {
+      norm,
+      label: t(meta?.label || norm.replace(/_/g, ' ')),
+      tone,
+    };
   };
 
   const maintenanceTeamOptions = [
@@ -465,416 +496,475 @@ export const InspectionList: React.FC = () => {
     'Electrical & Telematics Team',
     'Tires & Wheel Alignment Bay',
     'Tanker Valves & Hydrostatic Team',
-    ...technicians.map(t => `${t.full_name} (${t.specialization})`),
+    ...technicians.map(tech => `${tech.full_name} (${tech.specialization})`),
   ];
 
+  const hasActiveDefectFilters =
+    search !== '' ||
+    statusFilter !== 'ALL' ||
+    categoryFilter !== 'ALL' ||
+    vehicleFilter !== 'ALL' ||
+    severityFilter !== 'ALL';
+
+  const clearAllFilters = () => {
+    setSearch('');
+    setStatusFilter('ALL');
+    setCategoryFilter('ALL');
+    setVehicleFilter('ALL');
+    setSeverityFilter('ALL');
+  };
+
   return (
-    <div className="space-y-4 font-sans text-xs">
-      {/* Shareable Public Driver Reporting Link Banner */}
-      <div className="bg-gradient-to-r from-[#081a44] via-[#0d2870] to-[#0a215e] text-white rounded-xl p-4 shadow-sm border border-sky-400/20 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[10px] uppercase tracking-wider">
-              Public Shareable Link
-            </span>
-            <h2 className="text-sm sm:text-base font-black tracking-tight text-white">
-              Driver Vehicle Issue Reporting Portal (No Login Required)
-            </h2>
-          </div>
-          <p className="text-xs text-sky-200/90">
-            Share this link with drivers via WhatsApp or SMS. Drivers can submit vehicle issues and photos directly from their phones without an account.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
-          <div className="flex items-center bg-slate-950/60 border border-white/15 rounded-lg px-3 py-1.5 font-mono text-xs text-amber-300">
-            <Link2 className="w-3.5 h-3.5 mr-2 text-sky-300 shrink-0" />
-            <span className="truncate max-w-[240px] sm:max-w-[300px]">{publicReportUrl}</span>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleCopyPublicLink}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition cursor-pointer shadow-2xs"
-          >
-            {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copiedLink ? 'Copied Link!' : 'Copy Link'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleShareWhatsApp}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition cursor-pointer shadow-2xs"
-          >
-            <Share2 className="w-3.5 h-3.5" />
-            <span>Share via WhatsApp</span>
-          </button>
-
-          <a
-            href="/driver-report"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold text-xs transition"
-          >
-            <ExternalLink className="w-3.5 h-3.5" />
-            <span>Open Portal</span>
-          </a>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title={
+          <>
+            {isRTL ? 'بلاغات السائقين' : 'Driver Reports &'}
+            <br />
+            {isRTL ? 'وفحوصات المركبات' : 'Inspections Inbox'}
+          </>
+        }
+        subtitle={t('Driver issue reports, public reporting link, and digital pre-trip checklist logs.')}
+        actions={
+          <>
+            <GhostButton onClick={handleExportExcel}>
+              {t('Excel')}
+            </GhostButton>
+            <GhostButton onClick={handleExportPDF}>
+              {isRTL ? 'تقرير PDF' : 'PDF report'}
+            </GhostButton>
+            <SecondaryButton onClick={handleCopyPublicLink}>
+              {copiedLink ? t('Copied Link!') : isRTL ? 'نسخ رابط البلاغات' : 'Copy public link'}
+            </SecondaryButton>
+            {canManage && (
+              <PrimaryButton onClick={() => setIsInspectionFormOpen(true)}>
+                {isRTL ? `+ ${t('Log Pre-Trip Inspection')}` : '+ Log pre-trip inspection'}
+              </PrimaryButton>
+            )}
+          </>
+        }
+      />
 
       {/* Feedback Notification Banner */}
       {feedbackMessage && (
-        <div className="flex items-center justify-between gap-2 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-bold text-xs shadow-2xs">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 10,
+            padding: '10px 14px',
+            marginBottom: 16,
+            borderRadius: 4,
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderInlineStart: `3px solid ${EDITORIAL_STATUS.green.stripe}`,
+            color: 'var(--color-ink)',
+            fontSize: 13,
+            fontWeight: 500,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <CheckCircle2 style={{ width: 16, height: 16, flexShrink: 0, color: EDITORIAL_STATUS.green.text }} />
             <span>{feedbackMessage}</span>
           </div>
           <button
             type="button"
             onClick={() => setFeedbackMessage(null)}
-            className="text-[11px] underline opacity-75 hover:opacity-100 cursor-pointer"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              fontSize: 12,
+              textDecoration: 'underline',
+              color: 'var(--color-text-secondary)',
+              cursor: 'pointer',
+            }}
           >
-            Dismiss
+            {t('Dismiss')}
           </button>
         </div>
       )}
 
-      {/* Main Tab Bar */}
-      <div className="flex border-b border-slate-200 gap-4 bg-white px-4 pt-2.5 rounded-t-xl">
-        <button
-          onClick={() => setActiveMainTab('DEFECT_REPORTS')}
-          className={`pb-2.5 text-xs font-bold uppercase tracking-wider transition flex items-center gap-1.5 border-b-2 cursor-pointer ${
-            activeMainTab === 'DEFECT_REPORTS'
-              ? 'border-amber-500 text-amber-800'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <AlertTriangle className="w-3.5 h-3.5" />
-          <span>Driver Issue Reports ({defectReports.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveMainTab('CHECKLISTS')}
-          className={`pb-2.5 text-xs font-bold uppercase tracking-wider transition flex items-center gap-1.5 border-b-2 cursor-pointer ${
-            activeMainTab === 'CHECKLISTS'
-              ? 'border-amber-500 text-amber-800'
-              : 'border-transparent text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <ShieldCheck className="w-3.5 h-3.5" />
-          <span>Pre-Trip Checklist Logs ({inspections.length})</span>
-        </button>
-      </div>
+      {/* Main Editorial Tabs + Search */}
+      <StatusTabs
+        tabs={[
+          {
+            key: 'ALL',
+            label: isRTL ? 'الكل' : 'All',
+            count: defectReports.length,
+          },
+          {
+            key: 'NEW',
+            label: isRTL ? 'جديد' : 'New',
+            count: defectReports.filter(r => normalizeStatus(r.status) === 'NEW').length,
+            stripe: EDITORIAL_STATUS.amber.stripe,
+          },
+          {
+            key: 'UNDER_REVIEW',
+            label: isRTL ? 'قيد المراجعة' : 'Under review',
+            count: defectReports.filter(r => normalizeStatus(r.status) === 'UNDER_REVIEW').length,
+            stripe: EDITORIAL_STATUS.blue.stripe,
+          },
+          {
+            key: 'IN_PROGRESS',
+            label: isRTL ? 'قيد التنفيذ' : 'In progress',
+            count: defectReports.filter(r => normalizeStatus(r.status) === 'IN_PROGRESS').length,
+            stripe: EDITORIAL_STATUS.amber.stripe,
+          },
+          {
+            key: 'RESOLVED',
+            label: isRTL ? 'تم الحل' : 'Resolved',
+            count: defectReports.filter(r => normalizeStatus(r.status) === 'RESOLVED').length,
+            stripe: EDITORIAL_STATUS.green.stripe,
+          },
+          {
+            key: 'CHECKLISTS',
+            label: isRTL ? 'فحوصات ما قبل الرحلة' : 'Pre-trip logs',
+            count: inspections.length,
+            stripe: EDITORIAL_STATUS.blue.stripe,
+          },
+        ]}
+        activeKey={activeMainTab === 'CHECKLISTS' ? 'CHECKLISTS' : statusFilter}
+        onChange={key => {
+          if (key === 'CHECKLISTS') {
+            setActiveMainTab('CHECKLISTS');
+          } else {
+            setActiveMainTab('DEFECT_REPORTS');
+            setStatusFilter(key);
+          }
+        }}
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder={
+          activeMainTab === 'DEFECT_REPORTS'
+            ? t('Search report #, driver name, plate #, issue...')
+            : t('Search inspection #...')
+        }
+        extraFilters={
+          activeMainTab === 'DEFECT_REPORTS' ? (
+            <>
+              <EditorialSelect
+                value={categoryFilter}
+                onChange={e => setCategoryFilter(e.target.value)}
+              >
+                <option value="ALL">{t('All Categories')}</option>
+                <option value="Mechanical">{t('Mechanical')}</option>
+                <option value="Electrical">{t('Electrical')}</option>
+                <option value="Tire">{t('Tire')}</option>
+                <option value="Accident">{t('Accident')}</option>
+                <option value="Other">{t('Other')}</option>
+              </EditorialSelect>
+              <EditorialSelect
+                value={severityFilter}
+                onChange={e => setSeverityFilter(e.target.value)}
+              >
+                <option value="ALL">{t('All Severities')}</option>
+                <option value="CRITICAL">{t('CRITICAL')}</option>
+                <option value="HIGH">{t('HIGH')}</option>
+                <option value="MEDIUM">{t('MEDIUM')}</option>
+                <option value="LOW">{t('LOW')}</option>
+              </EditorialSelect>
+            </>
+          ) : undefined
+        }
+      />
 
       {/* TAB 1: DRIVER ISSUE REPORTS */}
       {activeMainTab === 'DEFECT_REPORTS' && (
-        <div className="space-y-3">
-          {/* Action Toolbar & Filters */}
-          <div className="bg-white border border-slate-200/90 p-3.5 rounded-xl shadow-2xs space-y-3">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                {canManage && (
-                  <button
-                    onClick={() => setIsInspectionFormOpen(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 text-slate-950 font-bold text-xs rounded-lg hover:bg-amber-400 transition shadow-2xs cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Log Pre-Trip Inspection
-                  </button>
-                )}
-                <button
-                  onClick={handleExportExcel}
-                  className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 hover:bg-slate-200 transition cursor-pointer"
+        <div>
+          <DataTable
+            columns={[
+              { label: t('Report #') },
+              { label: t('Driver Name') },
+              { label: t('Vehicle Plate & Unit') },
+              { label: t('Category') },
+              { label: t('Issue Description') },
+              { label: t('Assigned Team') },
+              { label: t('Submitted') },
+              { label: t('Status') },
+            ]}
+            isEmpty={filteredReports.length === 0}
+            emptyMessage={t('No driver issue reports found matching your filter criteria.')}
+            onClearFilters={hasActiveDefectFilters ? clearAllFilters : undefined}
+            clearFiltersLabel={t('Clear filters')}
+          >
+            {filteredReports.map(rep => {
+              const veh = vehicles.find(
+                v => v.vehicle_id === rep.vehicle_id || v.plate_number === rep.plate_number
+              );
+              const displayPlate = rep.plate_number || veh?.plate_number || rep.vehicle_id;
+              const statusMeta = getStatusMeta(rep.status);
+
+              return (
+                <DataRow
+                  key={rep.id}
+                  stripeColor={statusMeta.tone.stripe}
+                  onClick={() => openReportDetail(rep)}
+                  actions={
+                    <>
+                      <select
+                        aria-label={`${t('Status for')} ${rep.report_number}`}
+                        value={statusMeta.norm}
+                        onChange={e =>
+                          handleQuickStatusUpdate(rep, e.target.value as DefectReportStatus)
+                        }
+                        className="nf-field"
+                        style={{ height: 28, fontSize: 11.5, padding: '0 8px', width: 'auto' }}
+                      >
+                        {REPORT_STATUS_OPTIONS.map(opt => (
+                          <option key={opt.value} value={opt.value}>
+                            {t(opt.label)}
+                          </option>
+                        ))}
+                      </select>
+                      <RowAction
+                        icon={<Eye style={{ width: 15, height: 15 }} />}
+                        title={t('Review')}
+                        onClick={() => openReportDetail(rep)}
+                      />
+                    </>
+                  }
                 >
-                  <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" /> Excel
-                </button>
-                <button
-                  onClick={handleExportPDF}
-                  className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 hover:bg-slate-200 transition cursor-pointer"
-                >
-                  <FileText className="w-3.5 h-3.5 text-rose-600" /> PDF
-                </button>
-              </div>
-
-              <div className="relative w-full sm:w-80">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-                <input
-                  type="text"
-                  placeholder="Search report #, driver name, plate #, issue..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-900 focus:bg-white focus:border-amber-500 focus:outline-none"
-                />
-              </div>
-            </div>
-
-            {/* Filter controls row */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 border-t border-slate-100 text-[11px]">
-              <div>
-                <label className="text-slate-500 font-bold block mb-1">Report Status</label>
-                <select
-                  value={statusFilter}
-                  onChange={e => setStatusFilter(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 font-semibold"
-                >
-                  <option value="ALL">All Statuses</option>
-                  <option value="NEW">New</option>
-                  <option value="UNDER_REVIEW">Under Review</option>
-                  <option value="IN_PROGRESS">In Progress</option>
-                  <option value="RESOLVED">Resolved</option>
-                  <option value="REJECTED">Rejected</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-slate-500 font-bold block mb-1">Issue Category</label>
-                <select
-                  value={categoryFilter}
-                  onChange={e => setCategoryFilter(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 font-semibold"
-                >
-                  <option value="ALL">All Categories</option>
-                  <option value="Mechanical">Mechanical</option>
-                  <option value="Electrical">Electrical</option>
-                  <option value="Tire">Tire</option>
-                  <option value="Accident">Accident</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-slate-500 font-bold block mb-1">Vehicle Plate / Unit</label>
-                <select
-                  value={vehicleFilter}
-                  onChange={e => setVehicleFilter(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 font-semibold"
-                >
-                  <option value="ALL">All Registered Vehicles</option>
-                  {vehicles.map(v => (
-                    <option key={v.id} value={v.vehicle_id}>
-                      {v.plate_number} — {v.vehicle_id}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-slate-500 font-bold block mb-1">Severity Level</label>
-                <select
-                  value={severityFilter}
-                  onChange={e => setSeverityFilter(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 font-semibold"
-                >
-                  <option value="ALL">All Severities</option>
-                  <option value="CRITICAL">CRITICAL</option>
-                  <option value="HIGH">HIGH</option>
-                  <option value="MEDIUM">MEDIUM</option>
-                  <option value="LOW">LOW</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* ERP Data Table */}
-          <div className="bg-white border border-slate-200/90 rounded-xl overflow-hidden shadow-2xs">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold uppercase text-slate-500 tracking-wider">
-                  <tr>
-                    <th className="p-3">Report #</th>
-                    <th className="p-3">Driver Name</th>
-                    <th className="p-3">Vehicle Plate & Unit</th>
-                    <th className="p-3">Category</th>
-                    <th className="p-3">Issue Description</th>
-                    <th className="p-3">Assigned Team</th>
-                    <th className="p-3">Submitted</th>
-                    <th className="p-3">Status</th>
-                    <th className="p-3 text-right">Review & Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-medium">
-                  {filteredReports.length === 0 ? (
-                    <tr>
-                      <td colSpan={9} className="p-8 text-center text-slate-400">
-                        No driver issue reports found matching your filter criteria.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredReports.map(rep => {
-                      const veh = vehicles.find(
-                        v => v.vehicle_id === rep.vehicle_id || v.plate_number === rep.plate_number
-                      );
-                      const displayPlate = rep.plate_number || veh?.plate_number || rep.vehicle_id;
-
-                      return (
-                        <tr
-                          key={rep.id}
-                          onClick={() => openReportDetail(rep)}
-                          className="hover:bg-slate-50/80 cursor-pointer transition-colors"
+                  <td style={{ padding: '14px 16px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span
+                        dir="ltr"
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: 13,
+                          fontWeight: 500,
+                          color: 'var(--color-ink)',
+                        }}
+                      >
+                        {rep.report_number}
+                      </span>
+                      {rep.photo_url && (
+                        <button
+                          type="button"
+                          onClick={e => {
+                            e.stopPropagation();
+                            openLightbox(
+                              rep.photo_url!,
+                              `${t('Issue Photo')}: ${rep.report_number}`,
+                              `${t('Driver')}: ${rep.driver_name} • ${t('Plate')}: ${displayPlate}`,
+                              rep.report_number,
+                              rep.created_at
+                            );
+                          }}
+                          title={t('Click to view attached photo full size')}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            padding: '2px 6px',
+                            borderRadius: 4,
+                            background: 'var(--color-page-bg)',
+                            border: '1px solid var(--color-border)',
+                            color: 'var(--color-brand-accent)',
+                            fontSize: 11,
+                            fontWeight: 500,
+                            cursor: 'pointer',
+                          }}
                         >
-                          <td className="p-3 font-mono font-bold text-amber-700 whitespace-nowrap">
-                            <div className="flex items-center gap-1.5">
-                              <span>{rep.report_number}</span>
-                              {rep.photo_url && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openLightbox(
-                                      rep.photo_url!,
-                                      `Issue Photo: ${rep.report_number}`,
-                                      `Driver: ${rep.driver_name} • Plate: ${displayPlate}`,
-                                      rep.report_number,
-                                      rep.created_at
-                                    );
-                                  }}
-                                  title="Click to view attached photo full size"
-                                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-[10px] font-bold transition cursor-pointer"
-                                >
-                                  <Camera className="w-3.5 h-3.5 text-amber-600" />
-                                  <span className="hidden sm:inline">Photo</span>
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                          <td className="p-3 font-bold text-slate-900">{rep.driver_name}</td>
-                          <td className="p-3">
-                            <span className="font-mono font-black text-slate-900 block">
-                              {displayPlate}
-                            </span>
-                            {veh && (
-                              <span className="text-[10px] text-slate-500 font-semibold">
-                                {veh.vehicle_id} • {veh.make}
-                              </span>
-                            )}
-                          </td>
-                          <td className="p-3">
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-bold text-slate-800">{rep.category}</span>
-                              {getSeverityBadge(rep.severity)}
-                            </div>
-                          </td>
-                          <td className="p-3 text-slate-700 max-w-xs truncate" title={rep.description}>
-                            {rep.description}
-                          </td>
-                          <td className="p-3">
-                            {rep.assigned_maintenance_team ? (
-                              <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-800 font-semibold text-[11px] border border-slate-200">
-                                {rep.assigned_maintenance_team}
-                              </span>
-                            ) : (
-                              <span className="text-slate-400 italic text-[11px]">Unassigned</span>
-                            )}
-                          </td>
-                          <td className="p-3 font-mono text-slate-500 text-[11px] whitespace-nowrap">
-                            {new Date(rep.created_at).toLocaleString([], {
-                              month: 'short',
-                              day: '2-digit',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </td>
-                          <td className="p-3 whitespace-nowrap">{getStatusBadge(rep.status)}</td>
-                          <td className="p-3 text-right whitespace-nowrap" onClick={e => e.stopPropagation()}>
-                            <div className="inline-flex items-center gap-1.5">
-                              <select
-                                aria-label={`Status for ${rep.report_number}`}
-                                value={normalizeStatus(rep.status)}
-                                onChange={e =>
-                                  handleQuickStatusUpdate(rep, e.target.value as DefectReportStatus)
-                                }
-                                className="rounded-lg border border-slate-200 bg-slate-50 hover:bg-white px-2 py-1 text-[11px] font-bold text-slate-800 focus:border-amber-500 focus:outline-none cursor-pointer"
-                              >
-                                {REPORT_STATUS_OPTIONS.map(opt => (
-                                  <option key={opt.value} value={opt.value}>
-                                    {opt.label}
-                                  </option>
-                                ))}
-                              </select>
+                          <Camera style={{ width: 12, height: 12 }} />
+                          <span className="hidden sm:inline">{t('Photo')}</span>
+                        </button>
+                      )}
+                    </div>
+                  </td>
 
-                              <button
-                                type="button"
-                                onClick={() => openReportDetail(rep)}
-                                className="px-2.5 py-1 bg-amber-500 text-slate-950 font-bold text-[11px] rounded-lg hover:bg-amber-400 transition cursor-pointer"
-                              >
-                                Review
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  <td style={{ padding: '14px 16px', verticalAlign: 'middle', fontSize: 13, fontWeight: 500, color: 'var(--color-ink)' }}>
+                    {rep.driver_name}
+                  </td>
 
-            <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-200 text-[11px] text-slate-500 font-mono flex justify-between items-center">
-              <span>
-                Showing {filteredReports.length} of {defectReports.length} driver issue reports
-              </span>
-              <span>Public Portal Endpoint: Active (/driver-report)</span>
-            </div>
-          </div>
+                  <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
+                      <PlateChip plate={displayPlate} accentColor={statusMeta.tone.stripe} />
+                      {veh && (
+                        <span
+                          dir="ltr"
+                          style={{ fontSize: 11.5, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}
+                        >
+                          {veh.vehicle_id} • {veh.make}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+
+                  <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-ink)' }}>
+                        {t(rep.category)}
+                      </span>
+                      {getSeverityBadge(rep.severity)}
+                    </div>
+                  </td>
+
+                  <td
+                    style={{
+                      padding: '14px 16px',
+                      verticalAlign: 'middle',
+                      fontSize: 12.5,
+                      color: 'var(--color-text-secondary)',
+                      maxWidth: 260,
+                    }}
+                    title={rep.description}
+                  >
+                    <div className="truncate">{rep.description}</div>
+                  </td>
+
+                  <td style={{ padding: '14px 16px', verticalAlign: 'middle', fontSize: 12.5 }}>
+                    {rep.assigned_maintenance_team ? (
+                      <span style={{ color: 'var(--color-ink)', fontWeight: 500 }}>
+                        {t(rep.assigned_maintenance_team)}
+                      </span>
+                    ) : (
+                      <span style={{ color: 'var(--color-text-muted)' }}>{t('Unassigned')}</span>
+                    )}
+                  </td>
+
+                  <td
+                    style={{
+                      padding: '14px 16px',
+                      verticalAlign: 'middle',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 12,
+                      color: 'var(--color-text-muted)',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <span dir="ltr">
+                      {new Date(rep.created_at).toLocaleString(isRTL ? 'ar-SA-u-ca-gregory' : 'en-US', {
+                        month: 'short',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  </td>
+
+                  <td style={{ padding: '14px 16px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                    <StatusText label={statusMeta.label} color={statusMeta.tone.text} />
+                  </td>
+                </DataRow>
+              );
+            })}
+          </DataTable>
+
+          <TableFooter
+            summaryText={`${t('Showing')} ${filteredReports.length} ${t('of')} ${defectReports.length} ${t('driver issue reports')} · ${t('Public Portal Endpoint: Active')} (/driver-report)`}
+          />
         </div>
       )}
 
       {/* TAB 2: PRE-TRIP CHECKLIST LOGS */}
       {activeMainTab === 'CHECKLISTS' && (
-        <div className="space-y-3">
-          <div className="bg-white border border-slate-200/90 rounded-xl overflow-hidden shadow-2xs">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase text-slate-600 tracking-wider">
-                  <tr>
-                    <th className="p-3">Inspection #</th>
-                    <th className="p-3">Tractor Truck</th>
-                    <th className="p-3">Odometer</th>
-                    <th className="p-3">Result</th>
-                    <th className="p-3">Critical Defect</th>
-                    <th className="p-3">Linked WO</th>
-                    <th className="p-3">Date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-medium">
-                  {filteredChecklists.map(i => {
-                    const veh = vehicles.find(v => v.id === i.vehicle_id);
-                    const linkedWO = workOrders.find(w => w.id === i.created_work_order_id);
-                    return (
-                      <tr key={i.id} className="hover:bg-slate-50 transition">
-                        <td className="p-3 font-mono font-bold text-sky-700">{i.inspection_number}</td>
-                        <td className="p-3 font-bold text-slate-900">
-                          {veh?.vehicle_id} ({veh?.plate_number})
-                        </td>
-                        <td className="p-3 font-mono text-slate-700">
-                          {(i.odometer_reading || 0).toLocaleString()} KM
-                        </td>
-                        <td className="p-3">
-                          <Badge variant={i.overall_status === 'PASS' ? 'success' : 'danger'}>
-                            {i.overall_status}
-                          </Badge>
-                        </td>
-                        <td className="p-3">
-                          {i.has_critical_failure ? (
-                            <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 font-bold border border-rose-200">
-                              CRITICAL FAIL
-                            </span>
-                          ) : (
-                            <span className="text-slate-400">Pass</span>
-                          )}
-                        </td>
-                        <td className="p-3 font-mono text-slate-700">
-                          {linkedWO ? linkedWO.work_order_number : 'None'}
-                        </td>
-                        <td className="p-3 font-mono text-slate-500">
-                          {new Date(i.inspection_date).toLocaleDateString()}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        <div>
+          <DataTable
+            columns={[
+              { label: t('Inspection #') },
+              { label: t('Tractor Truck') },
+              { label: t('Odometer') },
+              { label: t('Result') },
+              { label: t('Critical Defect') },
+              { label: t('Linked WO') },
+              { label: t('Date') },
+            ]}
+            isEmpty={filteredChecklists.length === 0}
+            emptyMessage={t('No inspection checklist logs match your query.')}
+            onClearFilters={search ? () => setSearch('') : undefined}
+            clearFiltersLabel={t('Clear filters')}
+            hasActionsColumn={false}
+          >
+            {filteredChecklists.map(i => {
+              const veh = vehicles.find(v => v.id === i.vehicle_id);
+              const linkedWO = workOrders.find(w => w.id === i.created_work_order_id);
+              const isPass = i.overall_status === 'PASS';
+              const stripe = isPass ? EDITORIAL_STATUS.green.stripe : EDITORIAL_STATUS.red.stripe;
+
+              return (
+                <DataRow key={i.id} stripeColor={stripe}>
+                  <td
+                    style={{
+                      padding: '14px 16px',
+                      verticalAlign: 'middle',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: 'var(--color-ink)',
+                    }}
+                  >
+                    <span dir="ltr">{i.inspection_number}</span>
+                  </td>
+
+                  <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 3 }}>
+                      {veh?.plate_number ? (
+                        <PlateChip plate={veh.plate_number} accentColor={stripe} />
+                      ) : null}
+                      <span dir="ltr" style={{ fontSize: 12, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
+                        {veh?.vehicle_id || '—'}
+                      </span>
+                    </div>
+                  </td>
+
+                  <td
+                    style={{
+                      padding: '14px 16px',
+                      verticalAlign: 'middle',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 13,
+                      color: 'var(--color-ink)',
+                    }}
+                  >
+                    <span dir="ltr">{(i.odometer_reading || 0).toLocaleString()}</span> {t('KM')}
+                  </td>
+
+                  <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                    <Badge variant={isPass ? 'success' : 'danger'}>
+                      {t(i.overall_status)}
+                    </Badge>
+                  </td>
+
+                  <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
+                    {i.has_critical_failure ? (
+                      <StatusText label={t('CRITICAL FAIL')} color={EDITORIAL_STATUS.red.text} />
+                    ) : (
+                      <StatusText label={t('Pass')} color={EDITORIAL_STATUS.green.text} />
+                    )}
+                  </td>
+
+                  <td
+                    style={{
+                      padding: '14px 16px',
+                      verticalAlign: 'middle',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 12.5,
+                      color: 'var(--color-text-secondary)',
+                    }}
+                  >
+                    {linkedWO ? <span dir="ltr">{linkedWO.work_order_number}</span> : t('None')}
+                  </td>
+
+                  <td
+                    style={{
+                      padding: '14px 16px',
+                      verticalAlign: 'middle',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 12.5,
+                      color: 'var(--color-text-muted)',
+                    }}
+                  >
+                    <span dir="ltr">{new Date(i.inspection_date).toLocaleDateString(isRTL ? 'ar-SA-u-ca-gregory' : 'en-US')}</span>
+                  </td>
+                </DataRow>
+              );
+            })}
+          </DataTable>
+
+          <TableFooter
+            summaryText={`${t('Showing')} ${filteredChecklists.length} ${t('of')} ${inspections.length}`}
+          />
         </div>
       )}
 
@@ -883,7 +973,7 @@ export const InspectionList: React.FC = () => {
         <Modal
           isOpen={isInspectionFormOpen}
           onClose={() => setIsInspectionFormOpen(false)}
-          title="Digital Vehicle Pre-Trip Inspection"
+          title={t('Digital Vehicle Pre-Trip Inspection')}
           maxWidth="2xl"
         >
           <InspectionFormMobile onComplete={() => setIsInspectionFormOpen(false)} />
@@ -896,194 +986,244 @@ export const InspectionList: React.FC = () => {
           isOpen={!!selectedReport}
           isHidden={lightboxData.isOpen}
           onClose={() => setSelectedReport(null)}
-          title={`Driver Issue Report: ${selectedReport.report_number}`}
-          subtitle={`Category: ${selectedReport.category} | Reported by ${selectedReport.driver_name}`}
+          title={`${t('Driver Issue Report')}: ${selectedReport.report_number}`}
+          subtitle={`${t('Category')}: ${t(selectedReport.category)} | ${t('Reported by')} ${selectedReport.driver_name}`}
           maxWidth="2xl"
         >
-          <div className="space-y-4 text-xs font-sans">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, fontSize: 12.5 }}>
             {/* Record Header Summary Bar */}
-            <div className="p-3.5 bg-slate-50 border border-slate-200/90 rounded-xl flex flex-wrap items-center justify-between gap-2">
+            <div
+              style={{
+                padding: 14,
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 4,
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 10,
+              }}
+            >
               <div>
-                <span className="font-black text-slate-900 text-sm block">
-                  {selectedReport.report_number} — {selectedReport.category} Issue
-                </span>
-                <span className="text-[11px] text-slate-500">
-                  Driver: <strong>{selectedReport.driver_name}</strong> • Vehicle:{' '}
-                  <strong>
+                <div style={{ fontWeight: 600, color: 'var(--color-ink)', fontSize: 14 }}>
+                  <span dir="ltr">{selectedReport.report_number}</span> — {t(selectedReport.category)} {t('Issue')}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>
+                  {t('Driver')}: <strong style={{ color: 'var(--color-ink)' }}>{selectedReport.driver_name}</strong> • {t('Vehicle')}:{' '}
+                  <strong dir="ltr" style={{ color: 'var(--color-ink)', fontFamily: 'var(--font-mono)' }}>
                     {selectedReport.plate_number || selectedReport.vehicle_id} ({selectedReport.vehicle_id})
                   </strong>{' '}
-                  • {new Date(selectedReport.created_at).toLocaleString()}
-                </span>
+                  • <span dir="ltr">{new Date(selectedReport.created_at).toLocaleString(isRTL ? 'ar-SA-u-ca-gregory' : 'en-US')}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 {getSeverityBadge(selectedReport.severity)}
-                {getStatusBadge(selectedReport.status)}
+                <StatusText
+                  label={getStatusMeta(selectedReport.status).label}
+                  color={getStatusMeta(selectedReport.status).tone.text}
+                />
               </div>
             </div>
 
             {/* Quick Workshop Escalation Actions */}
             {canManage && (
-              <div className="p-3 bg-slate-100/80 border border-slate-200/90 rounded-xl flex flex-wrap items-center gap-2 text-[11px]">
-                <span className="font-extrabold text-slate-600 mr-1 uppercase text-[10px]">
-                  Workshop Escalation:
+              <div
+                style={{
+                  padding: 12,
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 4,
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+              >
+                <span style={{ fontWeight: 600, color: 'var(--color-text-secondary)', fontSize: 12 }}>
+                  {t('Workshop Escalation:')}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => handleCreateWorkOrder(selectedReport)}
-                  className="px-3 py-1.5 bg-amber-500 text-slate-950 font-bold rounded-lg hover:bg-amber-400 transition cursor-pointer"
-                >
-                  Create Work Order
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSchedulePM(selectedReport)}
-                  className="px-3 py-1.5 bg-white text-slate-800 font-semibold border border-slate-200 rounded-lg hover:bg-slate-50 transition cursor-pointer"
-                >
-                  Schedule PM Service
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleUpdateVehicleStatus(selectedReport, 'REQUIRES INSPECTION')}
-                  className="px-3 py-1.5 bg-orange-100 text-orange-900 font-semibold border border-orange-200 rounded-lg hover:bg-orange-200 transition cursor-pointer"
-                >
-                  Flag Vehicle: Requires Inspection
-                </button>
-                <button
-                  type="button"
+                <PrimaryButton onClick={() => handleCreateWorkOrder(selectedReport)}>
+                  {t('Create Work Order')}
+                </PrimaryButton>
+                <SecondaryButton onClick={() => handleSchedulePM(selectedReport)}>
+                  {t('Schedule PM Service')}
+                </SecondaryButton>
+                <SecondaryButton onClick={() => handleUpdateVehicleStatus(selectedReport, 'REQUIRES INSPECTION')}>
+                  {t('Flag Vehicle: Requires Inspection')}
+                </SecondaryButton>
+                <SecondaryButton
                   onClick={() => handleUpdateVehicleStatus(selectedReport, 'OUT_OF_SERVICE')}
-                  className="px-3 py-1.5 bg-rose-100 text-rose-900 font-semibold border border-rose-200 rounded-lg hover:bg-rose-200 transition cursor-pointer"
+                  style={{ color: '#991B1B', borderColor: '#FECACA' }}
                 >
-                  Set Out of Service
-                </button>
+                  {t('Set Out of Service')}
+                </SecondaryButton>
               </div>
             )}
 
             {/* Internal Record Tabs */}
-            <div className="flex border-b border-slate-200 gap-4 text-[11px]">
-              {(['DETAILS', 'VEHICLE', 'PHOTOS', 'MAINTENANCE', 'HISTORY'] as const).map(tabKey => (
-                <button
-                  key={tabKey}
-                  type="button"
-                  onClick={() => setDetailTab(tabKey)}
-                  className={`pb-2 font-bold uppercase transition border-b-2 cursor-pointer ${
-                    detailTab === tabKey
-                      ? 'border-amber-500 text-amber-800'
-                      : 'border-transparent text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  {tabKey === 'PHOTOS' && selectedReport.photo_url ? 'PHOTOS (1)' : tabKey}
-                </button>
-              ))}
+            <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border)', gap: 18, overflowX: 'auto', overflowY: 'hidden' }} className="no-scrollbar">
+              {(['DETAILS', 'VEHICLE', 'PHOTOS', 'MAINTENANCE', 'HISTORY'] as const).map(tabKey => {
+                const isActive = detailTab === tabKey;
+                return (
+                  <button
+                    key={tabKey}
+                    type="button"
+                    onClick={() => setDetailTab(tabKey)}
+                    style={{
+                      padding: '8px 2px',
+                      fontSize: 12.5,
+                      fontWeight: isActive ? 600 : 500,
+                      color: isActive ? 'var(--color-ink)' : 'var(--color-text-muted)',
+                      background: 'transparent',
+                      border: 'none',
+                      borderBottom: isActive ? '2px solid var(--color-ink)' : '2px solid transparent',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {tabKey === 'PHOTOS' && selectedReport.photo_url ? `${t('PHOTOS')} (1)` : t(tabKey)}
+                  </button>
+                );
+              })}
             </div>
 
             {/* TAB 1: DETAILS, STATUS, INTERNAL NOTES & TEAM ASSIGNMENT */}
             {detailTab === 'DETAILS' && (
-              <div className="space-y-4">
-                <div className="p-3.5 bg-white border border-slate-200 rounded-xl space-y-1">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
-                    Driver Issue Description
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div
+                  style={{
+                    padding: 14,
+                    background: 'var(--color-surface)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 4,
+                  }}
+                >
+                  <span style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--color-text-muted)', display: 'block', marginBottom: 4 }}>
+                    {t('Driver Issue Description')}
                   </span>
-                  <p className="text-slate-900 font-semibold leading-relaxed text-xs">
+                  <p style={{ margin: 0, color: 'var(--color-ink)', fontWeight: 500, lineHeight: 1.6, fontSize: 13 }}>
                     {selectedReport.description}
                   </p>
                 </div>
 
                 {selectedReport.photo_url && (
-                  <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                        <Camera className="w-3.5 h-3.5 text-slate-400" />
-                        Attached Issue Photo
+                  <div
+                    style={{
+                      padding: 14,
+                      background: 'var(--color-surface)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 4,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 10,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <Camera style={{ width: 14, height: 14, color: 'var(--color-text-muted)' }} />
+                        {t('Attached Issue Photo')}
                       </span>
-                      <button
-                        type="button"
+                      <SecondaryButton
                         onClick={() => openLightbox(
                           selectedReport.photo_url!,
-                          `Issue Photo: ${selectedReport.report_number}`,
-                          `Driver: ${selectedReport.driver_name} • Plate: ${selectedReport.plate_number}`,
+                          `${t('Issue Photo')}: ${selectedReport.report_number}`,
+                          `${t('Driver')}: ${selectedReport.driver_name} • ${t('Plate')}: ${selectedReport.plate_number}`,
                           selectedReport.report_number,
                           selectedReport.created_at
                         )}
-                        className="text-[11px] font-bold text-amber-800 hover:text-amber-900 bg-amber-100 hover:bg-amber-200 px-2.5 py-1 rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
                       >
-                        <Maximize2 className="w-3.5 h-3.5" />
-                        <span>Click to Open Full Size & Zoom</span>
-                      </button>
+                        <Maximize2 style={{ width: 13, height: 13 }} />
+                        <span>{t('Click to Open Full Size & Zoom')}</span>
+                      </SecondaryButton>
                     </div>
 
                     <div
                       onClick={() => openLightbox(
                         selectedReport.photo_url!,
-                        `Issue Photo: ${selectedReport.report_number}`,
-                        `Driver: ${selectedReport.driver_name} • Plate: ${selectedReport.plate_number}`,
+                        `${t('Issue Photo')}: ${selectedReport.report_number}`,
+                        `${t('Driver')}: ${selectedReport.driver_name} • ${t('Plate')}: ${selectedReport.plate_number}`,
                         selectedReport.report_number,
                         selectedReport.created_at
                       )}
-                      className="group relative cursor-pointer overflow-hidden rounded-xl border border-slate-200/90 bg-white hover:border-amber-400 transition shadow-xs max-w-md"
-                      title="Click to open full-screen viewer with zoom"
+                      style={{
+                        position: 'relative',
+                        cursor: 'pointer',
+                        overflow: 'hidden',
+                        borderRadius: 4,
+                        border: '1px solid var(--color-border)',
+                        background: 'var(--color-page-bg)',
+                        maxWidth: 420,
+                      }}
+                      title={t('Click to open full-screen viewer with zoom')}
                     >
                       <img
                         src={selectedReport.photo_url}
-                        alt="Driver uploaded issue"
-                        className="max-h-60 w-auto rounded-xl object-contain mx-auto transition-transform duration-200 group-hover:scale-[1.02]"
+                        alt={t('Driver uploaded issue')}
+                        style={{ maxHeight: 240, width: 'auto', objectFit: 'contain', margin: '0 auto', display: 'block' }}
                       />
-                      <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/30 transition-all flex items-center justify-center">
-                        <span className="opacity-0 group-hover:opacity-100 transition-opacity px-3.5 py-1.5 rounded-full bg-slate-900/90 backdrop-blur-xs text-white text-xs font-bold shadow-lg flex items-center gap-1.5">
-                          <ZoomIn className="w-4 h-4 text-amber-400" />
-                          View Full-Screen Lightbox
-                        </span>
-                      </div>
                     </div>
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-slate-50/70 border border-slate-200/90 rounded-xl p-4">
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                    gap: 12,
+                    background: 'var(--color-surface)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 4,
+                    padding: 14,
+                  }}
+                >
                   <div>
-                    <label className="font-bold text-slate-700 block mb-1.5">
-                      Update Report Status
+                    <label style={{ fontWeight: 600, color: 'var(--color-text-secondary)', display: 'block', marginBottom: 6, fontSize: 12 }}>
+                      {t('Update Report Status')}
                     </label>
-                    <select
+                    <EditorialSelect
+                      width="100%"
                       value={modalStatus}
                       onChange={e => setModalStatus(e.target.value as DefectReportStatus)}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-900 focus:border-amber-500 focus:outline-none"
                     >
                       {REPORT_STATUS_OPTIONS.map(opt => (
                         <option key={opt.value} value={opt.value}>
-                          {opt.label}
+                          {t(opt.label)}
                         </option>
                       ))}
-                    </select>
+                    </EditorialSelect>
                   </div>
 
                   <div>
-                    <label className="font-bold text-slate-700 flex items-center gap-1.5 mb-1.5">
-                      <Users className="w-3.5 h-3.5 text-amber-600" />
-                      Assign Maintenance Team / Technician
+                    <label style={{ fontWeight: 600, color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: 12 }}>
+                      <Users style={{ width: 14, height: 14, color: 'var(--color-brand-accent)' }} />
+                      {t('Assign Maintenance Team / Technician')}
                     </label>
-                    <select
+                    <EditorialSelect
+                      width="100%"
                       value={assignedTeam}
                       onChange={e => setAssignedTeam(e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-900 focus:border-amber-500 focus:outline-none"
                     >
-                      <option value="">-- Unassigned --</option>
+                      <option value="">{t('-- Unassigned --')}</option>
                       {maintenanceTeamOptions.map(team => (
                         <option key={team} value={team}>
-                          {team}
+                          {t(team)}
                         </option>
                       ))}
-                    </select>
+                    </EditorialSelect>
                   </div>
 
-                  <div className="sm:col-span-2">
-                    <label className="font-bold text-slate-700 block mb-1.5">
-                      Internal Staff & Maintenance Notes
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={{ fontWeight: 600, color: 'var(--color-text-secondary)', display: 'block', marginBottom: 6, fontSize: 12 }}>
+                      {t('Internal Staff & Maintenance Notes')}
                     </label>
                     <textarea
                       rows={3}
-                      placeholder="Add internal review notes, diagnosis remarks, or dispatch instructions..."
+                      placeholder={t('Add internal review notes, diagnosis remarks, or dispatch instructions...')}
                       value={internalNotes}
                       onChange={e => setInternalNotes(e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-slate-900 text-xs focus:border-amber-500 focus:outline-none"
+                      className="nf-field"
+                      style={{ height: 'auto', padding: '10px 12px', lineHeight: 1.5 }}
                     />
                   </div>
                 </div>
@@ -1092,7 +1232,17 @@ export const InspectionList: React.FC = () => {
 
             {/* TAB 2: LINKED VEHICLE RECORD */}
             {detailTab === 'VEHICLE' && (
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 text-xs">
+              <div
+                style={{
+                  padding: 16,
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 4,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 12,
+                }}
+              >
                 {(() => {
                   const veh = vehicles.find(
                     v =>
@@ -1100,50 +1250,54 @@ export const InspectionList: React.FC = () => {
                       v.plate_number === selectedReport.plate_number
                   );
                   const trl = veh?.assigned_trailer_id
-                    ? trailers.find(t => t.id === veh.assigned_trailer_id)
+                    ? trailers.find(tr => tr.id === veh.assigned_trailer_id)
                     : undefined;
 
                   return (
                     <>
-                      <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                        <div className="flex items-center gap-2 font-black text-slate-900">
-                          <Truck className="w-4 h-4 text-amber-600" />
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--color-row-divider)', paddingBottom: 10 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600, color: 'var(--color-ink)', fontSize: 13.5 }}>
+                          <Truck style={{ width: 16, height: 16, color: 'var(--color-brand-accent)' }} />
                           <span>
-                            Linked Vehicle: {veh ? `${veh.plate_number} (${veh.vehicle_id})` : selectedReport.vehicle_id}
+                            {t('Linked Vehicle')}: <span dir="ltr">{veh ? `${veh.plate_number} (${veh.vehicle_id})` : selectedReport.vehicle_id}</span>
                           </span>
                         </div>
-                        {veh && <Badge variant="info">{veh.status}</Badge>}
+                        {veh && <Badge variant="info">{t(veh.status)}</Badge>}
                       </div>
                       {veh ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-[11px]">
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, fontSize: 12 }}>
                           <div>
-                            <span className="text-slate-400 block">Plate Number</span>
-                            <span className="font-mono font-bold text-slate-900">{veh.plate_number}</span>
+                            <span style={{ color: 'var(--color-text-muted)', display: 'block', marginBottom: 2 }}>{t('Plate Number')}</span>
+                            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--color-ink)' }} dir="ltr">{veh.plate_number}</span>
                           </div>
                           <div>
-                            <span className="text-slate-400 block">Fleet Unit ID</span>
-                            <span className="font-mono font-bold text-slate-900">{veh.vehicle_id}</span>
+                            <span style={{ color: 'var(--color-text-muted)', display: 'block', marginBottom: 2 }}>{t('Fleet Unit ID')}</span>
+                            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--color-ink)' }} dir="ltr">{veh.vehicle_id}</span>
                           </div>
                           <div>
-                            <span className="text-slate-400 block">Make & Model</span>
-                            <span className="font-bold text-slate-900">{veh.make} {veh.model}</span>
+                            <span style={{ color: 'var(--color-text-muted)', display: 'block', marginBottom: 2 }}>{t('Make & Model')}</span>
+                            <span style={{ fontWeight: 600, color: 'var(--color-ink)' }}>{veh.make} {veh.model}</span>
                           </div>
                           <div>
-                            <span className="text-slate-400 block">Current Odometer</span>
-                            <span className="font-mono font-bold text-slate-900">{((veh && veh.current_mileage) || 0).toLocaleString()} KM</span>
+                            <span style={{ color: 'var(--color-text-muted)', display: 'block', marginBottom: 2 }}>{t('Current Odometer')}</span>
+                            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--color-ink)' }}>
+                              <span dir="ltr">{((veh && veh.current_mileage) || 0).toLocaleString()}</span> {t('KM')}
+                            </span>
                           </div>
                           <div>
-                            <span className="text-slate-400 block">Coupled Trailer</span>
-                            <span className="font-bold text-sky-800">{trl ? `${trl.trailer_id} (${trl.plate_number})` : 'Uncoupled'}</span>
+                            <span style={{ color: 'var(--color-text-muted)', display: 'block', marginBottom: 2 }}>{t('Coupled Trailer')}</span>
+                            <span style={{ fontWeight: 600, color: 'var(--color-brand-accent)' }}>
+                              {trl ? <span dir="ltr">{`${trl.trailer_id} (${trl.plate_number})`}</span> : t('Uncoupled')}
+                            </span>
                           </div>
                           <div>
-                            <span className="text-slate-400 block">Station Location</span>
-                            <span className="font-bold text-slate-900">{veh.station_location}</span>
+                            <span style={{ color: 'var(--color-text-muted)', display: 'block', marginBottom: 2 }}>{t('Station Location')}</span>
+                            <span style={{ fontWeight: 600, color: 'var(--color-ink)' }}>{veh.station_location}</span>
                           </div>
                         </div>
                       ) : (
-                        <p className="text-slate-500">
-                          Reported Plate Number: <strong className="font-mono">{selectedReport.plate_number || selectedReport.vehicle_id}</strong>
+                        <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>
+                          {t('Reported Plate Number')}: <strong style={{ fontFamily: 'var(--font-mono)' }} dir="ltr">{selectedReport.plate_number || selectedReport.vehicle_id}</strong>
                         </p>
                       )}
                     </>
@@ -1154,57 +1308,64 @@ export const InspectionList: React.FC = () => {
 
             {/* TAB 3: PHOTOS */}
             {detailTab === 'PHOTOS' && (
-              <div className="p-5 bg-slate-50 border border-slate-200 rounded-xl text-center">
+              <div
+                style={{
+                  padding: 20,
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 4,
+                  textAlign: 'center',
+                }}
+              >
                 {selectedReport.photo_url ? (
-                  <div className="space-y-3">
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                     <div
                       onClick={() => openLightbox(
                         selectedReport.photo_url!,
-                        `Issue Photo: ${selectedReport.report_number}`,
-                        `Driver: ${selectedReport.driver_name} • Plate: ${selectedReport.plate_number}`,
+                        `${t('Issue Photo')}: ${selectedReport.report_number}`,
+                        `${t('Driver')}: ${selectedReport.driver_name} • ${t('Plate')}: ${selectedReport.plate_number}`,
                         selectedReport.report_number,
                         selectedReport.created_at
                       )}
-                      className="group relative cursor-pointer inline-block overflow-hidden rounded-xl border border-slate-200 shadow-sm bg-white hover:border-amber-400 transition"
-                      title="Click to open full-screen viewer with zoom"
+                      style={{
+                        cursor: 'pointer',
+                        display: 'inline-block',
+                        overflow: 'hidden',
+                        borderRadius: 4,
+                        border: '1px solid var(--color-border)',
+                        background: 'var(--color-page-bg)',
+                      }}
+                      title={t('Click to open full-screen viewer with zoom')}
                     >
                       <img
                         src={selectedReport.photo_url}
-                        alt="Reported vehicle issue"
-                        className="max-h-80 mx-auto rounded-xl object-contain transition-transform duration-200 group-hover:scale-[1.02]"
+                        alt={t('Reported vehicle issue')}
+                        style={{ maxHeight: 320, margin: '0 auto', objectFit: 'contain', display: 'block' }}
                       />
-                      <div className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/30 transition-all flex items-center justify-center">
-                        <span className="opacity-0 group-hover:opacity-100 transition-opacity px-4 py-2 rounded-full bg-slate-900/90 backdrop-blur-xs text-white text-xs font-bold shadow-lg flex items-center gap-2">
-                          <ZoomIn className="w-4 h-4 text-amber-400" />
-                          Click to View Full-Screen & Zoom
-                        </span>
-                      </div>
                     </div>
-                    <div className="flex flex-wrap items-center justify-center gap-3">
-                      <p className="text-[11px] text-slate-500 font-medium">
-                        Photo attached by {selectedReport.driver_name} on {new Date(selectedReport.created_at).toLocaleString()}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                      <p style={{ fontSize: 12, color: 'var(--color-text-muted)', margin: 0 }}>
+                        {t('Photo attached by')} {selectedReport.driver_name} {t('on')} <span dir="ltr">{new Date(selectedReport.created_at).toLocaleString(isRTL ? 'ar-SA-u-ca-gregory' : 'en-US')}</span>
                       </p>
-                      <button
-                        type="button"
+                      <SecondaryButton
                         onClick={() => openLightbox(
                           selectedReport.photo_url!,
-                          `Issue Photo: ${selectedReport.report_number}`,
-                          `Driver: ${selectedReport.driver_name} • Plate: ${selectedReport.plate_number}`,
+                          `${t('Issue Photo')}: ${selectedReport.report_number}`,
+                          `${t('Driver')}: ${selectedReport.driver_name} • ${t('Plate')}: ${selectedReport.plate_number}`,
                           selectedReport.report_number,
                           selectedReport.created_at
                         )}
-                        className="text-xs font-bold text-amber-800 hover:text-amber-900 bg-amber-100 hover:bg-amber-200 px-3 py-1 rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
                       >
-                        <Maximize2 className="w-3.5 h-3.5" />
-                        <span>Open Full Screen</span>
-                      </button>
+                        <ZoomIn style={{ width: 14, height: 14 }} />
+                        <span>{t('Open Full Screen')}</span>
+                      </SecondaryButton>
                     </div>
                   </div>
                 ) : (
-                  <div className="py-6 text-slate-500">
-                    <Camera className="w-8 h-8 text-slate-400 mx-auto mb-1.5" />
-                    <p className="font-bold text-xs">No photo attached</p>
-                    <p className="text-[11px] mt-0.5">The driver did not upload a photo with this report.</p>
+                  <div style={{ padding: '24px 0', color: 'var(--color-text-muted)' }}>
+                    <Camera style={{ width: 28, height: 28, margin: '0 auto 8px', opacity: 0.6 }} />
+                    <p style={{ fontWeight: 600, fontSize: 13, margin: 0, color: 'var(--color-text-secondary)' }}>{t('No photo attached')}</p>
+                    <p style={{ fontSize: 12, marginTop: 4 }}>{t('The driver did not upload a photo with this report.')}</p>
                   </div>
                 )}
               </div>
@@ -1212,20 +1373,34 @@ export const InspectionList: React.FC = () => {
 
             {/* TAB 4: MAINTENANCE */}
             {detailTab === 'MAINTENANCE' && (
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-xs">
-                <span className="font-bold text-slate-900 block border-b border-slate-200 pb-1.5">
-                  Workshop & Maintenance Assignment
+              <div
+                style={{
+                  padding: 16,
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 4,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                }}
+              >
+                <span style={{ fontWeight: 600, color: 'var(--color-ink)', display: 'block', borderBottom: '1px solid var(--color-row-divider)', paddingBottom: 8 }}>
+                  {t('Workshop & Maintenance Assignment')}
                 </span>
-                <p className="text-slate-700">
-                  Assigned Maintenance Team:{' '}
-                  <span className="font-bold text-slate-900">
-                    {selectedReport.assigned_maintenance_team || assignedTeam || 'Not yet assigned'}
+                <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>
+                  {t('Assigned Maintenance Team')}:{' '}
+                  <span style={{ fontWeight: 600, color: 'var(--color-ink)' }}>
+                    {selectedReport.assigned_maintenance_team
+                      ? t(selectedReport.assigned_maintenance_team)
+                      : assignedTeam
+                      ? t(assignedTeam)
+                      : t('Not yet assigned')}
                   </span>
                 </p>
-                <p className="text-slate-700">
-                  Linked Work Order:{' '}
-                  <span className="font-mono font-bold text-amber-700">
-                    {selectedReport.work_order_id || 'None Created'}
+                <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>
+                  {t('Linked Work Order')}:{' '}
+                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--color-brand-accent)' }} dir="ltr">
+                    {selectedReport.work_order_id || t('None Created')}
                   </span>
                 </p>
               </div>
@@ -1233,37 +1408,39 @@ export const InspectionList: React.FC = () => {
 
             {/* TAB 5: HISTORY */}
             {detailTab === 'HISTORY' && (
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-xs">
-                <div className="flex items-center gap-1.5 font-bold text-slate-900 border-b border-slate-200 pb-1.5">
-                  <History className="w-4 h-4 text-sky-600" /> Audit Log History
+              <div
+                style={{
+                  padding: 16,
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 4,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 8,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: 'var(--color-ink)', borderBottom: '1px solid var(--color-row-divider)', paddingBottom: 8 }}>
+                  <History style={{ width: 15, height: 15, color: 'var(--color-brand-accent)' }} /> {t('Audit Log History')}
                 </div>
-                <div className="space-y-1 text-[11px] text-slate-600 font-mono">
-                  <p>
-                    [{new Date(selectedReport.created_at).toLocaleString()}] Issue report submitted by{' '}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)' }}>
+                  <p style={{ margin: 0 }}>
+                    <span dir="ltr">[{new Date(selectedReport.created_at).toLocaleString(isRTL ? 'ar-SA-u-ca-gregory' : 'en-US')}]</span> {t('Issue report submitted by')}{' '}
                     {selectedReport.driver_name}
                   </p>
-                  {selectedReport.action_taken && <p>[Staff Action] {selectedReport.action_taken}</p>}
+                  {selectedReport.action_taken && <p style={{ margin: 0 }}>[{t('Staff Action')}] {selectedReport.action_taken}</p>}
                 </div>
               </div>
             )}
 
             {/* Modal Footer */}
-            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200">
-              <button
-                type="button"
-                onClick={() => setSelectedReport(null)}
-                className="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-lg border border-slate-200 hover:bg-slate-200 transition cursor-pointer"
-              >
-                {canManage ? 'Cancel' : 'Close'}
-              </button>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, paddingTop: 12, borderTop: '1px solid var(--color-border)' }}>
+              <SecondaryButton onClick={() => setSelectedReport(null)}>
+                {canManage ? t('Cancel') : t('Close')}
+              </SecondaryButton>
               {canManage && (
-                <button
-                  type="button"
-                  onClick={handleSaveReportReview}
-                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-lg shadow-xs transition cursor-pointer"
-                >
-                  Save Review & Status
-                </button>
+                <PrimaryButton onClick={handleSaveReportReview}>
+                  {t('Save Review & Status')}
+                </PrimaryButton>
               )}
             </div>
           </div>
@@ -1280,6 +1457,6 @@ export const InspectionList: React.FC = () => {
         reportNumber={lightboxData.reportNumber}
         createdAt={lightboxData.createdAt}
       />
-    </div>
+    </PageContainer>
   );
 };

@@ -1,20 +1,38 @@
 import React from 'react';
-import { 
-  Truck, Wrench, DollarSign, CalendarCheck, Package, AlertTriangle, Filter, BarChart3
+import {
+  Truck,
+  Wrench,
+  DollarSign,
+  CalendarCheck,
+  AlertTriangle,
+  BarChart3,
 } from 'lucide-react';
 import { useFleet, DateFilterOption } from '../../context/FleetContext';
+import { useI18n } from '../../context/I18nContext';
 import { StatCard } from '../common/StatCard';
 import { DashboardCharts } from '../dashboard/DashboardCharts';
+import {
+  PageContainer,
+  PageHeader,
+  StatusTabs,
+  EDITORIAL_STATUS,
+} from '../common/EditorialUI';
 
 interface ManagementDashboardProps {
   onNavigateTab: (tab: any) => void;
 }
 
 export const ManagementDashboard: React.FC<ManagementDashboardProps> = ({ onNavigateTab }) => {
-  const { 
-    vehicles, trailers, workOrders, parts, schedules, documents,
-    dateFilter, setDateFilter, customDateRange, setCustomDateRange
+  const {
+    vehicles,
+    trailers,
+    workOrders,
+    parts,
+    schedules,
+    dateFilter,
+    setDateFilter,
   } = useFleet();
+  const { isRTL } = useI18n();
 
   const totalTrucks = vehicles.filter(v => v.vehicle_type === 'TRACTOR_HEAD' || v.vehicle_type === 'OTHER').length;
   const totalTrailers = trailers.length;
@@ -22,137 +40,144 @@ export const ManagementDashboard: React.FC<ManagementDashboardProps> = ({ onNavi
   const onTripCount = vehicles.filter(v => v.status === 'ON_TRIP').length;
   const inWorkshopCount = vehicles.filter(v => v.status === 'IN_WORKSHOP').length;
   const outOfServiceCount = vehicles.filter(v => v.status === 'OUT_OF_SERVICE').length;
-  
-  const maintenanceDueCount = schedules.filter(s => s.status === 'DUE' || s.status === 'OVERDUE' || s.status === 'DUE_SOON').length;
-  const openWOsCount = workOrders.filter(w => w.status !== 'RELEASED' && w.status !== 'CANCELLED' && w.status !== 'COMPLETED').length;
+
+  const maintenanceDueCount = schedules.filter(
+    s => s.status === 'DUE' || s.status === 'OVERDUE' || s.status === 'DUE_SOON'
+  ).length;
+  const openWOsCount = workOrders.filter(
+    w => w.status !== 'RELEASED' && w.status !== 'CANCELLED' && w.status !== 'COMPLETED'
+  ).length;
 
   const totalMonthlyMaintCost = workOrders.reduce((sum, w) => sum + (w.total_cost || 0), 0);
   const totalMonthlyPartsCost = workOrders.reduce((sum, w) => sum + (w.parts_cost || 0), 0);
 
   const dateFilterOptions: { key: DateFilterOption; label: string }[] = [
-    { key: 'TODAY', label: 'Today' },
-    { key: 'WEEK', label: 'This Week' },
-    { key: 'MONTH', label: 'This Month' },
-    { key: 'YEAR', label: 'This Year' },
-    { key: 'ALL', label: 'All Time' },
-    { key: 'CUSTOM', label: 'Custom Range' }
+    { key: 'TODAY', label: isRTL ? 'اليوم' : 'Today' },
+    { key: 'WEEK', label: isRTL ? 'هذا الأسبوع' : 'This Week' },
+    { key: 'MONTH', label: isRTL ? 'هذا الشهر' : 'This Month' },
+    { key: 'YEAR', label: isRTL ? 'هذه السنة' : 'This Year' },
+    { key: 'ALL', label: isRTL ? 'كل الأوقات' : 'All Time' },
+    { key: 'CUSTOM', label: isRTL ? 'فترة مخصصة' : 'Custom Range' },
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Header Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-slate-200 p-4 rounded-lg shadow-xs">
-        <div>
-          <div className="flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-amber-600" />
-            <h2 className="text-lg font-bold tracking-tight text-slate-900">Executive Management Dashboard</h2>
-            <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-50 text-amber-800 rounded border border-amber-200 uppercase">
-              Executive Read-Only Overview
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-0.5">
-            High-level executive financial metrics, fleet availability, breakdown frequencies, and maintenance cost analysis.
-          </p>
-        </div>
+    <PageContainer>
+      <PageHeader
+        title={isRTL ? 'لوحة الإدارة التنفيذية والتكاليف' : 'Executive Management Dashboard'}
+        subtitle={
+          isRTL
+            ? 'مؤشرات الأداء المالي التنفيذي، جاهزية الأسطول، وتكرار الأعطال وتحليل تكاليف الصيانة.'
+            : 'High-level executive financial metrics, fleet availability, breakdown frequencies, and maintenance cost analysis.'
+        }
+        badge={
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '3px 9px',
+              borderRadius: 4,
+              fontSize: 12,
+              fontWeight: 500,
+              background: '#EFF6FF',
+              color: '#1E40AF',
+              border: '1px solid #BFDBFE',
+            }}
+          >
+            <BarChart3 style={{ width: 13, height: 13 }} />
+            {isRTL ? 'نظرة تنفيذية للقراءة فقط' : 'Executive Read-Only Overview'}
+          </span>
+        }
+      />
 
-        {/* Date Filter Buttons */}
-        <div className="flex items-center gap-1 bg-slate-100 p-1 border border-slate-200 rounded">
-          <Filter className="w-3.5 h-3.5 text-amber-700 ml-1.5" />
-          {dateFilterOptions.map(opt => (
-            <button
-              key={opt.key}
-              onClick={() => setDateFilter(opt.key)}
-              className={`px-2.5 py-1 text-xs font-bold rounded transition ${
-                dateFilter === opt.key
-                  ? 'bg-amber-500 text-slate-950 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <StatusTabs
+        tabs={dateFilterOptions.map(opt => ({
+          key: opt.key,
+          label: opt.label,
+        }))}
+        activeKey={dateFilter}
+        onChange={key => setDateFilter(key as DateFilterOption)}
+      />
 
       {/* Management Executive KPIs */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3.5 mb-7">
         <StatCard
-          title="TOTAL TRUCKS"
+          title={isRTL ? 'إجمالي الشاحنات' : 'TOTAL TRUCKS'}
           value={totalTrucks}
-          subtitle="Tractor Units"
-          icon={<Truck className="w-4 h-4 text-amber-600" />}
+          subtitle={isRTL ? 'وحدات الجر' : 'Tractor Units'}
+          icon={<Truck style={{ width: 15, height: 15, color: EDITORIAL_STATUS.amber.text }} />}
           color="amber"
           onClick={() => onNavigateTab('vehicles')}
         />
         <StatCard
-          title="TOTAL TRAILERS"
+          title={isRTL ? 'إجمالي المقطورات' : 'TOTAL TRAILERS'}
           value={totalTrailers}
-          subtitle="Semi-Trailers"
-          icon={<Truck className="w-4 h-4 text-sky-600" />}
+          subtitle={isRTL ? 'الصهاريج والمقطورات' : 'Semi-Trailers'}
+          icon={<Truck style={{ width: 15, height: 15, color: EDITORIAL_STATUS.blue.text }} />}
           color="cyan"
           onClick={() => onNavigateTab('trailers')}
         />
         <StatCard
-          title="AVAILABLE"
+          title={isRTL ? 'متاح للخدمة' : 'AVAILABLE'}
           value={availableCount}
-          subtitle="Ready for Trip"
-          icon={<Truck className="w-4 h-4 text-emerald-600" />}
+          subtitle={isRTL ? 'جاهزة للرحلات' : 'Ready for Trip'}
+          icon={<Truck style={{ width: 15, height: 15, color: EDITORIAL_STATUS.green.text }} />}
           color="emerald"
           onClick={() => onNavigateTab('vehicles')}
         />
         <StatCard
-          title="ON TRIP"
+          title={isRTL ? 'في رحلة' : 'ON TRIP'}
           value={onTripCount}
-          subtitle="Active Hauling"
-          icon={<Truck className="w-4 h-4 text-blue-600" />}
+          subtitle={isRTL ? 'قيد التشغيل والنقل' : 'Active Hauling'}
+          icon={<Truck style={{ width: 15, height: 15, color: EDITORIAL_STATUS.blue.text }} />}
           color="blue"
           onClick={() => onNavigateTab('vehicles')}
         />
         <StatCard
-          title="IN WORKSHOP"
+          title={isRTL ? 'في الورشة' : 'IN WORKSHOP'}
           value={inWorkshopCount}
-          subtitle="Downtime"
-          icon={<Wrench className="w-4 h-4 text-amber-600" />}
+          subtitle={isRTL ? 'تحت الصيانة' : 'Downtime'}
+          icon={<Wrench style={{ width: 15, height: 15, color: EDITORIAL_STATUS.amber.text }} />}
           color="amber"
           onClick={() => onNavigateTab('workOrders')}
         />
         <StatCard
-          title="OUT OF SERVICE"
+          title={isRTL ? 'خارج الخدمة' : 'OUT OF SERVICE'}
           value={outOfServiceCount}
-          subtitle="Grounded"
-          icon={<AlertTriangle className="w-4 h-4 text-rose-600" />}
+          subtitle={isRTL ? 'متوقفة' : 'Grounded'}
+          icon={<AlertTriangle style={{ width: 15, height: 15, color: EDITORIAL_STATUS.red.text }} />}
           color="rose"
           onClick={() => onNavigateTab('vehicles')}
         />
         <StatCard
-          title="OPEN JOB CARDS"
+          title={isRTL ? 'بطاقات العمل المفتوحة' : 'OPEN JOB CARDS'}
           value={openWOsCount}
-          subtitle="Active Repairs"
-          icon={<Wrench className="w-4 h-4 text-blue-600" />}
+          subtitle={isRTL ? 'إصلاحات جارية' : 'Active Repairs'}
+          icon={<Wrench style={{ width: 15, height: 15, color: EDITORIAL_STATUS.blue.text }} />}
           color="blue"
           onClick={() => onNavigateTab('workOrders')}
         />
         <StatCard
-          title="MONTHLY COST"
-          value={`${(totalMonthlyMaintCost || 0).toLocaleString()} SAR`}
-          subtitle="Total Maintenance"
-          icon={<DollarSign className="w-4 h-4 text-emerald-600" />}
+          title={isRTL ? 'التكلفة الشهرية' : 'MONTHLY COST'}
+          value={`${(totalMonthlyMaintCost || 0).toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`}
+          subtitle={isRTL ? 'إجمالي الصيانة' : 'Total Maintenance'}
+          icon={<DollarSign style={{ width: 15, height: 15, color: EDITORIAL_STATUS.green.text }} />}
           color="emerald"
           onClick={() => onNavigateTab('analytics')}
         />
         <StatCard
-          title="PARTS COST"
-          value={`${(totalMonthlyPartsCost || 0).toLocaleString()} SAR`}
-          subtitle="Spare Parts"
-          icon={<DollarSign className="w-4 h-4 text-amber-600" />}
+          title={isRTL ? 'تكلفة قطع الغيار' : 'PARTS COST'}
+          value={`${(totalMonthlyPartsCost || 0).toLocaleString()} ${isRTL ? 'ر.س' : 'SAR'}`}
+          subtitle={isRTL ? 'قطع الغيار' : 'Spare Parts'}
+          icon={<DollarSign style={{ width: 15, height: 15, color: EDITORIAL_STATUS.amber.text }} />}
           color="amber"
           onClick={() => onNavigateTab('analytics')}
         />
         <StatCard
-          title="MAINTENANCE DUE"
+          title={isRTL ? 'صيانة وقائية مستحقة' : 'MAINTENANCE DUE'}
           value={maintenanceDueCount}
-          subtitle="PM Overdue/Due"
-          icon={<CalendarCheck className="w-4 h-4 text-purple-600" />}
+          subtitle={isRTL ? 'مستحقة أو متأخرة' : 'PM Overdue/Due'}
+          icon={<CalendarCheck style={{ width: 15, height: 15, color: '#5B21B6' }} />}
           color="purple"
           onClick={() => onNavigateTab('preventive')}
         />
@@ -166,6 +191,6 @@ export const ManagementDashboard: React.FC<ManagementDashboardProps> = ({ onNavi
         parts={parts}
         schedules={schedules}
       />
-    </div>
+    </PageContainer>
   );
 };

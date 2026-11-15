@@ -1,5 +1,5 @@
 import React from 'react';
-import { clsx } from 'clsx';
+import { useI18n } from '../../context/I18nContext';
 
 export interface TabItem {
   id: string;
@@ -19,31 +19,59 @@ export const Tabs: React.FC<TabsProps> = ({
   tabs,
   activeTab,
   onChange,
-  className
+  className = '',
 }) => {
+  const { t } = useI18n();
+
   return (
-    <div className={clsx('border-b border-slate-200 flex space-x-1 overflow-x-auto no-scrollbar', className)}>
+    <div
+      className={`no-scrollbar ${className}`}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 2,
+        borderBottom: '1px solid var(--color-row-divider)',
+        overflowX: 'auto',
+        overflowY: 'hidden',
+        scrollbarWidth: 'none',
+      }}
+    >
       {tabs.map(tab => {
         const isActive = tab.id === activeTab;
         return (
           <button
             key={tab.id}
+            type="button"
             onClick={() => onChange(tab.id)}
-            className={clsx(
-              'flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 whitespace-nowrap transition-all rounded-t-lg',
-              isActive
-                ? 'border-amber-500 text-amber-700 bg-amber-50/70 shadow-xs'
-                : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/70'
-            )}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '10px 14px',
+              fontSize: 13,
+              fontWeight: isActive ? 600 : 400,
+              color: isActive ? 'var(--color-ink)' : 'var(--color-text-secondary)',
+              background: 'transparent',
+              border: 'none',
+              borderBottom: isActive ? '2px solid var(--color-ink)' : '2px solid transparent',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              fontFamily: 'inherit',
+            }}
           >
-            {tab.icon && <span className={isActive ? 'text-amber-600' : 'text-slate-400'}>{tab.icon}</span>}
-            <span>{tab.label}</span>
+            {tab.icon && (
+              <span style={{ color: isActive ? 'var(--color-ink)' : 'var(--color-text-muted)' }}>
+                {tab.icon}
+              </span>
+            )}
+            <span>{t(tab.label, tab.label)}</span>
             {tab.badge !== undefined && (
               <span
-                className={clsx(
-                  'px-1.5 py-0.5 text-[10px] font-black rounded-full',
-                  isActive ? 'bg-amber-200/80 text-amber-900' : 'bg-slate-200 text-slate-600'
-                )}
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 12,
+                  color: isActive ? 'var(--color-ink)' : 'var(--color-text-muted)',
+                }}
               >
                 {tab.badge}
               </span>

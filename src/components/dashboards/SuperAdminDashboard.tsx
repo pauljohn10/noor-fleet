@@ -1,185 +1,252 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  ShieldCheck, Users, Lock, Server, History, AlertTriangle, Truck, Wrench, Bell, Database, Activity, CheckCircle2
+import {
+  ShieldCheck,
+  Users,
+  Lock,
+  Server,
+  History,
+  Truck,
+  Wrench,
+  Database,
+  CheckCircle2,
 } from 'lucide-react';
 import { useFleet } from '../../context/FleetContext';
+import { useI18n } from '../../context/I18nContext';
 import { StatCard } from '../common/StatCard';
 import { UserManagementModal } from '../common/UserManagementModal';
 import { Badge } from '../common/Badge';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
+import {
+  PageContainer,
+  PageHeader,
+  PrimaryButton,
+  SecondaryButton,
+  EditorialSection,
+  DataTable,
+  DataRow,
+  EDITORIAL_STATUS,
+} from '../common/EditorialUI';
 
 interface SuperAdminDashboardProps {
   onNavigateTab: (tab: any) => void;
 }
 
 export const SuperAdminDashboard: React.FC<SuperAdminDashboardProps> = ({ onNavigateTab }) => {
-  const { vehicles, trailers, workOrders, notifications, auditLogs } = useFleet();
+  const { vehicles, workOrders, notifications, auditLogs } = useFleet();
+  const { isRTL, t } = useI18n();
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [userCount, setUserCount] = useState<number>(0);
 
   useEffect(() => {
     if (isSupabaseConfigured) {
-      supabase.from('profiles').select('id', { count: 'exact', head: true }).then(({ count }) => {
-        if (count !== null && count !== undefined) setUserCount(count);
-      });
+      supabase
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .then(({ count }) => {
+          if (count !== null && count !== undefined) setUserCount(count);
+        });
     }
   }, []);
 
   const openWOsCount = workOrders.filter(w => w.status !== 'RELEASED' && w.status !== 'CANCELLED').length;
 
   return (
-    <div className="space-y-6">
-      {/* Super Admin Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-slate-200/90 p-4 rounded-xl shadow-2xs">
-        <div>
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-amber-600" />
-            <h2 className="text-base font-extrabold tracking-tight text-slate-900">Super Admin Control Center</h2>
-            <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-50 text-amber-800 rounded-md border border-amber-200 uppercase">
-              System Root Level
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-0.5 font-medium">
-            System administration, user access provisioning, security audit streams, and database health telemetry.
-          </p>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setIsUserModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg transition shadow-2xs active:scale-95 cursor-pointer"
+    <PageContainer>
+      <PageHeader
+        title={isRTL ? 'مركز التحكم للمدير العام' : 'Super Admin Control Center'}
+        subtitle={
+          isRTL
+            ? 'إدارة النظام، تفويض حسابات المستخدمين، سجل التدقيق الأمني، ومراقبة صحة قاعدة البيانات.'
+            : 'System administration, user access provisioning, security audit streams, and database health telemetry.'
+        }
+        badge={
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '3px 9px',
+              borderRadius: 4,
+              fontSize: 12,
+              fontWeight: 500,
+              background: '#ECFDF5',
+              color: '#0F5C4D',
+              border: '1px solid #A7F3D0',
+            }}
           >
-            <Users className="w-4 h-4" /> Manage Users & Provisioning
-          </button>
-          <button
-            onClick={() => onNavigateTab('auditLog')}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-white text-slate-700 font-bold text-xs rounded-lg border border-slate-200 hover:bg-slate-50 transition shadow-2xs active:scale-95 cursor-pointer"
-          >
-            <History className="w-4 h-4 text-sky-600" /> Audit Logs
-          </button>
-        </div>
-      </div>
+            <ShieldCheck style={{ width: 13, height: 13 }} />
+            {isRTL ? 'صلاحية النظام الكاملة' : 'System Root Level'}
+          </span>
+        }
+        actions={
+          <>
+            <SecondaryButton onClick={() => onNavigateTab('auditLog')}>
+              <History style={{ width: 14, height: 14 }} />
+              <span>{isRTL ? 'سجلات التدقيق' : 'Audit Logs'}</span>
+            </SecondaryButton>
+            <PrimaryButton onClick={() => setIsUserModalOpen(true)}>
+              <Users style={{ width: 14, height: 14 }} />
+              <span>{isRTL ? 'إدارة المستخدمين والصلاحيات' : 'Manage Users & Provisioning'}</span>
+            </PrimaryButton>
+          </>
+        }
+      />
 
       {/* Admin KPIs */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5 mb-7">
         <StatCard
-          title="TOTAL USERS"
+          title={isRTL ? 'إجمالي المستخدمين' : 'TOTAL USERS'}
           value={userCount}
-          subtitle="Database Profiles"
-          icon={<Users className="w-4 h-4 text-amber-600" />}
+          subtitle={isRTL ? 'حسابات قاعدة البيانات' : 'Database Profiles'}
+          icon={<Users style={{ width: 15, height: 15, color: EDITORIAL_STATUS.amber.text }} />}
           color="amber"
           onClick={() => setIsUserModalOpen(true)}
         />
         <StatCard
-          title="ACTIVE SESSIONS"
+          title={isRTL ? 'الجلسات النشطة' : 'ACTIVE SESSIONS'}
           value={userCount > 0 ? userCount : 1}
-          subtitle="Authenticated Users"
-          icon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />}
+          subtitle={isRTL ? 'مستخدمون موثقون' : 'Authenticated Users'}
+          icon={<CheckCircle2 style={{ width: 15, height: 15, color: EDITORIAL_STATUS.green.text }} />}
           color="emerald"
         />
         <StatCard
-          title="SYSTEM ROLES"
+          title={isRTL ? 'أدوار النظام' : 'SYSTEM ROLES'}
           value={3}
-          subtitle="Enforced RBAC Roles"
-          icon={<Lock className="w-4 h-4 text-purple-600" />}
+          subtitle={isRTL ? 'أدوار الصلاحيات المفعلة' : 'Enforced RBAC Roles'}
+          icon={<Lock style={{ width: 15, height: 15, color: '#5B21B6' }} />}
           color="purple"
         />
         <StatCard
-          title="TOTAL VEHICLES"
+          title={isRTL ? 'إجمالي الشاحنات' : 'TOTAL VEHICLES'}
           value={vehicles.length}
-          subtitle="Tractor Units"
-          icon={<Truck className="w-4 h-4 text-sky-600" />}
+          subtitle={isRTL ? 'وحدات الجر والشاحنات' : 'Tractor Units'}
+          icon={<Truck style={{ width: 15, height: 15, color: EDITORIAL_STATUS.blue.text }} />}
           color="cyan"
           onClick={() => onNavigateTab('vehicles')}
         />
         <StatCard
-          title="OPEN WORK ORDERS"
+          title={isRTL ? 'أوامر العمل المفتوحة' : 'OPEN WORK ORDERS'}
           value={openWOsCount}
-          subtitle="Active Job Cards"
-          icon={<Wrench className="w-4 h-4 text-amber-600" />}
+          subtitle={isRTL ? 'بطاقات العمل النشطة' : 'Active Job Cards'}
+          icon={<Wrench style={{ width: 15, height: 15, color: EDITORIAL_STATUS.amber.text }} />}
           color="amber"
           onClick={() => onNavigateTab('workOrders')}
         />
         <StatCard
-          title="DATABASE HEALTH"
+          title={isRTL ? 'سلامة قاعدة البيانات' : 'DATABASE HEALTH'}
           value="100%"
-          subtitle="PostgreSQL 15.1 Live"
-          icon={<Database className="w-4 h-4 text-emerald-600" />}
+          subtitle={isRTL ? 'PostgreSQL متصل مباشر' : 'PostgreSQL 15.1 Live'}
+          icon={<Database style={{ width: 15, height: 15, color: EDITORIAL_STATUS.green.text }} />}
           color="emerald"
         />
       </div>
 
       {/* Admin Widgets */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Audit Log Stream */}
-        <div className="bg-white border border-slate-200/90 rounded-xl p-5 shadow-2xs space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 flex items-center gap-2">
-              <History className="w-4 h-4 text-sky-600" /> Recent Security & Audit Events
-            </h3>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 28 }}>
+        <EditorialSection
+          title={isRTL ? 'أحدث أحداث الأمان والتدقيق' : 'Recent Security & Audit Events'}
+          marginTop={0}
+          action={
             <button
+              type="button"
               onClick={() => onNavigateTab('auditLog')}
-              className="text-xs font-bold text-amber-700 hover:text-amber-800 transition"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                fontSize: 12.5,
+                fontWeight: 500,
+                color: 'var(--color-brand-accent)',
+                textDecoration: 'underline',
+                cursor: 'pointer',
+              }}
             >
-              Full Audit Trail →
+              {isRTL ? 'سجل التدقيق الكامل ←' : 'Full Audit Trail →'}
             </button>
-          </div>
-
-          <div className="space-y-2.5 text-xs">
+          }
+        >
+          <DataTable
+            columns={[
+              { label: t('Actor') },
+              { label: t('Action') },
+              { label: t('Timestamp'), align: 'end' },
+            ]}
+            isEmpty={auditLogs.length === 0}
+            emptyMessage={isRTL ? 'لا توجد أحداث تدقيق بعد' : 'No audit events recorded'}
+            hasActionsColumn={false}
+          >
             {auditLogs.slice(0, 5).map(log => (
-              <div key={log.id} className="p-3 bg-slate-50/80 border border-slate-200/80 rounded-lg flex items-center justify-between hover:bg-slate-50 transition">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-900">{log.user_name}</span>
-                    <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold">{log.user_role}</span>
+              <DataRow key={log.id} stripeColor={EDITORIAL_STATUS.blue.stripe}>
+                <td style={{ padding: '12px 16px', verticalAlign: 'middle' }}>
+                  <div style={{ fontWeight: 500, fontSize: 13, color: 'var(--color-ink)' }}>{log.user_name}</div>
+                  <div style={{ fontSize: 11.5, color: EDITORIAL_STATUS.amber.text, marginTop: 2 }}>
+                    {t(log.user_role, log.user_role)}
                   </div>
-                  <p className="text-slate-600 text-[11px] mt-0.5 font-medium">{log.action} on {log.module} ({log.record_id})</p>
-                </div>
-                <span className="text-[10px] text-slate-400 font-mono">{new Date(log.created_at).toLocaleTimeString()}</span>
-              </div>
+                </td>
+                <td style={{ padding: '12px 16px', verticalAlign: 'middle', fontSize: 12.5, color: 'var(--color-text-secondary)' }}>
+                  {isRTL ? `${log.action} على ${log.module} (${log.record_id})` : `${log.action} on ${log.module} (${log.record_id})`}
+                </td>
+                <td style={{ padding: '12px 16px', verticalAlign: 'middle', textAlign: 'end', fontFamily: 'var(--font-mono)', fontSize: 11.5, color: 'var(--color-text-muted)' }}>
+                  {new Date(log.created_at).toLocaleTimeString(isRTL ? 'ar-SA' : 'en-US')}
+                </td>
+              </DataRow>
             ))}
-          </div>
-        </div>
+          </DataTable>
+        </EditorialSection>
 
-        {/* System Health & RBAC Roles Distribution */}
-        <div className="bg-white border border-slate-200/90 rounded-xl p-5 shadow-2xs space-y-4">
-          <div className="border-b border-slate-100 pb-3">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 flex items-center gap-2">
-              <Server className="w-4 h-4 text-emerald-600" /> Infrastructure & Database Telemetry
-            </h3>
-          </div>
-
-          <div className="space-y-2.5 text-xs">
-            <div className="p-3 bg-slate-50/80 border border-slate-200/80 rounded-lg flex items-center justify-between hover:bg-slate-50 transition">
-              <div>
-                <p className="font-bold text-slate-900">Supabase PostgreSQL Engine</p>
-                <p className="text-slate-500 text-[10px] font-medium">Row Level Security (RLS) Active</p>
-              </div>
-              <Badge variant="success">HEALTHY</Badge>
-            </div>
-            <div className="p-3 bg-slate-50/80 border border-slate-200/80 rounded-lg flex items-center justify-between hover:bg-slate-50 transition">
-              <div>
-                <p className="font-bold text-slate-900">Storage Buckets (Photos & Docs)</p>
-                <p className="text-slate-500 text-[10px] font-medium">vehicle-photos, work-order-photos, inspection-photos</p>
-              </div>
-              <Badge variant="success">ONLINE</Badge>
-            </div>
-            <div className="p-3 bg-slate-50/80 border border-slate-200/80 rounded-lg flex items-center justify-between hover:bg-slate-50 transition">
-              <div>
-                <p className="font-bold text-slate-900">System Notification Sentinel</p>
-                <p className="text-slate-500 text-[10px] font-medium">{notifications.length} active system alerts</p>
-              </div>
-              <Badge variant="info">RUNNING</Badge>
-            </div>
-          </div>
-        </div>
+        <EditorialSection
+          title={isRTL ? 'حالة البنية التحتية وقاعدة البيانات' : 'Infrastructure & Database Telemetry'}
+          marginTop={0}
+        >
+          <DataTable
+            columns={[
+              { label: isRTL ? 'الخدمة' : 'Service' },
+              { label: isRTL ? 'التفاصيل' : 'Details' },
+              { label: isRTL ? 'الحالة' : 'Status', align: 'end' },
+            ]}
+            isEmpty={false}
+            hasActionsColumn={false}
+          >
+            <DataRow stripeColor={EDITORIAL_STATUS.green.stripe}>
+              <td style={{ padding: '12px 16px', verticalAlign: 'middle', fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>
+                {isRTL ? 'محرك قاعدة البيانات Supabase PostgreSQL' : 'Supabase PostgreSQL Engine'}
+              </td>
+              <td style={{ padding: '12px 16px', verticalAlign: 'middle', fontSize: 12, color: 'var(--color-text-muted)' }}>
+                {isRTL ? 'أمان مستوى الصفوف (RLS) مُفعَّل' : 'Row Level Security (RLS) Active'}
+              </td>
+              <td style={{ padding: '12px 16px', verticalAlign: 'middle', textAlign: 'end' }}>
+                <Badge variant="success">Healthy</Badge>
+              </td>
+            </DataRow>
+            <DataRow stripeColor={EDITORIAL_STATUS.green.stripe}>
+              <td style={{ padding: '12px 16px', verticalAlign: 'middle', fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>
+                {isRTL ? 'حاويات التخزين السحابية' : 'Storage Buckets (Photos & Docs)'}
+              </td>
+              <td style={{ padding: '12px 16px', verticalAlign: 'middle', fontSize: 11.5, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }} dir="ltr">
+                vehicle-photos, work-order-photos, inspection-photos
+              </td>
+              <td style={{ padding: '12px 16px', verticalAlign: 'middle', textAlign: 'end' }}>
+                <Badge variant="success">Online</Badge>
+              </td>
+            </DataRow>
+            <DataRow stripeColor={EDITORIAL_STATUS.blue.stripe}>
+              <td style={{ padding: '12px 16px', verticalAlign: 'middle', fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>
+                {isRTL ? 'مراقب التنبيهات الفورية للنظام' : 'System Notification Sentinel'}
+              </td>
+              <td style={{ padding: '12px 16px', verticalAlign: 'middle', fontSize: 12, color: 'var(--color-text-muted)' }}>
+                {isRTL ? `${notifications.length} تنبيه نظام نشط` : `${notifications.length} active system alerts`}
+              </td>
+              <td style={{ padding: '12px 16px', verticalAlign: 'middle', textAlign: 'end' }}>
+                <Badge variant="info">Running</Badge>
+              </td>
+            </DataRow>
+          </DataTable>
+        </EditorialSection>
       </div>
 
       <UserManagementModal
         isOpen={isUserModalOpen}
         onClose={() => setIsUserModalOpen(false)}
       />
-    </div>
+    </PageContainer>
   );
 };

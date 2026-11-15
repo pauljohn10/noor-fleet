@@ -1,12 +1,24 @@
 import React from 'react';
-import { DollarSign, Calendar, Wrench, Truck, Clock, Download, FileText } from 'lucide-react';
+import { Download, FileText } from 'lucide-react';
 import { useFleet } from '../../context/FleetContext';
-import { StatCard } from '../common/StatCard';
+import { useI18n } from '../../context/I18nContext';
 import { Badge } from '../common/Badge';
 import { exportToExcel, exportToPDFReport } from '../../lib/exportUtils';
+import {
+  PageContainer,
+  PageHeader,
+  GhostButton,
+  MetricStrip,
+  EditorialSection,
+  DataTable,
+  DataRow,
+  PlateChip,
+  EDITORIAL_STATUS,
+} from '../common/EditorialUI';
 
 export const CostAnalysisView: React.FC = () => {
   const { vehicles, workOrders, schedules } = useFleet();
+  const { t, isRTL } = useI18n();
 
   const totalPartsCost = workOrders.reduce((sum, w) => sum + (w.parts_cost || 0), 0);
   const totalLaborCost = workOrders.reduce((sum, w) => sum + (w.labor_cost || 0), 0);
@@ -25,153 +37,181 @@ export const CostAnalysisView: React.FC = () => {
 
   const handleExportExcel = () => {
     const data = vehicleCostRanking.map(r => ({
-      'Vehicle ID': r.vehicle.vehicle_id,
-      'Plate Number': r.vehicle.plate_number,
-      'Make & Model': `${r.vehicle.make} ${r.vehicle.model}`,
-      'Work Orders Count': r.repairsCount,
-      'Total Maintenance Cost (SAR)': r.cost,
-      'Status': r.vehicle.status
+      [t('Vehicle ID')]: r.vehicle.vehicle_id,
+      [t('Plate Number')]: r.vehicle.plate_number,
+      [t('Make & Model')]: `${r.vehicle.make} ${r.vehicle.model}`,
+      [t('Work Orders Count')]: r.repairsCount,
+      [t('Total Maintenance Cost (SAR)')]: r.cost,
+      [t('Status')]: t(r.vehicle.status.replace(/_/g, ' '))
     }));
     exportToExcel(data, 'Vehicle_Maintenance_Cost_Ranking');
   };
 
   const handleExportPDF = () => {
-    const headers = ['Rank', 'Vehicle ID', 'Plate Number', 'Make & Model', 'Repairs Count', 'Maintenance Cost (SAR)', 'Fleet Status'];
+    const headers = [
+      t('Rank'),
+      t('Vehicle ID'),
+      t('Plate Number'),
+      t('Make & Model'),
+      t('Repairs Count'),
+      t('Maintenance Cost (SAR)'),
+      t('Fleet Status')
+    ];
     const rows = vehicleCostRanking.map((r, idx) => [
       `#${idx + 1}`,
       r.vehicle.vehicle_id,
       r.vehicle.plate_number,
       `${r.vehicle.make} ${r.vehicle.model}`,
-      `${r.repairsCount} work orders`,
-      `${(r.cost || 0).toLocaleString()} SAR`,
-      r.vehicle.status
+      isRTL ? `${r.repairsCount} أمر عمل` : `${r.repairsCount} work orders`,
+      `${(r.cost || 0).toLocaleString()} ${t('SAR')}`,
+      t(r.vehicle.status.replace(/_/g, ' '))
     ]);
 
     exportToPDFReport(
-      'Fleet Maintenance Cost Analysis & Vehicle Ranking',
+      t('Fleet Maintenance Cost Analysis & Vehicle Ranking'),
       headers,
       rows,
       'Vehicle_Cost_Analysis_Report',
       {
         orientation: 'landscape',
-        subtitle: 'Workshop Repair Expenditure Analysis (Spare Parts + Labor + External Subcontracting)',
+        subtitle: t('Workshop Repair Expenditure Analysis (Spare Parts + Labor + External Subcontracting)'),
         summaryKPIs: [
-          { label: 'Total Maintenance', value: `${(totalGrandCost || 0).toLocaleString()} SAR`, color: 'emerald' },
-          { label: 'Parts Incurred', value: `${(totalPartsCost || 0).toLocaleString()} SAR`, color: 'amber' },
-          { label: 'Labor Hours Billed', value: `${(totalLaborCost || 0).toLocaleString()} SAR`, color: 'sky' }
+          { label: t('Total Maintenance'), value: `${(totalGrandCost || 0).toLocaleString()} ${t('SAR')}`, color: 'emerald' },
+          { label: t('Parts Incurred'), value: `${(totalPartsCost || 0).toLocaleString()} ${t('SAR')}`, color: 'amber' },
+          { label: t('Labor Hours Billed'), value: `${(totalLaborCost || 0).toLocaleString()} ${t('SAR')}`, color: 'sky' }
         ],
         metadata: [
-          { label: 'Total Vehicles Audited', value: `${vehicles.length} units` },
-          { label: 'Total Work Orders', value: `${workOrders.length} orders` }
+          { label: t('Total Vehicles Audited'), value: isRTL ? `${vehicles.length} مركبة` : `${vehicles.length} units` },
+          { label: t('Total Work Orders'), value: isRTL ? `${workOrders.length} أمر عمل` : `${workOrders.length} orders` }
         ]
       }
     );
   };
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-slate-200 p-4 rounded-lg shadow-xs">
-        <div>
-          <h2 className="text-lg font-bold tracking-tight text-slate-900 flex items-center gap-2">
-            <DollarSign className="w-5 h-5 text-emerald-600" /> Maintenance Cost Analysis & Workshop Calendar
-          </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Total Cost Formula = Spare Parts + Technician Labor + External Subcontracting Services. Breakdown by vehicle unit.
-          </p>
-        </div>
+    <PageContainer>
+      <PageHeader
+        title={
+          <>
+            {isRTL ? 'مقاييس تكلفة الأسطول' : 'Fleet Cost'}
+            <br />
+            {isRTL ? 'وتحليل الصيانة' : 'Metrics & Analysis'}
+          </>
+        }
+        subtitle={t('Total Cost Formula = Spare Parts + Technician Labor + External Subcontracting Services. Breakdown by vehicle unit.')}
+        actions={
+          <>
+            <GhostButton onClick={handleExportExcel} title={t('Export to Excel')}>
+              {t('Excel')}
+            </GhostButton>
+            <GhostButton onClick={handleExportPDF} title={t('Export to PDF')}>
+              {isRTL ? 'تقرير PDF' : 'PDF report'}
+            </GhostButton>
+          </>
+        }
+      />
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleExportExcel}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-md border border-slate-200 transition active:scale-95 cursor-pointer"
-            title="Export to Excel"
+      <MetricStrip
+        marginBottom={28}
+        items={[
+          {
+            label: isRTL ? 'إجمالي تكلفة الصيانة' : 'Total maintenance expense',
+            value: `${(totalGrandCost || 0).toLocaleString()} ${t('SAR')}`,
+            subtext: t('Cumulative Maintenance'),
+            mono: true,
+            stripe: EDITORIAL_STATUS.green.stripe,
+            valueColor: EDITORIAL_STATUS.green.text,
+          },
+          {
+            label: isRTL ? 'تكلفة قطع الغيار' : 'Parts expense',
+            value: `${(totalPartsCost || 0).toLocaleString()} ${t('SAR')}`,
+            subtext: t('Spare Parts Issued'),
+            mono: true,
+            stripe: EDITORIAL_STATUS.amber.stripe,
+            valueColor: EDITORIAL_STATUS.amber.text,
+          },
+          {
+            label: isRTL ? 'تكلفة العمالة' : 'Labor expense',
+            value: `${(totalLaborCost || 0).toLocaleString()} ${t('SAR')}`,
+            subtext: t('Technician Hours'),
+            mono: true,
+            stripe: EDITORIAL_STATUS.blue.stripe,
+            valueColor: EDITORIAL_STATUS.blue.text,
+          },
+          {
+            label: isRTL ? 'الخدمات الخارجية' : 'External services',
+            value: `${(totalExternalCost || 0).toLocaleString()} ${t('SAR')}`,
+            subtext: t('Specialized Subcontract'),
+            mono: true,
+            stripe: EDITORIAL_STATUS.muted.stripe,
+            valueColor: 'var(--color-ink)',
+          },
+        ]}
+      />
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: 28 }}>
+        <EditorialSection title={t('Highest Repair Cost Vehicles')} marginTop={0}>
+          <DataTable
+            columns={[
+              { label: t('Vehicle') },
+              { label: t('Repairs Count') },
+              { label: t('Total Cost'), align: 'end' },
+            ]}
+            isEmpty={vehicleCostRanking.length === 0}
+            emptyMessage={t('No vehicles found')}
+            hasActionsColumn={false}
           >
-            <Download className="w-3.5 h-3.5 text-slate-600" />
-            <span className="hidden sm:inline">Excel</span>
-          </button>
-          <button
-            onClick={handleExportPDF}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-md border border-slate-200 transition active:scale-95 cursor-pointer"
-            title="Export to PDF"
-          >
-            <FileText className="w-3.5 h-3.5 text-slate-600" />
-            <span className="hidden sm:inline">PDF</span>
-          </button>
-        </div>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <StatCard
-          title="TOTAL MAINTENANCE EXPENSE"
-          value={`${(totalGrandCost || 0).toLocaleString()} SAR`}
-          subtitle="Cumulative Maintenance"
-          icon={<DollarSign className="w-5 h-5 text-emerald-600" />}
-          color="emerald"
-        />
-        <StatCard
-          title="PARTS EXPENSE"
-          value={`${(totalPartsCost || 0).toLocaleString()} SAR`}
-          subtitle="Spare Parts Issued"
-          icon={<DollarSign className="w-5 h-5 text-amber-600" />}
-          color="amber"
-        />
-        <StatCard
-          title="LABOR EXPENSE"
-          value={`${(totalLaborCost || 0).toLocaleString()} SAR`}
-          subtitle="Technician Hours"
-          icon={<Clock className="w-5 h-5 text-blue-600" />}
-          color="blue"
-        />
-        <StatCard
-          title="EXTERNAL SERVICES"
-          value={`${(totalExternalCost || 0).toLocaleString()} SAR`}
-          subtitle="Specialized Subcontract"
-          icon={<Wrench className="w-5 h-5 text-purple-600" />}
-          color="purple"
-        />
-      </div>
-
-      {/* Cost Ranking & Calendar Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-xs">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3 flex items-center gap-2">
-            <Truck className="w-4 h-4 text-amber-600" /> Highest Repair Cost Vehicles
-          </h3>
-          <div className="space-y-2">
             {vehicleCostRanking.map(item => (
-              <div key={item.vehicle.id} className="p-3 bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between">
-                <div>
-                  <span className="font-bold text-slate-900 text-xs">{item.vehicle.vehicle_id} ({item.vehicle.plate_number})</span>
-                  <p className="text-[11px] text-slate-500 mt-0.5">{item.vehicle.make} {item.vehicle.model} - {item.repairsCount} Repairs Logged</p>
-                </div>
-                <div className="text-right">
-                  <span className="font-mono font-bold text-slate-900 text-xs">{(item.cost || 0).toLocaleString()} SAR</span>
-                </div>
-              </div>
+              <DataRow key={item.vehicle.id} stripeColor={item.cost > 0 ? EDITORIAL_STATUS.amber.stripe : EDITORIAL_STATUS.muted.stripe}>
+                <td style={{ padding: '12px 16px', verticalAlign: 'middle' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 3 }}>
+                    <PlateChip plate={item.vehicle.plate_number} />
+                    <span dir="ltr" style={{ fontSize: 12, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
+                      {item.vehicle.vehicle_id} • {item.vehicle.make} {item.vehicle.model}
+                    </span>
+                  </div>
+                </td>
+                <td style={{ padding: '12px 16px', verticalAlign: 'middle', fontSize: 13, color: 'var(--color-text-secondary)' }}>
+                  <span dir="ltr" style={{ fontFamily: 'var(--font-mono)', fontWeight: 500 }}>{item.repairsCount}</span> {t('Repairs Logged')}
+                </td>
+                <td style={{ padding: '12px 16px', verticalAlign: 'middle', textAlign: 'end', fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: 13, color: 'var(--color-ink)' }}>
+                  <span dir="ltr">{(item.cost || 0).toLocaleString()}</span> {t('SAR')}
+                </td>
+              </DataRow>
             ))}
-          </div>
-        </div>
+          </DataTable>
+        </EditorialSection>
 
-        {/* Workshop Calendar Overview */}
-        <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-xs">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3 flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-blue-600" /> Maintenance Calendar Schedule Overview
-          </h3>
-          <div className="space-y-2 text-xs">
+        <EditorialSection title={t('Maintenance Calendar Schedule Overview')} marginTop={0}>
+          <DataTable
+            columns={[
+              { label: t('Schedule Title') },
+              { label: t('Target Due') },
+              { label: t('Status'), align: 'end' },
+            ]}
+            isEmpty={schedules.length === 0}
+            emptyMessage={t('No schedules found')}
+            hasActionsColumn={false}
+          >
             {schedules.map(s => (
-              <div key={s.id} className="p-3 bg-slate-50 border border-slate-200 rounded-md flex items-center justify-between">
-                <div>
-                  <p className="font-bold text-slate-900">{s.title}</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">Target Due: {s.next_due_date || 'KM Trigger'}</p>
-                </div>
-                <Badge variant={s.status === 'OVERDUE' ? 'danger' : 'info'}>{s.status}</Badge>
-              </div>
+              <DataRow
+                key={s.id}
+                stripeColor={s.status === 'OVERDUE' ? EDITORIAL_STATUS.red.stripe : EDITORIAL_STATUS.blue.stripe}
+              >
+                <td style={{ padding: '12px 16px', verticalAlign: 'middle', fontWeight: 500, fontSize: 13, color: 'var(--color-ink)' }}>
+                  {s.title}
+                </td>
+                <td style={{ padding: '12px 16px', verticalAlign: 'middle', fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-text-muted)' }}>
+                  <span dir={s.next_due_date ? 'ltr' : undefined}>{s.next_due_date || t('KM Trigger')}</span>
+                </td>
+                <td style={{ padding: '12px 16px', verticalAlign: 'middle', textAlign: 'end' }}>
+                  <Badge variant={s.status === 'OVERDUE' ? 'danger' : 'info'}>{s.status}</Badge>
+                </td>
+              </DataRow>
             ))}
-          </div>
-        </div>
+          </DataTable>
+        </EditorialSection>
       </div>
-    </div>
+    </PageContainer>
   );
 };

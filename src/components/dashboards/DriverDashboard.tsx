@@ -1,13 +1,32 @@
 import React, { useState } from 'react';
-import { 
-  Truck, ShieldCheck, AlertTriangle, FileText, Bell, ChevronRight, AlertOctagon, CheckCircle2, Clock, Wrench, Shield
+import {
+  Truck,
+  ShieldCheck,
+  AlertTriangle,
+  FileText,
+  Bell,
+  AlertOctagon,
+  Clock,
+  Wrench,
 } from 'lucide-react';
 import { useFleet } from '../../context/FleetContext';
 import { useAuth } from '../../context/AuthContext';
+import { useI18n } from '../../context/I18nContext';
 import { Badge } from '../common/Badge';
 import { Modal } from '../common/Modal';
 import { InspectionFormMobile } from '../inspections/InspectionFormMobile';
 import { DefectReportCategory, SeverityLevel } from '../../types';
+import {
+  EDITORIAL_STATUS,
+  PageContainer,
+  PageHeader,
+  EditorialSection,
+  DataTable,
+  DataRow,
+  PlateChip,
+  PrimaryButton,
+  SecondaryButton,
+} from '../common/EditorialUI';
 
 interface DriverDashboardProps {
   onNavigateTab: (tab: any) => void;
@@ -16,6 +35,7 @@ interface DriverDashboardProps {
 export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab }) => {
   const { vehicles, trailers, drivers, defectReports, submitDefectReport } = useFleet();
   const { currentProfile } = useAuth();
+  const { isRTL, t } = useI18n();
 
   const [isInspectionOpen, setIsInspectionOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -27,22 +47,27 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
   const [description, setDescription] = useState('');
 
   // Real vehicle resolution based on authenticated profile
-  const matchedDriver = drivers.find(d => 
-    (currentProfile?.id && d.profile_id === currentProfile.id) ||
-    (currentProfile?.full_name && d.full_name.toLowerCase() === currentProfile.full_name.toLowerCase())
+  const matchedDriver = drivers.find(
+    (d) =>
+      (currentProfile?.id && d.profile_id === currentProfile.id) ||
+      (currentProfile?.full_name && d.full_name.toLowerCase() === currentProfile.full_name.toLowerCase())
   );
-  
-  const myAssignedTractor = vehicles.find(v => matchedDriver ? v.assigned_driver_id === matchedDriver.id : false) 
-    || vehicles[0];
 
-  const myAssignedTrailer = trailers.find(t => 
-    myAssignedTractor ? (t.id === myAssignedTractor.assigned_trailer_id || t.assigned_tractor_id === myAssignedTractor.id) : false
-  ) || trailers[0];
+  const myAssignedTractor =
+    vehicles.find((v) => (matchedDriver ? v.assigned_driver_id === matchedDriver.id : false)) || vehicles[0];
+
+  const myAssignedTrailer =
+    trailers.find((tr) =>
+      myAssignedTractor
+        ? tr.id === myAssignedTractor.assigned_trailer_id || tr.assigned_tractor_id === myAssignedTractor.id
+        : false
+    ) || trailers[0];
 
   // Isolated Defect Reports for active driver
-  const myReports = defectReports.filter(r => 
-    (matchedDriver && r.driver_id === matchedDriver.id) ||
-    (currentProfile?.full_name && r.driver_name.toLowerCase() === currentProfile.full_name.toLowerCase())
+  const myReports = defectReports.filter(
+    (r) =>
+      (matchedDriver && r.driver_id === matchedDriver.id) ||
+      (currentProfile?.full_name && r.driver_name.toLowerCase() === currentProfile.full_name.toLowerCase())
   );
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -67,7 +92,7 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
       category,
       severity,
       description,
-      status: 'REPORTED'
+      status: 'REPORTED',
     });
 
     setDescription('');
@@ -77,232 +102,470 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
 
   const getSeverityBadge = (sev: SeverityLevel) => {
     switch (sev) {
-      case 'CRITICAL': return <span className="px-2 py-0.5 rounded text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-200">CRITICAL</span>;
-      case 'HIGH': return <span className="px-2 py-0.5 rounded text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-200">HIGH</span>;
-      case 'MEDIUM': return <span className="px-2 py-0.5 rounded text-[10px] font-black bg-sky-100 text-sky-800 border border-sky-200">MEDIUM</span>;
-      case 'LOW': return <span className="px-2 py-0.5 rounded text-[10px] font-black bg-slate-100 text-slate-700 border border-slate-200">LOW</span>;
+      case 'CRITICAL':
+        return (
+          <Badge variant="danger" size="sm">
+            {t('CRITICAL', 'CRITICAL')}
+          </Badge>
+        );
+      case 'HIGH':
+        return (
+          <Badge variant="amber" size="sm">
+            {t('HIGH', 'HIGH')}
+          </Badge>
+        );
+      case 'MEDIUM':
+        return (
+          <Badge variant="info" size="sm">
+            {t('MEDIUM', 'MEDIUM')}
+          </Badge>
+        );
+      case 'LOW':
+        return (
+          <Badge variant="slate" size="sm">
+            {t('LOW', 'LOW')}
+          </Badge>
+        );
     }
   };
 
   const getStatusBadge = (st: string) => {
     switch (st) {
-      case 'REPORTED': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">REPORTED</span>;
-      case 'UNDER_REVIEW': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">UNDER REVIEW</span>;
-      case 'WORK_ORDER_CREATED': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-200">WORK ORDER CREATED</span>;
-      case 'RESOLVED': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">RESOLVED</span>;
-      default: return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">{st}</span>;
+      case 'REPORTED':
+        return (
+          <Badge variant="amber" size="sm">
+            {t('REPORTED', 'REPORTED')}
+          </Badge>
+        );
+      case 'UNDER_REVIEW':
+        return (
+          <Badge variant="purple" size="sm">
+            {t('UNDER_REVIEW', 'UNDER REVIEW')}
+          </Badge>
+        );
+      case 'WORK_ORDER_CREATED':
+        return (
+          <Badge variant="info" size="sm">
+            {isRTL ? 'تم إنشاء أمر عمل' : 'Work order created'}
+          </Badge>
+        );
+      case 'RESOLVED':
+        return (
+          <Badge variant="success" size="sm">
+            {t('RESOLVED', 'RESOLVED')}
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="slate" size="sm">
+            {t(st, st)}
+          </Badge>
+        );
     }
   };
 
   return (
-    <div className="space-y-6 max-w-3xl mx-auto pb-12">
-      {/* DRIVER MOBILE HEADER */}
-      <div className="bg-white border border-slate-200 p-4 rounded-lg flex items-center justify-between shadow-xs">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-emerald-600 animate-pulse"></span>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">AUTHENTICATED DRIVER PORTAL</span>
-          </div>
-          <h2 className="text-lg font-bold tracking-tight text-slate-900 mt-0.5">
-            Welcome, {currentProfile.full_name}
-          </h2>
-          <p className="text-xs text-amber-700 font-semibold mt-0.5 flex items-center gap-1">
-            <Shield className="w-3.5 h-3.5" /> Aramco Certified Hazardous Materials Transporter
-          </p>
-        </div>
-        <div className="p-2.5 bg-amber-50 border border-amber-200 text-amber-700 rounded-lg">
-          <Truck className="w-5 h-5" />
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title={isRTL ? `مرحباً، ${currentProfile.full_name}` : `Welcome, ${currentProfile.full_name}`}
+        subtitle={
+          isRTL
+            ? 'بوابة السائق الموثقة — ناقل مواد بترولية معتمد لدى أرامكو'
+            : 'Authenticated Driver Portal — Aramco Certified Hazardous Materials Transporter'
+        }
+        badge={
+          <Badge variant="success" size="sm">
+            {isRTL ? 'بوابة السائق' : 'Driver portal'}
+          </Badge>
+        }
+      />
 
       {/* MY ASSIGNED VEHICLE CARD (STRICT 1:1 BINDING - NO DROPDOWN - NO FINANCIAL DATA) */}
-      <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-          <div className="flex items-center gap-2">
-            <Truck className="w-4 h-4 text-amber-600" />
-            <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">MY ASSIGNED TRACTOR & COUPLED TRAILER</h3>
-          </div>
-          <Badge variant={
-            myAssignedTractor?.status === 'AVAILABLE' ? 'success' :
-            myAssignedTractor?.status === 'REQUIRES INSPECTION' ? 'amber' : 'danger'
-          }>
+      <EditorialSection
+        title={isRTL ? 'الشاحنة والمقطورة المخصصة لي' : 'My assigned tractor & coupled trailer'}
+        action={
+          <Badge
+            variant={
+              myAssignedTractor?.status === 'AVAILABLE'
+                ? 'success'
+                : myAssignedTractor?.status === 'REQUIRES INSPECTION'
+                ? 'amber'
+                : 'danger'
+            }
+          >
             {myAssignedTractor?.status || 'AVAILABLE'}
           </Badge>
-        </div>
-
+        }
+        marginTop={0}
+      >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
           {/* Tractor details */}
-          <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 px-2 py-0.5 bg-amber-100 text-amber-900 text-[9px] font-bold rounded-bl border-b border-l border-amber-200">
-              ASSIGNED TRACTOR
+          <div
+            style={{
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderInlineStart: '3px solid var(--color-brand-accent)',
+              borderRadius: 'var(--radius-sm)',
+              padding: 16,
+            }}
+            className="space-y-2"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)' }}>
+                {isRTL ? 'رأس الشاحنة المخصصة' : 'Assigned tractor head'}
+              </span>
+              <Truck className="w-4 h-4" style={{ color: 'var(--color-brand-accent)' }} />
             </div>
-            <p className="text-[10px] text-slate-500 uppercase font-bold">Tractor Head Truck</p>
-            <p className="font-extrabold text-slate-900 text-base">{myAssignedTractor?.vehicle_id} <span className="text-amber-700 text-xs font-semibold">({myAssignedTractor?.plate_number})</span></p>
-            <p className="text-slate-600">{myAssignedTractor?.make} {myAssignedTractor?.model} ({myAssignedTractor?.year})</p>
-            <div className="pt-2 flex items-center justify-between text-[11px] border-t border-slate-200 mt-2">
-              <span className="text-slate-500">Odometer:</span>
-              <span className="text-slate-900 font-mono font-bold">{(myAssignedTractor?.current_mileage || 0).toLocaleString()} KM</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 700,
+                  fontSize: 15,
+                  color: 'var(--color-ink)',
+                }}
+              >
+                {myAssignedTractor?.vehicle_id}
+              </span>
+              {myAssignedTractor?.plate_number && (
+                <PlateChip plate={myAssignedTractor.plate_number} />
+              )}
+            </div>
+            <p style={{ color: 'var(--color-text-secondary)' }}>
+              {myAssignedTractor?.make} {myAssignedTractor?.model} ({myAssignedTractor?.year})
+            </p>
+            <div
+              className="pt-2 flex items-center justify-between text-[11px]"
+              style={{ borderTop: '1px solid var(--color-row-divider)' }}
+            >
+              <span style={{ color: 'var(--color-text-muted)' }}>{isRTL ? 'العداد:' : 'Odometer:'}</span>
+              <span
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 600,
+                  color: 'var(--color-ink)',
+                }}
+              >
+                {(myAssignedTractor?.current_mileage || 0).toLocaleString()} {isRTL ? 'كم' : 'KM'}
+              </span>
             </div>
           </div>
 
           {/* Coupled Trailer details */}
-          <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 px-2 py-0.5 bg-sky-100 text-sky-900 text-[9px] font-bold rounded-bl border-b border-l border-sky-200">
-              COUPLED TANKER
+          <div
+            style={{
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderInlineStart: `3px solid ${EDITORIAL_STATUS.blue.stripe}`,
+              borderRadius: 'var(--radius-sm)',
+              padding: 16,
+            }}
+            className="space-y-2"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-muted)' }}>
+                {isRTL ? 'مقطورة الصهريج المرتبطة' : 'Coupled tanker trailer'}
+              </span>
+              <Truck className="w-4 h-4" style={{ color: EDITORIAL_STATUS.blue.text }} />
             </div>
-            <p className="text-[10px] text-slate-500 uppercase font-bold">Tanker Trailer</p>
-            <p className="font-extrabold text-sky-700 text-base">{myAssignedTrailer?.trailer_id} <span className="text-slate-600 text-xs font-semibold">({myAssignedTrailer?.plate_number})</span></p>
-            <p className="text-slate-600">{(myAssignedTrailer?.tank_capacity_liters || 0).toLocaleString()} Liters ({myAssignedTrailer?.number_of_compartments || 0} Compartments)</p>
-            <div className="pt-2 flex items-center justify-between text-[11px] border-t border-slate-200 mt-2">
-              <span className="text-slate-500">Specification:</span>
-              <span className="text-sky-800 font-semibold">{myAssignedTrailer?.tank_type}</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 700,
+                  fontSize: 15,
+                  color: 'var(--color-ink)',
+                }}
+              >
+                {myAssignedTrailer?.trailer_id}
+              </span>
+              {myAssignedTrailer?.plate_number && (
+                <PlateChip
+                  plate={myAssignedTrailer.plate_number}
+                  accentColor={EDITORIAL_STATUS.blue.stripe}
+                />
+              )}
+            </div>
+            <p style={{ color: 'var(--color-text-secondary)' }}>
+              {(myAssignedTrailer?.tank_capacity_liters || 0).toLocaleString()} {isRTL ? 'لتر' : 'Liters'} (
+              {myAssignedTrailer?.number_of_compartments || 0} {isRTL ? 'خزانات' : 'Compartments'})
+            </p>
+            <div
+              className="pt-2 flex items-center justify-between text-[11px]"
+              style={{ borderTop: '1px solid var(--color-row-divider)' }}
+            >
+              <span style={{ color: 'var(--color-text-muted)' }}>{isRTL ? 'المواصفات:' : 'Specification:'}</span>
+              <span style={{ fontWeight: 600, color: 'var(--color-ink)' }}>
+                {myAssignedTrailer?.tank_type}
+              </span>
             </div>
           </div>
         </div>
-      </div>
+      </EditorialSection>
 
       {/* PRIMARY ACTION BUTTONS (MOBILE FIRST BIG TOUCH TARGETS) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-6">
         <button
           onClick={() => setIsInspectionOpen(true)}
-          className="p-4 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-500 transition text-left space-y-2 shadow-xs flex flex-col justify-between group"
+          style={{
+            background: 'var(--color-ink)',
+            color: 'var(--color-page-bg)',
+            border: '1px solid var(--color-ink)',
+            borderRadius: 'var(--radius-sm)',
+            padding: 16,
+          }}
+          className="text-start flex flex-col justify-between gap-3 cursor-pointer transition-opacity hover:opacity-95"
         >
-          <div className="flex items-center justify-between">
-            <ShieldCheck className="w-7 h-7" />
-            <span className="text-[10px] bg-emerald-700 text-emerald-100 font-extrabold px-2 py-0.5 rounded uppercase">DAILY MANDATORY</span>
+          <div className="flex items-center justify-between w-full">
+            <ShieldCheck className="w-6 h-6" style={{ color: '#8FD6C4' }} />
+            <Badge variant="success" size="sm">
+              {isRTL ? 'إلزامي يومياً' : 'Daily mandatory'}
+            </Badge>
           </div>
           <div>
-            <p className="text-base uppercase tracking-wider font-extrabold">START PRE-TRIP CHECK</p>
-            <p className="text-xs font-medium opacity-90">Perform 15-Point Digital Safety Checklist</p>
+            <p style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600 }}>
+              {isRTL ? 'بدء فحص ما قبل الرحلة' : 'Start Pre-Trip Check'}
+            </p>
+            <p style={{ fontSize: 12, opacity: 0.85, marginTop: 2 }}>
+              {isRTL ? 'تنفيذ قائمة السلامة الرقمية (15 بند)' : 'Perform 15-Point Digital Safety Checklist'}
+            </p>
           </div>
         </button>
 
         <button
           onClick={() => setIsReportOpen(true)}
-          className="p-4 bg-rose-600 text-white font-bold rounded-lg hover:bg-rose-500 transition text-left space-y-2 shadow-xs flex flex-col justify-between group"
+          style={{
+            background: 'var(--color-surface)',
+            color: 'var(--color-ink)',
+            border: '1px solid var(--color-border)',
+            borderInlineStart: `3px solid ${EDITORIAL_STATUS.red.stripe}`,
+            borderRadius: 'var(--radius-sm)',
+            padding: 16,
+          }}
+          className="text-start flex flex-col justify-between gap-3 cursor-pointer transition-colors hover:bg-[#ECE8DE]"
         >
-          <div className="flex items-center justify-between">
-            <AlertTriangle className="w-7 h-7 text-amber-200" />
-            <span className="text-[10px] bg-rose-700 text-rose-100 font-extrabold px-2 py-0.5 rounded uppercase">IMMEDIATE ACTION</span>
+          <div className="flex items-center justify-between w-full">
+            <AlertTriangle className="w-6 h-6" style={{ color: EDITORIAL_STATUS.red.text }} />
+            <Badge variant="danger" size="sm">
+              {isRTL ? 'إجراء فوري' : 'Immediate action'}
+            </Badge>
           </div>
           <div>
-            <p className="text-base uppercase tracking-wider font-extrabold">REPORT A PROBLEM</p>
-            <p className="text-xs font-medium opacity-90">Log Defect / Breakdown / Safety Concern</p>
+            <p style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600 }}>
+              {isRTL ? 'الإبلاغ عن عطل أو مشكلة' : 'Report a Problem'}
+            </p>
+            <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}>
+              {isRTL
+                ? 'تسجيل عطل أو توقف طارئ أو ملاحظة سلامة'
+                : 'Log Defect / Breakdown / Safety Concern'}
+            </p>
           </div>
         </button>
       </div>
 
       {/* QUICK NAVIGATION TILES */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <button
           onClick={() => onNavigateTab('vehicles')}
-          className="p-3.5 bg-white border border-slate-200 text-slate-900 font-bold rounded-lg hover:bg-slate-50 transition text-left flex flex-col gap-2 shadow-xs"
+          style={{
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-sm)',
+            padding: 14,
+          }}
+          className="text-start flex flex-col gap-2 cursor-pointer hover:bg-[#ECE8DE] transition-colors"
         >
-          <Truck className="w-5 h-5 text-amber-600" />
+          <Truck className="w-4 h-4" style={{ color: 'var(--color-brand-accent)' }} />
           <div>
-            <p className="text-xs font-bold text-slate-900">My Vehicle</p>
-            <p className="text-[10px] text-slate-500 font-normal">Specs & History</p>
+            <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}>
+              {isRTL ? 'مركبتي' : 'My Vehicle'}
+            </p>
+            <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
+              {isRTL ? 'المواصفات والسجل' : 'Specs & History'}
+            </p>
           </div>
         </button>
 
         <button
           onClick={() => onNavigateTab('inspections')}
-          className="p-3.5 bg-white border border-slate-200 text-slate-900 font-bold rounded-lg hover:bg-slate-50 transition text-left flex flex-col gap-2 shadow-xs"
+          style={{
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-sm)',
+            padding: 14,
+          }}
+          className="text-start flex flex-col gap-2 cursor-pointer hover:bg-[#ECE8DE] transition-colors"
         >
-          <ShieldCheck className="w-5 h-5 text-sky-600" />
+          <ShieldCheck className="w-4 h-4" style={{ color: EDITORIAL_STATUS.blue.text }} />
           <div>
-            <p className="text-xs font-bold text-slate-900">My Inspections</p>
-            <p className="text-[10px] text-slate-500 font-normal">Checklist Logs</p>
+            <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}>
+              {isRTL ? 'فحوصاتي' : 'My Inspections'}
+            </p>
+            <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
+              {isRTL ? 'سجلات الفحص' : 'Checklist Logs'}
+            </p>
           </div>
         </button>
 
         <button
           onClick={() => onNavigateTab('documents')}
-          className="p-3.5 bg-white border border-slate-200 text-slate-900 font-bold rounded-lg hover:bg-slate-50 transition text-left flex flex-col gap-2 shadow-xs"
+          style={{
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-sm)',
+            padding: 14,
+          }}
+          className="text-start flex flex-col gap-2 cursor-pointer hover:bg-[#ECE8DE] transition-colors"
         >
-          <FileText className="w-5 h-5 text-purple-600" />
+          <FileText className="w-4 h-4" style={{ color: 'var(--color-text-secondary)' }} />
           <div>
-            <p className="text-xs font-bold text-slate-900">Documents</p>
-            <p className="text-[10px] text-slate-500 font-normal">Istimara & Permits</p>
+            <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}>
+              {isRTL ? 'الوثائق' : 'Documents'}
+            </p>
+            <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
+              {isRTL ? 'الاستمارة والتصاريح' : 'Istimara & Permits'}
+            </p>
           </div>
         </button>
 
         <button
-          onClick={() => alert('Notifications: All safety alerts active for driver ' + currentProfile.full_name)}
-          className="p-3.5 bg-white border border-slate-200 text-slate-900 font-bold rounded-lg hover:bg-slate-50 transition text-left flex flex-col gap-2 shadow-xs"
+          onClick={() =>
+            alert(
+              (isRTL
+                ? 'التنبيهات: جميع تنبيهات السلامة مفعلة للسائق '
+                : 'Notifications: All safety alerts active for driver ') + currentProfile.full_name
+            )
+          }
+          style={{
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-sm)',
+            padding: 14,
+          }}
+          className="text-start flex flex-col gap-2 cursor-pointer hover:bg-[#ECE8DE] transition-colors"
         >
-          <Bell className="w-5 h-5 text-amber-600" />
+          <Bell className="w-4 h-4" style={{ color: EDITORIAL_STATUS.amber.text }} />
           <div>
-            <p className="text-xs font-bold text-slate-900">Notifications</p>
-            <p className="text-[10px] text-slate-500 font-normal">System Alerts</p>
+            <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-ink)' }}>
+              {isRTL ? 'التنبيهات' : 'Notifications'}
+            </p>
+            <p style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
+              {isRTL ? 'تنبيهات النظام' : 'System Alerts'}
+            </p>
           </div>
         </button>
       </div>
 
       {/* MY DEFECT REPORTS SECTION */}
-      <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-          <div className="flex items-center gap-2">
-            <Wrench className="w-4 h-4 text-amber-600" />
-            <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">MY SUBMITTED DEFECT & PROBLEM REPORTS</h3>
-          </div>
-          <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded border border-amber-200">
-            {myReports.length} Reports Logged
-          </span>
-        </div>
-
-        {myReports.length === 0 ? (
-          <div className="text-center py-8 bg-slate-50 rounded-lg border border-dashed border-slate-200">
-            <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto mb-2 opacity-80" />
-            <p className="text-xs font-bold text-slate-800">No active defect reports</p>
-            <p className="text-[11px] text-slate-500 mt-0.5">Your vehicle is currently in operational condition.</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {myReports.map(rep => (
-              <div key={rep.id} className="p-4 bg-slate-50/70 border border-slate-200 rounded-lg text-xs space-y-2 hover:border-slate-300 transition">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-amber-700">{rep.report_number}</span>
-                    <span className="text-slate-600 font-medium">({rep.category})</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {getSeverityBadge(rep.severity)}
-                    {getStatusBadge(rep.status)}
-                  </div>
+      <EditorialSection
+        title={isRTL ? 'بلاغات الأعطال والمشاكل المرسلة مني' : 'My submitted defect & problem reports'}
+        action={
+          <Badge variant="slate" size="sm">
+            {isRTL ? `${myReports.length} بلاغات مسجلة` : `${myReports.length} Reports Logged`}
+          </Badge>
+        }
+        marginTop={0}
+      >
+        <DataTable
+          columns={[
+            { label: isRTL ? 'البلاغ والفئة' : 'Report & category' },
+            { label: isRTL ? 'الوصف ورد الورشة' : 'Description & response' },
+            { label: isRTL ? 'المركبة والوقت' : 'Vehicle & timestamp' },
+            { label: isRTL ? 'الخطورة والحالة' : 'Severity & status', align: 'end' },
+          ]}
+          hasActionsColumn={false}
+          isEmpty={myReports.length === 0}
+          emptyMessage={
+            isRTL
+              ? 'لا توجد بلاغات أعطال نشطة — مركبتك في حالة تشغيلية سليمة حالياً.'
+              : 'No active defect reports — your vehicle is currently in operational condition.'
+          }
+        >
+          {myReports.map((rep) => (
+            <DataRow
+              key={rep.id}
+              stripeColor={
+                rep.severity === 'CRITICAL'
+                  ? EDITORIAL_STATUS.red.stripe
+                  : rep.severity === 'HIGH'
+                  ? EDITORIAL_STATUS.amber.stripe
+                  : rep.status === 'RESOLVED'
+                  ? EDITORIAL_STATUS.green.stripe
+                  : EDITORIAL_STATUS.blue.stripe
+              }
+            >
+              <td className="py-3 pe-3 whitespace-nowrap">
+                <div className="flex flex-col gap-0.5">
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontWeight: 600,
+                      fontSize: 12,
+                      color: 'var(--color-ink)',
+                    }}
+                  >
+                    {rep.report_number}
+                  </span>
+                  <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+                    {rep.category}
+                  </span>
                 </div>
-
-                <p className="text-slate-800 leading-relaxed font-medium">{rep.description}</p>
-
+              </td>
+              <td className="py-3 pe-3">
+                <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-ink)' }}>
+                  {rep.description}
+                </p>
                 {rep.workshop_response && (
-                  <div className="p-2.5 bg-white border border-slate-200 rounded text-[11px] text-slate-700 flex items-start gap-2">
-                    <Wrench className="w-3.5 h-3.5 text-sky-600 shrink-0 mt-0.5" />
+                  <div
+                    className="mt-2 p-2 flex items-start gap-2 text-[11px]"
+                    style={{
+                      background: 'var(--color-surface)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 'var(--radius-sm)',
+                      color: 'var(--color-text-secondary)',
+                    }}
+                  >
+                    <Wrench
+                      className="w-3.5 h-3.5 shrink-0 mt-0.5"
+                      style={{ color: EDITORIAL_STATUS.blue.text }}
+                    />
                     <div>
-                      <span className="font-bold text-sky-800 block">Workshop Response:</span>
+                      <span className="font-semibold block" style={{ color: 'var(--color-ink)' }}>
+                        {isRTL ? 'رد الورشة:' : 'Workshop Response:'}
+                      </span>
                       <span>{rep.workshop_response}</span>
                     </div>
                   </div>
                 )}
-
-                <div className="flex items-center justify-between text-[10px] text-slate-500 pt-2 border-t border-slate-200">
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-slate-400" />
-                    {new Date(rep.created_at).toLocaleString()}
+              </td>
+              <td className="py-3 pe-3 whitespace-nowrap">
+                <div className="flex flex-col gap-1 text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                  <span style={{ color: 'var(--color-ink)', fontWeight: 500 }}>
+                    {rep.vehicle_id} / {rep.trailer_id || (isRTL ? 'بدون مقطورة' : 'No Trailer')}
                   </span>
-                  <span>Vehicle: {rep.vehicle_id} / {rep.trailer_id || 'No Trailer'}</span>
+                  <span className="inline-flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {new Date(rep.created_at).toLocaleString(isRTL ? 'ar-SA' : 'en-US')}
+                  </span>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              </td>
+              <td className="py-3 text-end whitespace-nowrap">
+                <div className="flex items-center justify-end gap-1.5">
+                  {getSeverityBadge(rep.severity)}
+                  {getStatusBadge(rep.status)}
+                </div>
+              </td>
+            </DataRow>
+          ))}
+        </DataTable>
+      </EditorialSection>
 
       {/* PRE-TRIP INSPECTION MODAL */}
       {isInspectionOpen && (
         <Modal
           isOpen={isInspectionOpen}
           onClose={() => setIsInspectionOpen(false)}
-          title="Digital Vehicle Pre-Trip Inspection"
+          title={isRTL ? 'الفحص الرقمي للمركبة قبل الرحلة' : 'Digital Vehicle Pre-Trip Inspection'}
           maxWidth="3xl"
         >
           <InspectionFormMobile onComplete={() => setIsInspectionOpen(false)} />
@@ -314,107 +577,169 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
         <Modal
           isOpen={isReportOpen}
           onClose={() => setIsReportOpen(false)}
-          title="Report Vehicle Defect or Safety Issue"
-          subtitle="Alerts Workshop Supervisor immediately and records defect audit history."
+          title={isRTL ? 'الإبلاغ عن عطل مركبة أو مخالفة سلامة' : 'Report Vehicle Defect or Safety Issue'}
+          subtitle={
+            isRTL
+              ? 'ينبه مشرف الورشة فوراً ويسجل سجل تدقيق البلاغ.'
+              : 'Alerts Workshop Supervisor immediately and records defect audit history.'
+          }
         >
-          <form onSubmit={handleFormSubmit} className="space-y-4 text-xs font-sans">
+          <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
             {/* Auto-populated read-only vehicle fields */}
-            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl grid grid-cols-2 gap-3 text-[11px]">
+            <div
+              className="p-3.5 grid grid-cols-2 gap-3 text-[11px]"
+              style={{
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-sm)',
+              }}
+            >
               <div>
-                <span className="text-slate-500 block font-medium">Assigned Tractor:</span>
-                <span className="font-bold text-amber-800">{myAssignedTractor?.vehicle_id} ({myAssignedTractor?.plate_number})</span>
+                <span className="block font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                  {isRTL ? 'الشاحنة المخصصة:' : 'Assigned Tractor:'}
+                </span>
+                <span
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontWeight: 600,
+                    color: 'var(--color-ink)',
+                  }}
+                >
+                  {myAssignedTractor?.vehicle_id} ({myAssignedTractor?.plate_number})
+                </span>
               </div>
               <div>
-                <span className="text-slate-500 block font-medium">Coupled Trailer:</span>
-                <span className="font-bold text-sky-800">{myAssignedTrailer?.trailer_id || 'N/A'}</span>
+                <span className="block font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                  {isRTL ? 'المقطورة المرتبطة:' : 'Coupled Trailer:'}
+                </span>
+                <span
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontWeight: 600,
+                    color: 'var(--color-ink)',
+                  }}
+                >
+                  {myAssignedTrailer?.trailer_id || (isRTL ? 'لا يوجد' : 'N/A')}
+                </span>
               </div>
-              <div className="col-span-2 pt-2 border-t border-slate-200/80">
-                <span className="text-slate-500 font-medium">Reporting Driver: </span>
-                <span className="font-bold text-slate-900">{currentProfile.full_name}</span>
+              <div
+                className="col-span-2 pt-2"
+                style={{ borderTop: '1px solid var(--color-row-divider)' }}
+              >
+                <span className="font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                  {isRTL ? 'السائق المُبلّغ: ' : 'Reporting Driver: '}
+                </span>
+                <span className="font-semibold" style={{ color: 'var(--color-ink)' }}>
+                  {currentProfile.full_name}
+                </span>
               </div>
             </div>
 
             {/* Category selection */}
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                Defect Category <span className="text-rose-500">*</span>
+              <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--color-ink)' }}>
+                {isRTL ? 'تصنيف العطل' : 'Defect Category'}{' '}
+                <span style={{ color: EDITORIAL_STATUS.red.text }}>*</span>
               </label>
               <select
                 value={category}
-                onChange={e => setCategory(e.target.value as DefectReportCategory)}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs text-slate-900 font-bold focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
+                onChange={(e) => setCategory(e.target.value as DefectReportCategory)}
+                className="nf-field w-full"
               >
-                <option value="Brakes">Brakes & Pneumatics</option>
-                <option value="Engine">Engine & Drivetrain</option>
-                <option value="Tires">Tires & Wheels</option>
-                <option value="Valve">API Discharge Valves & Manifold</option>
-                <option value="Electrical">Lighting & Electrical</option>
-                <option value="Safety Gear">Hazmat Safety Equipment & Grounding</option>
-                <option value="Steering">Steering & Suspension</option>
-                <option value="Transmission">Transmission & Clutch</option>
-                <option value="Leaks">Fuel / Oil Leaks</option>
-                <option value="Other">Other Mechanical Defect</option>
+                <option value="Brakes">{isRTL ? 'الفرامل ونظام الهواء' : 'Brakes & Pneumatics'}</option>
+                <option value="Engine">{isRTL ? 'المحرك ونقل الحركة' : 'Engine & Drivetrain'}</option>
+                <option value="Tires">{isRTL ? 'الإطارات والعجلات' : 'Tires & Wheels'}</option>
+                <option value="Valve">
+                  {isRTL ? 'صمامات التفريغ والوصلات' : 'API Discharge Valves & Manifold'}
+                </option>
+                <option value="Electrical">{isRTL ? 'الإنارة والكهرباء' : 'Lighting & Electrical'}</option>
+                <option value="Safety Gear">
+                  {isRTL ? 'معدات السلامة والتأريض' : 'Hazmat Safety Equipment & Grounding'}
+                </option>
+                <option value="Steering">{isRTL ? 'التوجيه ونظام التعليق' : 'Steering & Suspension'}</option>
+                <option value="Transmission">{isRTL ? 'ناقل الحركة والكلتش' : 'Transmission & Clutch'}</option>
+                <option value="Leaks">{isRTL ? 'تسربات الوقود أو الزيت' : 'Fuel / Oil Leaks'}</option>
+                <option value="Other">{isRTL ? 'عطل ميكانيكي آخر' : 'Other Mechanical Defect'}</option>
               </select>
             </div>
 
             {/* Severity selection */}
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                Severity Level <span className="text-rose-500">*</span>
+              <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--color-ink)' }}>
+                {isRTL ? 'مستوى الخطورة' : 'Severity Level'}{' '}
+                <span style={{ color: EDITORIAL_STATUS.red.text }}>*</span>
               </label>
               <div className="grid grid-cols-4 gap-2">
-                {(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as SeverityLevel[]).map(s => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setSeverity(s)}
-                    className={`py-2 px-1 rounded-xl text-center font-extrabold text-xs transition border cursor-pointer ${
-                      severity === s
-                        ? s === 'CRITICAL'
-                          ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
-                          : s === 'HIGH'
-                          ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-xs'
-                          : s === 'MEDIUM'
-                          ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
-                          : 'bg-slate-700 text-white border-slate-700 shadow-xs'
-                        : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                    }`}
-                  >
-                    {s}
-                  </button>
-                ))}
+                {(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as SeverityLevel[]).map((s) => {
+                  const isActive = severity === s;
+                  const stripe =
+                    s === 'CRITICAL'
+                      ? EDITORIAL_STATUS.red.stripe
+                      : s === 'HIGH'
+                      ? EDITORIAL_STATUS.amber.stripe
+                      : s === 'MEDIUM'
+                      ? EDITORIAL_STATUS.blue.stripe
+                      : EDITORIAL_STATUS.muted.stripe;
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setSeverity(s)}
+                      style={{
+                        background: isActive ? 'var(--color-ink)' : 'var(--color-surface)',
+                        color: isActive ? 'var(--color-page-bg)' : 'var(--color-text-secondary)',
+                        border: isActive
+                          ? '1px solid var(--color-ink)'
+                          : '1px solid var(--color-border)',
+                        borderInlineStart: `3px solid ${stripe}`,
+                        borderRadius: 'var(--radius-sm)',
+                        padding: '8px 6px',
+                      }}
+                      className="text-center font-semibold text-xs transition-colors cursor-pointer"
+                    >
+                      {t(s, s)}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             {/* Problem Description */}
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                Detailed Defect Description <span className="text-rose-500">*</span>
+              <label className="text-xs font-semibold block mb-1.5" style={{ color: 'var(--color-ink)' }}>
+                {isRTL ? 'وصف العطل التفصيلي' : 'Detailed Defect Description'}{' '}
+                <span style={{ color: EDITORIAL_STATUS.red.text }}>*</span>
               </label>
               <textarea
                 required
                 rows={4}
-                placeholder="Explain the specific issue encountered (e.g. low pressure building up slowly, leak at discharge API valve 2, tire pressure warning)..."
+                placeholder={
+                  isRTL
+                    ? 'اشرح المشكلة بدقة (مثال: بطء تعبئة الهواء، تسريب في صمام التفريغ رقم 2، تحذير ضغط الإطارات)...'
+                    : 'Explain the specific issue encountered (e.g. low pressure building up slowly, leak at discharge API valve 2, tire pressure warning)...'
+                }
                 value={description}
-                onChange={e => setDescription(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition resize-none"
+                onChange={(e) => setDescription(e.target.value)}
+                className="nf-field w-full resize-none"
               />
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200">
-              <button
-                type="button"
-                onClick={() => setIsReportOpen(false)}
-                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition active:scale-95 cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
+            <div
+              className="flex items-center justify-end gap-2.5 pt-3"
+              style={{ borderTop: '1px solid var(--color-row-divider)' }}
+            >
+              <SecondaryButton type="button" onClick={() => setIsReportOpen(false)}>
+                {t('Cancel', 'Cancel')}
+              </SecondaryButton>
+              <PrimaryButton
                 type="submit"
-                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs rounded-xl shadow-xs transition active:scale-95 cursor-pointer"
+                style={{
+                  background: EDITORIAL_STATUS.red.stripe,
+                  borderColor: EDITORIAL_STATUS.red.stripe,
+                }}
               >
-                Submit Problem Report
-              </button>
+                {isRTL ? 'إرسال بلاغ العطل' : 'Submit Problem Report'}
+              </PrimaryButton>
             </div>
           </form>
         </Modal>
@@ -425,45 +750,104 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
         <Modal
           isOpen={showCriticalConfirm}
           onClose={() => setShowCriticalConfirm(false)}
-          title="⚠️ CRITICAL SAFETY WARNING"
+          title={isRTL ? 'تحذير سلامة حرج' : 'Critical safety warning'}
         >
-          <div className="space-y-4 text-xs font-sans">
-            <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl space-y-2 text-rose-900">
+          <div className="space-y-4 text-xs">
+            <div
+              className="p-4 space-y-2"
+              style={{
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                borderInlineStart: `3px solid ${EDITORIAL_STATUS.red.stripe}`,
+                borderRadius: 'var(--radius-sm)',
+                color: 'var(--color-ink)',
+              }}
+            >
               <div className="flex items-center gap-2">
-                <AlertOctagon className="w-5 h-5 text-rose-700 shrink-0" />
-                <h4 className="font-extrabold text-sm uppercase tracking-wide">Vehicle Operational Suspension Warning</h4>
+                <AlertOctagon
+                  className="w-5 h-5 shrink-0"
+                  style={{ color: EDITORIAL_STATUS.red.text }}
+                />
+                <h4 className="font-semibold text-sm">
+                  {isRTL ? 'تحذير إيقاف تشغيل المركبة' : 'Vehicle Operational Suspension Warning'}
+                </h4>
               </div>
-              <p className="text-xs leading-relaxed font-medium">
-                You are marking this defect report as <strong className="text-rose-950 underline">CRITICAL</strong> for tractor vehicle <strong className="text-amber-900">{myAssignedTractor?.vehicle_id}</strong>.
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+                {isRTL ? (
+                  <>
+                    أنت تحدد هذا البلاغ بدرجة{' '}
+                    <strong style={{ color: EDITORIAL_STATUS.red.text }}>حرج</strong> للشاحنة{' '}
+                    <strong style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-ink)' }}>
+                      {myAssignedTractor?.vehicle_id}
+                    </strong>
+                    .
+                  </>
+                ) : (
+                  <>
+                    You are marking this defect report as{' '}
+                    <strong style={{ color: EDITORIAL_STATUS.red.text }}>CRITICAL</strong> for tractor
+                    vehicle{' '}
+                    <strong style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-ink)' }}>
+                      {myAssignedTractor?.vehicle_id}
+                    </strong>
+                    .
+                  </>
+                )}
               </p>
-              <p className="text-xs leading-relaxed font-medium">
-                Submitting a CRITICAL report will automatically change vehicle status to <strong className="text-amber-900 font-black">REQUIRES INSPECTION</strong> and generate an urgent alert for the Workshop Supervisor.
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+                {isRTL ? (
+                  <>
+                    سيؤدي إرسال بلاغ حرج تلقائياً إلى تغيير حالة المركبة إلى{' '}
+                    <strong style={{ color: 'var(--color-ink)' }}>يتطلب فحص</strong> وإنشاء تنبيه
+                    عاجل لمشرف الورشة.
+                  </>
+                ) : (
+                  <>
+                    Submitting a CRITICAL report will automatically change vehicle status to{' '}
+                    <strong style={{ color: 'var(--color-ink)' }}>REQUIRES INSPECTION</strong> and
+                    generate an urgent alert for the Workshop Supervisor.
+                  </>
+                )}
               </p>
             </div>
 
-            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 space-y-1">
-              <span className="text-[10px] text-slate-500 uppercase font-bold">Defect Summary:</span>
-              <p className="font-bold text-slate-900">{category} - {description}</p>
+            <div
+              className="p-3.5 space-y-1"
+              style={{
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-sm)',
+              }}
+            >
+              <span className="text-[11px] font-semibold" style={{ color: 'var(--color-text-muted)' }}>
+                {isRTL ? 'ملخص العطل:' : 'Defect Summary:'}
+              </span>
+              <p className="font-semibold" style={{ color: 'var(--color-ink)' }}>
+                {category} - {description}
+              </p>
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200">
-              <button
-                onClick={() => setShowCriticalConfirm(false)}
-                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition active:scale-95 cursor-pointer"
-              >
-                Back to Edit
-              </button>
-              <button
+            <div
+              className="flex items-center justify-end gap-2.5 pt-3"
+              style={{ borderTop: '1px solid var(--color-row-divider)' }}
+            >
+              <SecondaryButton onClick={() => setShowCriticalConfirm(false)}>
+                {isRTL ? 'رجوع للتعديل' : 'Back to Edit'}
+              </SecondaryButton>
+              <PrimaryButton
                 onClick={executeSubmit}
-                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs rounded-xl shadow-xs transition active:scale-95 cursor-pointer flex items-center gap-2"
+                style={{
+                  background: EDITORIAL_STATUS.red.stripe,
+                  borderColor: EDITORIAL_STATUS.red.stripe,
+                }}
               >
                 <AlertTriangle className="w-4 h-4" />
-                Confirm Critical Report
-              </button>
+                {isRTL ? 'تأكيد البلاغ الحرج' : 'Confirm Critical Report'}
+              </PrimaryButton>
             </div>
           </div>
         </Modal>
       )}
-    </div>
+    </PageContainer>
   );
 };
