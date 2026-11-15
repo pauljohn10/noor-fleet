@@ -1,0 +1,374 @@
+/* ============================================================================
+   NOOR FLEET LOGIN PAGE — SUBTLE EDITORIAL MOTION
+   Only transform, opacity, and SVG stroke-dashoffset are animated.
+   ============================================================================ */
+
+:root {
+  --motion-fast: 150ms;
+  --motion-error: 200ms;
+  --motion-shake: 300ms;
+  --motion-node: 300ms;
+  --motion-node-stagger: 150ms;
+  --motion-node-base-delay: 650ms;
+  --motion-label-offset: 200ms;
+  --motion-base: 450ms;
+  --motion-form-stagger: 60ms;
+  --motion-headline: 600ms;
+  --motion-headline-stagger: 120ms;
+  --motion-planned-fade: 800ms;
+  --motion-grid-fade: 1.2s;
+  --motion-route: 1.8s;
+  --motion-pulse: 3s;
+  --motion-drift: 24s;
+}
+
+/* Language crossfade wrapper */
+.nf-login-lang-fade {
+  transition: opacity var(--motion-fast) ease;
+}
+.nf-login-lang-fade.is-fading {
+  opacity: 0;
+}
+
+/* ── 1. ROUTE PANEL SVG MOTION ────────────────────────────────────────────── */
+
+/* Grid lines fade in */
+.nf-route-grid {
+  opacity: 0;
+  animation: nfFadeIn var(--motion-grid-fade) ease-out forwards;
+}
+
+/* Active route draws from start to end once */
+.nf-active-route {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: nfDrawRoute var(--motion-route) ease-out forwards;
+}
+
+/* Planned dotted corridors fade in after active route finishes, then drift */
+.nf-planned-routes {
+  opacity: 0;
+  animation: nfFadeIn var(--motion-planned-fade) ease-out var(--motion-route) forwards;
+}
+
+.nf-planned-route-path {
+  animation: nfDriftDots var(--motion-drift) linear var(--motion-route) infinite;
+}
+
+/* Junction nodes pop in sequentially */
+.nf-route-node {
+  opacity: 0;
+  transform: scale(0.6);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: nfNodePop var(--motion-node) ease-out forwards;
+}
+
+.nf-node-1 {
+  animation-delay: var(--motion-node-base-delay);
+}
+.nf-node-2 {
+  animation-delay: calc(var(--motion-node-base-delay) + var(--motion-node-stagger) * 1);
+}
+.nf-node-3 {
+  animation-delay: calc(var(--motion-node-base-delay) + var(--motion-node-stagger) * 2);
+}
+.nf-node-4 {
+  animation-delay: calc(var(--motion-node-base-delay) + var(--motion-node-stagger) * 3);
+}
+
+/* Soft pulse rings around each node with desynchronized delays */
+.nf-node-pulse {
+  opacity: 0;
+  transform: scale(1);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: nfNodePulse var(--motion-pulse) ease-out infinite;
+}
+
+.nf-pulse-1 {
+  animation-delay: calc(var(--motion-node-base-delay) + 0.4s);
+}
+.nf-pulse-2 {
+  animation-delay: calc(var(--motion-node-base-delay) + 1.2s);
+}
+.nf-pulse-3 {
+  animation-delay: calc(var(--motion-node-base-delay) + 2.0s);
+}
+.nf-pulse-4 {
+  animation-delay: calc(var(--motion-node-base-delay) + 2.7s);
+}
+
+/* Plate labels fade in 200ms after their node appears */
+.nf-node-label {
+  opacity: 0;
+  animation: nfFadeIn var(--motion-node) ease-out forwards;
+}
+
+.nf-label-1 {
+  animation-delay: calc(var(--motion-node-base-delay) + var(--motion-label-offset));
+}
+.nf-label-2 {
+  animation-delay: calc(var(--motion-node-base-delay) + var(--motion-node-stagger) * 1 + var(--motion-label-offset));
+}
+.nf-label-3 {
+  animation-delay: calc(var(--motion-node-base-delay) + var(--motion-node-stagger) * 2 + var(--motion-label-offset));
+}
+.nf-label-4 {
+  animation-delay: calc(var(--motion-node-base-delay) + var(--motion-node-stagger) * 3 + var(--motion-label-offset));
+}
+
+/* ── 2. ROUTE PANEL HEADLINE & DESCRIPTION ────────────────────────────────── */
+
+.nf-panel-reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  animation: nfFadeUp var(--motion-headline) ease-out forwards;
+}
+
+.nf-panel-line-1 {
+  display: block;
+  animation-delay: 120ms;
+}
+.nf-panel-line-2 {
+  display: block;
+  animation-delay: calc(120ms + var(--motion-headline-stagger) * 1);
+}
+.nf-panel-line-3 {
+  display: block;
+  animation-delay: calc(120ms + var(--motion-headline-stagger) * 2);
+}
+.nf-panel-desc {
+  animation-delay: calc(120ms + var(--motion-headline-stagger) * 3);
+}
+
+/* ── 3. LOGIN FORM SEQUENCE & INTERACTIONS ────────────────────────────────── */
+
+.nf-form-reveal {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: nfFadeUp var(--motion-base) ease-out forwards;
+}
+
+.nf-form-seq-1 {
+  animation-delay: 0ms;
+}
+.nf-form-seq-2 {
+  animation-delay: calc(var(--motion-form-stagger) * 1);
+}
+.nf-form-seq-3 {
+  animation-delay: calc(var(--motion-form-stagger) * 2);
+}
+.nf-form-seq-4 {
+  animation-delay: calc(var(--motion-form-stagger) * 3);
+}
+.nf-form-seq-5 {
+  animation-delay: calc(var(--motion-form-stagger) * 4);
+}
+
+/* Inputs: smooth border-color & 3px focus ring fade, no size change */
+.nf-login-split .nf-input {
+  transition: border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
+}
+
+/* Input shake on invalid credentials (3 small steps, 300ms total) */
+.nf-input-shake {
+  animation: nfShake var(--motion-shake) ease-in-out 1;
+}
+
+/* Error banner slide down + fade in (200ms) */
+.nf-error-banner {
+  animation: nfErrorSlideDown var(--motion-error) ease-out forwards;
+}
+
+/* Submit button hover, active press, and bottom indeterminate progress bar */
+.nf-login-submit-btn {
+  position: relative;
+  overflow: hidden;
+  transition: background-color var(--motion-fast) ease, transform var(--motion-fast) ease, opacity var(--motion-fast) ease;
+}
+
+.nf-login-submit-btn:hover:not(:disabled) {
+  background-color: #292724 !important;
+}
+
+.nf-login-submit-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.nf-login-progress-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.nf-login-progress-bar {
+  width: 40%;
+  height: 100%;
+  background: var(--color-page-bg);
+  opacity: 0.75;
+  animation: nfProgressIndeterminate 1.1s ease-in-out infinite;
+}
+
+/* Driver link row hover + arrow shift (LTR & RTL mirrored) */
+.nf-driver-row {
+  transition: background-color var(--motion-fast) ease, border-color var(--motion-fast) ease;
+}
+
+.nf-driver-arrow {
+  transition: transform var(--motion-fast) ease;
+}
+
+.nf-driver-row:hover .nf-driver-arrow {
+  transform: translateX(4px);
+}
+
+[dir='rtl'] .nf-driver-arrow {
+  transform: scaleX(-1);
+}
+
+[dir='rtl'] .nf-driver-row:hover .nf-driver-arrow {
+  transform: translateX(-4px) scaleX(-1);
+}
+
+/* ── KEYFRAMES ────────────────────────────────────────────────────────────── */
+
+@keyframes nfFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes nfFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes nfDrawRoute {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes nfDriftDots {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -100;
+  }
+}
+
+@keyframes nfNodePop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes nfNodePulse {
+  0% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.2);
+  }
+}
+
+@keyframes nfErrorSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes nfShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+  75% {
+    transform: translateX(-3px);
+  }
+}
+
+@keyframes nfProgressIndeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(260%);
+  }
+}
+
+/* ── 4. REDUCED MOTION ACCESSIBILITY ──────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .nf-login-lang-fade,
+  .nf-login-split .nf-input,
+  .nf-login-submit-btn,
+  .nf-driver-row,
+  .nf-driver-arrow {
+    transition-duration: 0.01ms !important;
+  }
+
+  .nf-route-grid,
+  .nf-active-route,
+  .nf-planned-routes,
+  .nf-route-node,
+  .nf-node-label,
+  .nf-panel-reveal,
+  .nf-form-reveal,
+  .nf-error-banner {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+
+  .nf-planned-route-path {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+
+  .nf-node-pulse,
+  .nf-truck-marker {
+    display: none !important;
+    animation: none !important;
+  }
+
+  .nf-input-shake {
+    animation: none !important;
+  }
+}

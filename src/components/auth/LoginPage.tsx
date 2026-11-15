@@ -11,6 +11,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
 import { checkSetupStatus, bootstrapSuperAdmin } from '../../lib/adminUsersApi';
 import { DESIGN_TOKENS } from '../../lib/designTokens';
+import './LoginPage.css';
 
 const T = DESIGN_TOKENS;
 
@@ -80,6 +81,25 @@ export const LoginPage: React.FC = () => {
   // Rate-limiting / brute-force protection
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockoutTimer, setLockoutTimer] = useState(0);
+  const [isLangFading, setIsLangFading] = useState(false);
+  const [shakeCount, setShakeCount] = useState(0);
+
+  useEffect(() => {
+    if (loginError) {
+      setShakeCount((c) => c + 1);
+    }
+  }, [loginError]);
+
+  const handleAnimatedLanguageToggle = () => {
+    if (isLangFading) return;
+    setIsLangFading(true);
+    setTimeout(() => {
+      toggleLanguage();
+      requestAnimationFrame(() => {
+        setIsLangFading(false);
+      });
+    }, 150);
+  };
 
   useEffect(() => {
     if (lockoutTimer <= 0) return;
@@ -112,7 +132,7 @@ export const LoginPage: React.FC = () => {
   return (
     <div
       dir={isRTL ? 'rtl' : 'ltr'}
-      className="nf-login-split"
+      className={`nf-login-split nf-login-lang-fade ${isLangFading ? 'is-fading' : ''}`}
       style={{ fontFamily: fontStack, color: T.colors.ink }}
     >
       {/* ================================================================= */}
@@ -192,7 +212,7 @@ export const LoginPage: React.FC = () => {
           {/* Arabic / English Toggle */}
           <button
             type="button"
-            onClick={toggleLanguage}
+            onClick={handleAnimatedLanguageToggle}
             className="nf-focus-ring"
             style={{
               background: T.colors.surface,
@@ -220,7 +240,7 @@ export const LoginPage: React.FC = () => {
           }}
         >
           {/* Headline & Welcome Subtitle */}
-          <div style={{ marginBottom: 28 }}>
+          <div className="nf-form-reveal nf-form-seq-1" style={{ marginBottom: 28 }}>
             <h1
               style={{
                 fontFamily: isRTL ? T.fonts.arabic : T.fonts.brand,
@@ -318,6 +338,7 @@ export const LoginPage: React.FC = () => {
           {loginError && (
             <div
               role="alert"
+              className="nf-error-banner"
               style={{
                 marginBottom: 18,
                 padding: '11px 14px',
@@ -358,7 +379,7 @@ export const LoginPage: React.FC = () => {
           {/* Email & Password Form */}
           <form onSubmit={handleSubmit} noValidate={false}>
             {/* Email Field */}
-            <div style={{ marginBottom: 18 }}>
+            <div className="nf-form-reveal nf-form-seq-2" style={{ marginBottom: 18 }}>
               <label
                 htmlFor="login-email"
                 style={{
@@ -372,6 +393,7 @@ export const LoginPage: React.FC = () => {
                 {isRTL ? 'البريد الإلكتروني' : 'Email'}
               </label>
               <input
+                key={`email-${shakeCount}`}
                 id="login-email"
                 name="email"
                 type="email"
@@ -381,7 +403,7 @@ export const LoginPage: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@alnoortransport.com"
-                className="nf-input"
+                className={`nf-input ${shakeCount > 0 && loginError ? 'nf-input-shake' : ''}`}
                 style={{
                   fontFamily: T.fonts.ui,
                   textAlign: 'left',
@@ -390,7 +412,7 @@ export const LoginPage: React.FC = () => {
             </div>
 
             {/* Password Field */}
-            <div style={{ marginBottom: 20 }}>
+            <div className="nf-form-reveal nf-form-seq-3" style={{ marginBottom: 20 }}>
               <div
                 style={{
                   display: 'flex',
@@ -432,6 +454,7 @@ export const LoginPage: React.FC = () => {
 
               <div style={{ position: 'relative' }}>
                 <input
+                  key={`pw-${shakeCount}`}
                   id="login-password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
@@ -439,7 +462,7 @@ export const LoginPage: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="nf-input"
+                  className={`nf-input ${shakeCount > 0 && loginError ? 'nf-input-shake' : ''}`}
                   style={{
                     paddingInlineEnd: 64,
                   }}
@@ -504,45 +527,53 @@ export const LoginPage: React.FC = () => {
             )}
 
             {/* Submit Button (48px ink background, paper text) */}
-            <button
-              type="submit"
-              disabled={isLoading || lockoutTimer > 0}
-              className="nf-focus-ring"
-              style={{
-                width: '100%',
-                height: 48,
-                background: T.colors.ink,
-                color: T.colors.pageBg,
-                border: 'none',
-                borderRadius: T.radius,
-                fontSize: 14,
-                fontWeight: 600,
-                fontFamily: fontStack,
-                cursor: isLoading || lockoutTimer > 0 ? 'not-allowed' : 'pointer',
-                opacity: isLoading || lockoutTimer > 0 ? 0.65 : 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-              }}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 size={16} className="animate-spin" />
-                  <span>{isRTL ? 'جاري التحقق...' : 'Signing in...'}</span>
-                </>
-              ) : lockoutTimer > 0 ? (
-                <span>
-                  {isRTL ? `مقفل (${lockoutTimer} ث)` : `Locked (${lockoutTimer}s)`}
-                </span>
-              ) : (
-                <span>{isRTL ? 'تسجيل الدخول' : 'Log in'}</span>
-              )}
-            </button>
+            <div className="nf-form-reveal nf-form-seq-4">
+              <button
+                type="submit"
+                disabled={isLoading || lockoutTimer > 0}
+                className="nf-focus-ring nf-login-submit-btn"
+                style={{
+                  width: '100%',
+                  height: 48,
+                  background: T.colors.ink,
+                  color: T.colors.pageBg,
+                  border: 'none',
+                  borderRadius: T.radius,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  fontFamily: fontStack,
+                  cursor: isLoading || lockoutTimer > 0 ? 'not-allowed' : 'pointer',
+                  opacity: isLoading || lockoutTimer > 0 ? 0.65 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                }}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>{isRTL ? 'جاري التحقق...' : 'Signing in...'}</span>
+                  </>
+                ) : lockoutTimer > 0 ? (
+                  <span>
+                    {isRTL ? `مقفل (${lockoutTimer} ث)` : `Locked (${lockoutTimer}s)`}
+                  </span>
+                ) : (
+                  <span>{isRTL ? 'تسجيل الدخول' : 'Log in'}</span>
+                )}
+                {isLoading && (
+                  <span className="nf-login-progress-track" aria-hidden="true">
+                    <span className="nf-login-progress-bar" />
+                  </span>
+                )}
+              </button>
+            </div>
           </form>
 
           {/* Corporate RBAC Note */}
           <p
+            className="nf-form-reveal nf-form-seq-4"
             style={{
               marginTop: 14,
               marginBottom: 0,
@@ -558,6 +589,7 @@ export const LoginPage: React.FC = () => {
 
           {/* Divider */}
           <hr
+            className="nf-form-reveal nf-form-seq-5"
             style={{
               margin: '24px 0',
               border: 'none',
@@ -568,7 +600,7 @@ export const LoginPage: React.FC = () => {
           {/* Driver Report Bordered Row (No Login Required) */}
           <a
             href="/driver-report"
-            className="nf-focus-ring"
+            className="nf-focus-ring nf-form-reveal nf-form-seq-5 nf-driver-row"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -580,7 +612,6 @@ export const LoginPage: React.FC = () => {
               background: T.colors.pageBg,
               textDecoration: 'none',
               color: T.colors.ink,
-              transition: 'background-color 0.12s ease, border-color 0.12s ease',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = T.colors.rowHover;
@@ -616,10 +647,10 @@ export const LoginPage: React.FC = () => {
             </div>
             <ArrowRight
               size={16}
+              className="nf-driver-arrow"
               style={{
                 color: T.colors.ink,
                 flexShrink: 0,
-                transform: isRTL ? 'scaleX(-1)' : 'none',
               }}
             />
           </a>
@@ -687,7 +718,7 @@ export const LoginPage: React.FC = () => {
           }}
         >
           {/* Orthogonal grid lines */}
-          <g stroke={T.colors.routePanel.grid} strokeWidth="1">
+          <g className="nf-route-grid" stroke={T.colors.routePanel.grid} strokeWidth="1">
             <line x1="130" y1="0" x2="130" y2="900" />
             <line x1="270" y1="0" x2="270" y2="900" />
             <line x1="410" y1="0" x2="410" y2="900" />
@@ -701,78 +732,75 @@ export const LoginPage: React.FC = () => {
             <line x1="0" y1="750" x2="800" y2="750" />
           </g>
 
-          {/* Planned route 1 (upper dotted corridor) */}
-          <path
-            d="M -20 310 C 90 345, 190 310, 270 252 C 390 165, 595 160, 820 385"
-            fill="none"
-            stroke={T.colors.routePanel.plannedRoute}
-            strokeWidth="2"
-            strokeDasharray="4 6"
-          />
+          {/* Planned dotted routes (fade in after active route finishes, then slow drift) */}
+          <g className="nf-planned-routes">
+            {/* Planned route 1 (upper dotted corridor) */}
+            <path
+              className="nf-planned-route-path"
+              d="M -20 310 C 90 345, 190 310, 270 252 C 390 165, 595 160, 820 385"
+              fill="none"
+              stroke={T.colors.routePanel.plannedRoute}
+              strokeWidth="2"
+              strokeDasharray="4 6"
+            />
 
-          {/* Planned route 2 (lower dotted feeder) */}
-          <path
-            d="M 190 920 C 260 760, 315 645, 365 555 C 430 440, 560 400, 820 450"
-            fill="none"
-            stroke={T.colors.routePanel.plannedRoute}
-            strokeWidth="2"
-            strokeDasharray="4 6"
-          />
+            {/* Planned route 2 (lower dotted feeder) */}
+            <path
+              className="nf-planned-route-path"
+              d="M 190 920 C 260 760, 315 645, 365 555 C 430 440, 560 400, 820 450"
+              fill="none"
+              stroke={T.colors.routePanel.plannedRoute}
+              strokeWidth="2"
+              strokeDasharray="4 6"
+            />
+          </g>
 
           {/* Active route (solid bright curve from lower-left to upper-right) */}
           <path
+            id="nf-active-route-path"
+            className="nf-active-route"
+            pathLength={1}
             d="M -20 695 C 120 635, 225 605, 340 595 C 495 582, 565 445, 635 340 C 690 258, 745 185, 820 120"
             fill="none"
             stroke={T.colors.routePanel.activeRoute}
             strokeWidth="2.5"
           />
 
+          {/* Traveling truck marker + faint trailing dot along active route */}
+          <circle
+            className="nf-truck-marker"
+            r="2.5"
+            fill={T.colors.routePanel.activeRoute}
+            opacity="0.4"
+          >
+            <animateMotion dur="14s" begin="0.4s" repeatCount="indefinite" calcMode="linear">
+              <mpath href="#nf-active-route-path" />
+            </animateMotion>
+          </circle>
+          <circle
+            className="nf-truck-marker"
+            r="4"
+            fill={T.colors.routePanel.activeRoute}
+          >
+            <animateMotion dur="14s" repeatCount="indefinite" calcMode="linear">
+              <mpath href="#nf-active-route-path" />
+            </animateMotion>
+          </circle>
+
           {/* Junction Nodes & Plate Labels */}
           <g>
-            {/* KSA-1103 */}
+            {/* LBR-4921 (Node 1) */}
             <circle
-              cx="270"
-              cy="252"
+              className="nf-node-pulse nf-pulse-1"
+              cx="340"
+              cy="595"
               r="6"
-              fill={T.colors.routePanel.bg}
+              fill="none"
               stroke={T.colors.routePanel.activeRoute}
-              strokeWidth="2"
+              strokeWidth="1.5"
             />
-            <text
-              x="284"
-              y="241"
-              fill={T.colors.routePanel.label}
-              fontFamily={T.fonts.mono}
-              fontSize="13"
-              fontWeight="500"
-              letterSpacing="0.04em"
-            >
-              KSA-1103
-            </text>
-
-            {/* BND-8192 */}
             <circle
-              cx="635"
-              cy="340"
-              r="6"
-              fill={T.colors.routePanel.bg}
-              stroke={T.colors.routePanel.activeRoute}
-              strokeWidth="2"
-            />
-            <text
-              x="649"
-              y="328"
-              fill={T.colors.routePanel.label}
-              fontFamily={T.fonts.mono}
-              fontSize="13"
-              fontWeight="500"
-              letterSpacing="0.04em"
-            >
-              BND-8192
-            </text>
-
-            {/* LBR-4921 */}
-            <circle
+              className="nf-route-node nf-node-1"
               cx="340"
               cy="595"
               r="6"
@@ -781,6 +809,7 @@ export const LoginPage: React.FC = () => {
               strokeWidth="2"
             />
             <text
+              className="nf-node-label nf-label-1"
               x="354"
               y="620"
               fill={T.colors.routePanel.label}
@@ -792,8 +821,18 @@ export const LoginPage: React.FC = () => {
               LBR-4921
             </text>
 
-            {/* DMM-9044 */}
+            {/* DMM-9044 (Node 2) */}
             <circle
+              className="nf-node-pulse nf-pulse-2"
+              cx="392"
+              cy="515"
+              r="5.5"
+              fill="none"
+              stroke={T.colors.routePanel.activeRoute}
+              strokeWidth="1.5"
+            />
+            <circle
+              className="nf-route-node nf-node-2"
               cx="392"
               cy="515"
               r="5.5"
@@ -802,6 +841,7 @@ export const LoginPage: React.FC = () => {
               strokeWidth="2"
             />
             <text
+              className="nf-node-label nf-label-2"
               x="406"
               y="520"
               fill={T.colors.routePanel.label}
@@ -811,6 +851,70 @@ export const LoginPage: React.FC = () => {
               letterSpacing="0.04em"
             >
               DMM-9044
+            </text>
+
+            {/* BND-8192 (Node 3) */}
+            <circle
+              className="nf-node-pulse nf-pulse-3"
+              cx="635"
+              cy="340"
+              r="6"
+              fill="none"
+              stroke={T.colors.routePanel.activeRoute}
+              strokeWidth="1.5"
+            />
+            <circle
+              className="nf-route-node nf-node-3"
+              cx="635"
+              cy="340"
+              r="6"
+              fill={T.colors.routePanel.bg}
+              stroke={T.colors.routePanel.activeRoute}
+              strokeWidth="2"
+            />
+            <text
+              className="nf-node-label nf-label-3"
+              x="649"
+              y="328"
+              fill={T.colors.routePanel.label}
+              fontFamily={T.fonts.mono}
+              fontSize="13"
+              fontWeight="500"
+              letterSpacing="0.04em"
+            >
+              BND-8192
+            </text>
+
+            {/* KSA-1103 (Node 4) */}
+            <circle
+              className="nf-node-pulse nf-pulse-4"
+              cx="270"
+              cy="252"
+              r="6"
+              fill="none"
+              stroke={T.colors.routePanel.activeRoute}
+              strokeWidth="1.5"
+            />
+            <circle
+              className="nf-route-node nf-node-4"
+              cx="270"
+              cy="252"
+              r="6"
+              fill={T.colors.routePanel.bg}
+              stroke={T.colors.routePanel.activeRoute}
+              strokeWidth="2"
+            />
+            <text
+              className="nf-node-label nf-label-4"
+              x="284"
+              y="241"
+              fill={T.colors.routePanel.label}
+              fontFamily={T.fonts.mono}
+              fontSize="13"
+              fontWeight="500"
+              letterSpacing="0.04em"
+            >
+              KSA-1103
             </text>
           </g>
         </svg>
@@ -834,11 +938,22 @@ export const LoginPage: React.FC = () => {
               margin: 0,
             }}
           >
-            {isRTL
-              ? 'كل شاحنة. كل رحلة. شاشة واحدة.'
-              : 'Every truck. Every trip. One view.'}
+            {isRTL ? (
+              <>
+                <span className="nf-panel-reveal nf-panel-line-1">كل شاحنة.</span>
+                <span className="nf-panel-reveal nf-panel-line-2">كل رحلة.</span>
+                <span className="nf-panel-reveal nf-panel-line-3">شاشة واحدة.</span>
+              </>
+            ) : (
+              <>
+                <span className="nf-panel-reveal nf-panel-line-1">Every truck.</span>
+                <span className="nf-panel-reveal nf-panel-line-2">Every trip.</span>
+                <span className="nf-panel-reveal nf-panel-line-3">One view.</span>
+              </>
+            )}
           </h2>
           <p
+            className="nf-panel-reveal nf-panel-desc"
             style={{
               marginTop: 14,
               marginBottom: 0,
