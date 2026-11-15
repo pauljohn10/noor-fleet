@@ -15,8 +15,6 @@ import { useI18n } from '../../context/I18nContext';
 import {
   Truck,
   Wrench,
-  ShieldCheck,
-  CheckCircle2,
   FileText,
   Edit3,
   Plus,
@@ -67,7 +65,6 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
   const {
     vehicles,
     workOrders,
-    inspections,
     documents,
     tankerTestRecords,
     updateTrailerTankTestConfig,
@@ -103,8 +100,6 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
 
   const assignedTractor = vehicles.find((v) => v.id === trailer.assigned_tractor_id);
   const trailerWOs = workOrders.filter((w) => w.trailer_id === trailer.id);
-  const _trailerInspections = inspections.filter((i) => i.trailer_id === trailer.id);
-  void _trailerInspections;
   const trailerDocs = documents.filter((d) => d.trailer_id === trailer.id);
 
   // All tank test records for this tanker trailer (already sorted latest-first by test_date DESC, created_at DESC)
@@ -206,19 +201,6 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
     }
   };
 
-  const trailerChecklist = [
-    { name: 'Hydrostatic Tank Shell & Baffles', status: 'PASS', lastChecked: '2026-08-20' },
-    { name: 'API Bottom Discharge Valves (4-Inch)', status: 'PASS', lastChecked: '2026-09-02' },
-    { name: 'Vapor Recovery Line & Pressure Relief Valve', status: 'PASS', lastChecked: '2026-09-02' },
-    { name: 'Pneumatic Emergency Foot Valves', status: 'PASS', lastChecked: '2026-09-02' },
-    { name: 'Static Grounding Reel & Cable Clamp', status: 'PASS', lastChecked: '2026-09-02' },
-    { name: 'Trailer Kingpin & Coupling Mounting', status: 'PASS', lastChecked: '2026-08-15' },
-    { name: 'Dual-Line Pneumatic ABS Brake System', status: 'PASS', lastChecked: '2026-08-15' },
-    { name: 'Heavy Air Suspension Bellows', status: 'PASS', lastChecked: '2026-08-15' },
-    { name: 'Rear LED Hazard & Clearance Lights', status: 'PASS', lastChecked: '2026-09-02' },
-    { name: 'Fire Extinguisher Box & Chemical Spill Kit', status: 'PASS', lastChecked: '2026-09-02' },
-  ];
-
   const tabItems = [
     { id: 'overview', label: t('Overview & Specs'), icon: <Truck className="w-4 h-4" /> },
     {
@@ -227,7 +209,6 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
       icon: <FlaskConical className="w-4 h-4" />,
       badge: trailerTestRecords.length,
     },
-    { id: 'safety', label: t('Tanker Safety Check'), icon: <ShieldCheck className="w-4 h-4" /> },
     { id: 'jobs', label: t('Work Orders'), icon: <Wrench className="w-4 h-4" />, badge: trailerWOs.length },
     {
       id: 'documents',
@@ -830,48 +811,6 @@ export const TrailerDetailDrawer: React.FC<TrailerDetailDrawerProps> = ({
                   </div>
                 );
               })}
-            </div>
-          </div>
-        )}
-
-        {/* Tab 2: Tanker Safety Check */}
-        {activeTab === 'safety' && (
-          <div className="space-y-3 text-xs">
-            <p className="text-xs mb-2" style={{ color: 'var(--color-text-muted)' }}>
-              {t('Mandatory Saudi Civil Defense & Aramco Terminal Safety Checks:')}
-            </p>
-            <div className="grid grid-cols-1 gap-2">
-              {trailerChecklist.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="p-3 flex items-center justify-between"
-                  style={{
-                    background: 'var(--color-surface)',
-                    border: '1px solid var(--color-border)',
-                    borderInlineStart: `3px solid ${EDITORIAL_STATUS.green.stripe}`,
-                    borderRadius: 'var(--radius-sm)',
-                  }}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <CheckCircle2
-                      className="w-4 h-4 shrink-0"
-                      style={{ color: EDITORIAL_STATUS.green.text }}
-                    />
-                    <div>
-                      <p className="font-semibold" style={{ color: 'var(--color-ink)' }}>
-                        {t(item.name)}
-                      </p>
-                      <p className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
-                        {t('Last Certified')}:{' '}
-                        <span style={{ fontFamily: 'var(--font-mono)' }} dir="ltr">
-                          {item.lastChecked}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant="success">{item.status}</Badge>
-                </div>
-              ))}
             </div>
           </div>
         )}
