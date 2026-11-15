@@ -80,7 +80,7 @@ const NAV_GROUPS: NavGroup[] = [
     title: 'Operations',
     titleAr: 'العمليات',
     items: [
-      { key: 'inspections',  label: 'Driver Reports Inbox',  labelAr: 'صندوق تقارير السائقين' },
+      { key: 'inspections', label: 'Driver Reports Inbox', labelAr: 'صندوق تقارير السائقين' },
       { key: 'statusMatrix', label: 'Vehicle Status Matrix', labelAr: 'مصفوفة حالة المركبات' },
     ],
   },

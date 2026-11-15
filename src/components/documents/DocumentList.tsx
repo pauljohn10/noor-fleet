@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
-import { Edit3, Trash2, Eye } from 'lucide-react';
+import { Edit3, Trash2, Eye, Download, FileText } from 'lucide-react';
 import { useFleet } from '../../context/FleetContext';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
 import { VehicleDocument } from '../../types';
 import { DocumentFormModal, COMMON_DOCUMENT_TYPES } from './DocumentFormModal';
+import { DocumentAttachmentPreviewModal } from './DocumentAttachmentPreviewModal';
+import {
+  downloadAttachment,
+  getReadableAttachmentFileName,
+} from '../../lib/attachmentUtils';
 import { exportToExcel, exportToPDFReport } from '../../lib/exportUtils';
 import { DESIGN_TOKENS } from '../../lib/designTokens';
 import {
@@ -33,6 +38,7 @@ export const DocumentList: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingDoc, setEditingDoc] = useState<VehicleDocument | null>(null);
   const [isViewOnly, setIsViewOnly] = useState<boolean>(false);
+  const [previewDoc, setPreviewDoc] = useState<VehicleDocument | null>(null);
 
   const [search, setSearch] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<string>('ALL');
@@ -339,6 +345,7 @@ export const DocumentList: React.FC = () => {
           { label: isRTL ? 'رقم الوثيقة' : 'Document #', align: 'start' },
           { label: isRTL ? 'جهة الإصدار' : 'Authority', align: 'start' },
           { label: isRTL ? 'تاريخ الانتهاء' : 'Expiry date', align: 'start' },
+          { label: isRTL ? 'المرفق' : 'Attachment', align: 'start' },
           { label: isRTL ? 'الحالة' : 'Status', align: 'start' },
         ]}
         isEmpty={pagedDocuments.length === 0}
@@ -390,6 +397,29 @@ export const DocumentList: React.FC = () => {
               onClick={() => (canManage ? handleOpenEdit(d) : handleOpenView(d))}
               actions={
                 <>
+                  {d.attachment_url && (
+                    <>
+                      <RowAction
+                        icon={<Eye size={14} />}
+                        title={t('Preview Scan')}
+                        onClick={() => setPreviewDoc(d)}
+                      />
+                      <RowAction
+                        icon={<Download size={14} />}
+                        title={t('Download')}
+                        onClick={() =>
+                          downloadAttachment(
+                            d.attachment_url,
+                            getReadableAttachmentFileName(
+                              d.attachment_url,
+                              d.document_number,
+                              d.document_type
+                            )
+                          )
+                        }
+                      />
+                    </>
+                  )}
                   {canManage ? (
                     <RowAction
                       icon={<Edit3 size={14} />}
@@ -514,6 +544,70 @@ export const DocumentList: React.FC = () => {
                 )}
               </td>
 
+              <td
+                style={{ padding: '14px 16px', verticalAlign: 'middle' }}
+                onClick={e => e.stopPropagation()}
+              >
+                {d.attachment_url ? (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewDoc(d)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        padding: '4px 9px',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        borderRadius: 4,
+                        border: '1px solid var(--color-input-border)',
+                        background: 'var(--color-surface)',
+                        color: 'var(--color-brand-accent)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <FileText size={13} />
+                      <span>{t('Preview')}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        downloadAttachment(
+                          d.attachment_url,
+                          getReadableAttachmentFileName(
+                            d.attachment_url,
+                            d.document_number,
+                            d.document_type
+                          )
+                        )
+                      }
+                      title={t('Download')}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: '4px 8px',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        borderRadius: 4,
+                        border: '1px solid var(--color-input-border)',
+                        background: 'var(--color-surface)',
+                        color: 'var(--color-ink)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <Download size={12} />
+                      <span>{t('Download')}</span>
+                    </button>
+                  </div>
+                ) : (
+                  <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+                    {isRTL ? 'لا يوجد مرفق' : 'No file'}
+                  </span>
+                )}
+              </td>
+
               <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
                 <StatusText label={statusLabel} color={textColor} />
               </td>
@@ -544,6 +638,25 @@ export const DocumentList: React.FC = () => {
         initialDoc={editingDoc}
         isReadOnly={isViewOnly}
       />
+
+      {previewDoc && previewDoc.attachment_url && (
+        <DocumentAttachmentPreviewModal
+          isOpen={Boolean(previewDoc)}
+          onClose={() => setPreviewDoc(null)}
+          attachmentUrl={previewDoc.attachment_url}
+          documentNumber={previewDoc.document_number}
+          documentType={previewDoc.document_type}
+          assetLabel={(() => {
+            const veh = vehicles.find(v => v.id === previewDoc.vehicle_id);
+            if (veh) return `${veh.vehicle_id} · ${veh.plate_number}`;
+            const trl = trailers.find(tr => tr.id === previewDoc.trailer_id);
+            if (trl) return `${trl.trailer_id} · ${trl.plate_number}`;
+            return t('Fleet Master Policy');
+          })()}
+          issueDate={previewDoc.issue_date}
+          expiryDate={previewDoc.expiry_date}
+        />
+      )}
     </PageContainer>
   );
 };

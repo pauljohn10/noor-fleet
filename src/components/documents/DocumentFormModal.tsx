@@ -16,12 +16,23 @@ import {
   Loader2,
   Clock,
   ShieldCheck,
+  Eye,
+  Download,
 } from 'lucide-react';
 import {
   EDITORIAL_STATUS,
   PrimaryButton,
   SecondaryButton,
 } from '../common/EditorialUI';
+import {
+  createRenderablePreviewUrl,
+  detectAttachmentKind,
+  downloadAttachment,
+  getReadableAttachmentFileName,
+  openAttachmentInNewTab,
+  uploadDocumentAttachment,
+} from '../../lib/attachmentUtils';
+import { DocumentAttachmentPreviewModal } from './DocumentAttachmentPreviewModal';
 
 export const COMMON_DOCUMENT_TYPES = [
   'Vehicle Registration (Istimara)',
@@ -102,6 +113,9 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
   const [selectedTrailerId, setSelectedTrailerId] = useState<string>('');
   const [attachmentUrl, setAttachmentUrl] = useState<string>('');
   const [attachmentName, setAttachmentName] = useState<string>('');
+  const [inlinePreviewUrl, setInlinePreviewUrl] = useState<string | null>(null);
+  const [isUploadingFile, setIsUploadingFile] = useState<boolean>(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState<boolean>(false);
   const [notes, setNotes] = useState<string>('');
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -129,7 +143,15 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
         setSelectedTrailerId('');
       }
       setAttachmentUrl(initialDoc.attachment_url || '');
-      setAttachmentName(initialDoc.attachment_url ? t('Attached Document File') : '');
+      setAttachmentName(
+        initialDoc.attachment_url
+          ? getReadableAttachmentFileName(
+              initialDoc.attachment_url,
+              initialDoc.document_number,
+              initialDoc.document_type
+            )
+          : ''
+      );
       setNotes(initialDoc.notes || '');
     } else if (isOpen) {
       setDocType(COMMON_DOCUMENT_TYPES[0]);
@@ -161,6 +183,33 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
     setErrorMessage(null);
   }, [initialDoc, preselectedVehicleId, preselectedTrailerId, isOpen, vehicles]);
 
+  useEffect(() => {
+    if (!isOpen || !attachmentUrl) {
+      setInlinePreviewUrl(null);
+      return;
+    }
+    let active = true;
+    let revokeFn: (() => void) | null = null;
+
+    createRenderablePreviewUrl(attachmentUrl)
+      .then(({ previewUrl, revoke }) => {
+        if (!active) {
+          revoke();
+          return;
+        }
+        revokeFn = revoke;
+        setInlinePreviewUrl(previewUrl);
+      })
+      .catch(() => {
+        if (active) setInlinePreviewUrl(attachmentUrl);
+      });
+
+    return () => {
+      active = false;
+      if (revokeFn) revokeFn();
+    };
+  }, [isOpen, attachmentUrl]);
+
   const handleQuickRenew = (years: number) => {
     if (effectiveReadOnly) return;
     const parsed = expiryDate ? new Date(expiryDate) : new Date();
@@ -179,7 +228,7 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
     return Math.ceil((exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (effectiveReadOnly) return;
     const file = e.target.files?.[0];
     if (!file) return;
@@ -187,19 +236,29 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
       setErrorMessage(t('Uploaded attachment exceeds 10 MB limit.'));
       return;
     }
+    setErrorMessage(null);
     setAttachmentName(file.name);
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      if (typeof ev.target?.result === 'string') {
-        setAttachmentUrl(ev.target.result);
-      }
-    };
-    reader.readAsDataURL(file);
+    setIsUploadingFile(true);
+    try {
+      const uploaded = await uploadDocumentAttachment(file, {
+        documentNumber: docNumber.trim().toUpperCase() || initialDoc?.document_number,
+        documentType: docType,
+        vehicleId: unitCategory === 'VEHICLE' ? selectedVehicleId : undefined,
+        trailerId: unitCategory === 'TRAILER' ? selectedTrailerId : undefined,
+      });
+      setAttachmentUrl(uploaded.url);
+      setAttachmentName(uploaded.fileName || file.name);
+    } catch (err: any) {
+      setErrorMessage(err?.message || t('Failed to process uploaded document attachment.'));
+    } finally {
+      setIsUploadingFile(false);
+      e.target.value = '';
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (effectiveReadOnly) return;
+    if (effectiveReadOnly || isUploadingFile) return;
     setErrorMessage(null);
 
     const cleanNumber = docNumber.trim().toUpperCase();
@@ -223,6 +282,8 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
     setIsSaving(true);
     try {
       const performedBy = currentProfile?.full_name || 'Fleet Manager';
+      const preservedAttachmentUrl =
+        attachmentUrl.trim() || initialDoc?.attachment_url?.trim() || undefined;
       const payload = {
         document_type: docType,
         document_number: cleanNumber,
@@ -231,7 +292,7 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
         issuing_authority: issuingAuthority.trim() || undefined,
         vehicle_id: unitCategory === 'VEHICLE' ? selectedVehicleId : undefined,
         trailer_id: unitCategory === 'TRAILER' ? selectedTrailerId : undefined,
-        attachment_url: attachmentUrl.trim() || undefined,
+        attachment_url: preservedAttachmentUrl,
         notes: notes.trim() || undefined,
         updated_by: performedBy,
       };
@@ -789,11 +850,17 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
                       color: 'var(--color-brand-accent)',
                     }}
                   >
-                    <Upload className="w-4 h-4" />
+                    {isUploadingFile ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4" />
+                    )}
                   </div>
                   <div>
                     <div className="text-xs font-semibold" style={{ color: 'var(--color-ink)' }}>
-                      {attachmentName || t('Upload scanned PDF or certificate photo')}
+                      {isUploadingFile
+                        ? t('Uploading document scan to storage...')
+                        : attachmentName || t('Upload scanned PDF or certificate photo')}
                     </div>
                     <div className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
                       {t('PDF, JPG, PNG up to 10 MB')}
@@ -809,11 +876,16 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
                     color: 'var(--color-ink)',
                   }}
                 >
-                  {attachmentUrl ? t('Replace File') : t('Choose File')}
+                  {isUploadingFile
+                    ? t('Uploading...')
+                    : attachmentUrl
+                    ? t('Replace File')
+                    : t('Choose File')}
                 </span>
                 <input
                   type="file"
                   accept="image/*,.pdf"
+                  disabled={isUploadingFile}
                   onChange={handleFileUpload}
                   className="hidden"
                 />
@@ -822,29 +894,135 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
 
             {attachmentUrl && (
               <div
-                className="p-2.5 flex items-center justify-between gap-2"
                 style={{
                   background: 'var(--color-page-bg)',
                   border: '1px solid var(--color-border)',
                   borderRadius: 'var(--radius-sm)',
+                  overflow: 'hidden',
                 }}
               >
-                <span
-                  className="text-xs font-medium truncate"
-                  style={{ color: 'var(--color-text-secondary)' }}
+                <div
+                  className="p-2.5 flex flex-wrap items-center justify-between gap-2"
+                  style={{
+                    borderBottom: inlinePreviewUrl ? '1px solid var(--color-border)' : 'none',
+                  }}
                 >
-                  {attachmentName || t('Document scan attached')}
-                </span>
-                <a
-                  href={attachmentUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-semibold shrink-0 hover:underline"
-                  style={{ color: 'var(--color-brand-accent)' }}
-                >
-                  <span>{t('View Scan')}</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileText
+                      className="w-4 h-4 shrink-0"
+                      style={{ color: 'var(--color-brand-accent)' }}
+                    />
+                    <span
+                      className="text-xs font-semibold truncate"
+                      style={{ color: 'var(--color-ink)' }}
+                    >
+                      {attachmentName ||
+                        getReadableAttachmentFileName(attachmentUrl, docNumber, docType)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setIsPreviewModalOpen(true)}
+                      className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 transition-colors"
+                      style={{
+                        background: 'var(--color-surface)',
+                        border: '1px solid var(--color-input-border)',
+                        borderRadius: 'var(--radius-sm)',
+                        color: 'var(--color-ink)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>{t('Preview')}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openAttachmentInNewTab(attachmentUrl)}
+                      className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 transition-colors"
+                      style={{
+                        background: 'var(--color-surface)',
+                        border: '1px solid var(--color-input-border)',
+                        borderRadius: 'var(--radius-sm)',
+                        color: 'var(--color-brand-accent)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>{t('View Scan')}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        downloadAttachment(
+                          attachmentUrl,
+                          attachmentName ||
+                            getReadableAttachmentFileName(attachmentUrl, docNumber, docType)
+                        )
+                      }
+                      className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 transition-colors"
+                      style={{
+                        background: 'var(--color-ink)',
+                        border: '1px solid var(--color-ink)',
+                        borderRadius: 'var(--radius-sm)',
+                        color: 'var(--color-surface)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>{t('Download')}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Inline Visual Preview for Images and PDFs */}
+                {inlinePreviewUrl && (
+                  <div
+                    className="p-2.5"
+                    style={{
+                      background: 'var(--color-surface)',
+                    }}
+                  >
+                    {detectAttachmentKind(attachmentUrl, attachmentName) === 'image' ? (
+                      <div
+                        onClick={() => setIsPreviewModalOpen(true)}
+                        style={{
+                          cursor: 'pointer',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          backgroundColor: '#F4F1EA',
+                          border: '1px solid var(--color-border)',
+                          borderRadius: 'var(--radius-sm)',
+                          padding: '0.5rem',
+                        }}
+                        title={t('Click to enlarge preview')}
+                      >
+                        <img
+                          src={inlinePreviewUrl}
+                          alt={attachmentName || t('Attached Document File')}
+                          style={{
+                            maxHeight: '220px',
+                            maxWidth: '100%',
+                            objectFit: 'contain',
+                            borderRadius: '2px',
+                          }}
+                        />
+                      </div>
+                    ) : detectAttachmentKind(attachmentUrl, attachmentName) === 'pdf' ? (
+                      <iframe
+                        src={inlinePreviewUrl}
+                        title={attachmentName || 'PDF Preview'}
+                        style={{
+                          width: '100%',
+                          height: '240px',
+                          border: '1px solid var(--color-border)',
+                          borderRadius: 'var(--radius-sm)',
+                          backgroundColor: '#FFFDF8',
+                        }}
+                      />
+                    ) : null}
+                  </div>
+                )}
               </div>
             )}
 
@@ -901,6 +1079,32 @@ export const DocumentFormModal: React.FC<DocumentFormModalProps> = ({
           </div>
         )}
       </form>
+
+      {attachmentUrl && (
+        <DocumentAttachmentPreviewModal
+          isOpen={isPreviewModalOpen}
+          onClose={() => setIsPreviewModalOpen(false)}
+          attachmentUrl={attachmentUrl}
+          documentNumber={docNumber || initialDoc?.document_number}
+          documentType={docType || initialDoc?.document_type}
+          assetLabel={
+            unitCategory === 'VEHICLE'
+              ? (() => {
+                  const v = vehicles.find((x) => x.id === selectedVehicleId);
+                  return v ? `${v.vehicle_id} · ${v.plate_number}` : undefined;
+                })()
+              : unitCategory === 'TRAILER'
+              ? (() => {
+                  const tr = trailers.find((x) => x.id === selectedTrailerId);
+                  return tr ? `${tr.trailer_id} · ${tr.plate_number}` : undefined;
+                })()
+              : t('General Fleet')
+          }
+          issueDate={issueDate}
+          expiryDate={expiryDate}
+          fileName={attachmentName}
+        />
+      )}
     </Modal>
   );
 };

@@ -212,8 +212,8 @@ export const InspectionFormMobile: React.FC<InspectionFormMobileProps> = ({ onCo
                   ? EDITORIAL_STATUS.red.stripe
                   : EDITORIAL_STATUS.amber.stripe
                 : item.result === 'PASS'
-                ? EDITORIAL_STATUS.green.stripe
-                : EDITORIAL_STATUS.muted.stripe;
+                  ? EDITORIAL_STATUS.green.stripe
+                  : EDITORIAL_STATUS.muted.stripe;
 
             return (
               <div
@@ -309,10 +309,10 @@ export const InspectionFormMobile: React.FC<InspectionFormMobileProps> = ({ onCo
                             sev === 'CRITICAL'
                               ? EDITORIAL_STATUS.red.stripe
                               : sev === 'HIGH'
-                              ? EDITORIAL_STATUS.amber.stripe
-                              : sev === 'MEDIUM'
-                              ? EDITORIAL_STATUS.blue.stripe
-                              : EDITORIAL_STATUS.muted.stripe;
+                                ? EDITORIAL_STATUS.amber.stripe
+                                : sev === 'MEDIUM'
+                                  ? EDITORIAL_STATUS.blue.stripe
+                                  : EDITORIAL_STATUS.muted.stripe;
                           return (
                             <button
                               key={sev}

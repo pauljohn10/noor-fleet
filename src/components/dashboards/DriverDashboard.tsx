@@ -189,8 +189,8 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
               myAssignedTractor?.status === 'AVAILABLE'
                 ? 'success'
                 : myAssignedTractor?.status === 'REQUIRES INSPECTION'
-                ? 'amber'
-                : 'danger'
+                  ? 'amber'
+                  : 'danger'
             }
           >
             {myAssignedTractor?.status || 'AVAILABLE'}
@@ -488,10 +488,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
                 rep.severity === 'CRITICAL'
                   ? EDITORIAL_STATUS.red.stripe
                   : rep.severity === 'HIGH'
-                  ? EDITORIAL_STATUS.amber.stripe
-                  : rep.status === 'RESOLVED'
-                  ? EDITORIAL_STATUS.green.stripe
-                  : EDITORIAL_STATUS.blue.stripe
+                    ? EDITORIAL_STATUS.amber.stripe
+                    : rep.status === 'RESOLVED'
+                      ? EDITORIAL_STATUS.green.stripe
+                      : EDITORIAL_STATUS.blue.stripe
               }
             >
               <td className="py-3 pe-3 whitespace-nowrap">
@@ -676,10 +676,10 @@ export const DriverDashboard: React.FC<DriverDashboardProps> = ({ onNavigateTab 
                     s === 'CRITICAL'
                       ? EDITORIAL_STATUS.red.stripe
                       : s === 'HIGH'
-                      ? EDITORIAL_STATUS.amber.stripe
-                      : s === 'MEDIUM'
-                      ? EDITORIAL_STATUS.blue.stripe
-                      : EDITORIAL_STATUS.muted.stripe;
+                        ? EDITORIAL_STATUS.amber.stripe
+                        : s === 'MEDIUM'
+                          ? EDITORIAL_STATUS.blue.stripe
+                          : EDITORIAL_STATUS.muted.stripe;
                   return (
                     <button
                       key={s}

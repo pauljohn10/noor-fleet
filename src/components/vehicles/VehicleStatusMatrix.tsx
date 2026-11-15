@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
 import { Vehicle, VehicleStatus } from '../../types';
 import { VehicleFormModal } from './VehicleFormModal';
-import { Modal } from '../common/Modal';
+import { VehicleDetailDrawer } from './VehicleDetailDrawer';
 import { exportToExcel, exportToPDFReport } from '../../lib/exportUtils';
 import {
   PageContainer,
@@ -17,7 +17,6 @@ import {
   StatusText,
   TableFooter,
   PrimaryButton,
-  SecondaryButton,
   GhostButton,
   RowAction,
   EditorialSelect,
@@ -416,53 +415,11 @@ export const VehicleStatusMatrix: React.FC = () => {
         />
       )}
 
-      {selectedVehicle && (
-        <Modal
-          isOpen={!!selectedVehicle}
-          onClose={() => setSelectedVehicle(undefined)}
-          title={`${selectedVehicle.vehicle_id} — ${selectedVehicle.plate_number}`}
-          subtitle={`${selectedVehicle.make} ${selectedVehicle.model} (${selectedVehicle.year})`}
-          maxWidth="lg"
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, fontSize: 13 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div>
-                <div style={{ fontSize: 11.5, color: 'var(--color-text-muted)' }}>
-                  {isRTL ? 'رقم الأسطول' : 'Fleet number'}
-                </div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--color-ink)', marginTop: 2 }}>
-                  {selectedVehicle.fleet_number}
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: 11.5, color: 'var(--color-text-muted)' }}>
-                  {isRTL ? 'عداد المسافة' : 'Odometer'}
-                </div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--color-ink)', marginTop: 2 }}>
-                  {(selectedVehicle.current_mileage || 0).toLocaleString()} {isRTL ? 'كم' : 'km'}
-                </div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: 12, borderTop: '1px solid var(--color-border)' }}>
-              <SecondaryButton onClick={() => setSelectedVehicle(undefined)}>
-                {isRTL ? 'إغلاق' : 'Close'}
-              </SecondaryButton>
-              {canEdit && (
-                <PrimaryButton
-                  onClick={() => {
-                    const veh = selectedVehicle;
-                    setSelectedVehicle(undefined);
-                    setEditingVehicle(veh);
-                    setIsFormOpen(true);
-                  }}
-                >
-                  {isRTL ? 'تعديل المركبة' : 'Edit vehicle'}
-                </PrimaryButton>
-              )}
-            </div>
-          </div>
-        </Modal>
-      )}
+      <VehicleDetailDrawer
+        vehicle={selectedVehicle || null}
+        isOpen={!!selectedVehicle}
+        onClose={() => setSelectedVehicle(undefined)}
+      />
     </PageContainer>
   );
 };

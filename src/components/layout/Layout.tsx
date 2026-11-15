@@ -20,17 +20,17 @@ export const Layout: React.FC<LayoutProps> = ({ activeTab, onSelectTab, children
     <div className="flex h-screen w-screen overflow-hidden" style={{ background: 'var(--color-page-bg)', color: 'var(--color-ink)', fontFamily: isRTL ? 'var(--font-arabic)' : 'var(--font-ui)', fontSize: 14 }}>
       {/* Desktop Sidebar */}
       <div className="hidden md:flex shrink-0">
-        <Sidebar 
-          activeTab={activeTab} 
-          onSelectTab={onSelectTab} 
-          collapsed={sidebarCollapsed} 
+        <Sidebar
+          activeTab={activeTab}
+          onSelectTab={onSelectTab}
+          collapsed={sidebarCollapsed}
         />
       </div>
 
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col overflow-hidden min-w-0">
-        <Header 
-          activeTab={activeTab} 
+        <Header
+          activeTab={activeTab}
           onOpenSearch={() => setIsSearchOpen(true)}
           onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
         />

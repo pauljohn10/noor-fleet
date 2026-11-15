@@ -17,8 +17,14 @@ import {
   Plus,
   Clock,
   Eye,
+  Download,
 } from 'lucide-react';
 import { DocumentFormModal } from '../documents/DocumentFormModal';
+import { DocumentAttachmentPreviewModal } from '../documents/DocumentAttachmentPreviewModal';
+import {
+  downloadAttachment,
+  getReadableAttachmentFileName,
+} from '../../lib/attachmentUtils';
 import {
   EDITORIAL_STATUS,
   PlateChip,
@@ -46,6 +52,7 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
   const [selectedDocForEdit, setSelectedDocForEdit] = useState<VehicleDocument | null>(null);
   const [isViewOnlyDoc, setIsViewOnlyDoc] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<VehicleDocument | null>(null);
 
   if (!vehicle) return null;
 
@@ -698,7 +705,36 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0">
+                    <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 flex-wrap">
+                      {d.attachment_url && (
+                        <>
+                          <SecondaryButton
+                            type="button"
+                            onClick={() => setPreviewDoc(d)}
+                            style={{ height: 32, fontSize: 12 }}
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>{t('Preview')}</span>
+                          </SecondaryButton>
+                          <SecondaryButton
+                            type="button"
+                            onClick={() =>
+                              downloadAttachment(
+                                d.attachment_url,
+                                getReadableAttachmentFileName(
+                                  d.attachment_url,
+                                  d.document_number,
+                                  d.document_type
+                                )
+                              )
+                            }
+                            style={{ height: 32, fontSize: 12 }}
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            <span>{t('Download')}</span>
+                          </SecondaryButton>
+                        </>
+                      )}
                       {canManage ? (
                         <SecondaryButton
                           type="button"
@@ -746,6 +782,19 @@ export const VehicleDetailDrawer: React.FC<VehicleDetailDrawerProps> = ({
         isReadOnly={isViewOnlyDoc}
         defaultVehicleId={vehicle.id}
       />
+
+      {previewDoc && previewDoc.attachment_url && (
+        <DocumentAttachmentPreviewModal
+          isOpen={Boolean(previewDoc)}
+          onClose={() => setPreviewDoc(null)}
+          attachmentUrl={previewDoc.attachment_url}
+          documentNumber={previewDoc.document_number}
+          documentType={previewDoc.document_type}
+          assetLabel={`${vehicle.vehicle_id} · ${vehicle.plate_number}`}
+          issueDate={previewDoc.issue_date}
+          expiryDate={previewDoc.expiry_date}
+        />
+      )}
     </Drawer>
   );
 };

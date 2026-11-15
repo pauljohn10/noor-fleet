@@ -171,8 +171,8 @@ export const WorkshopSupervisorDashboard: React.FC<WorkshopSupervisorDashboardPr
               stage.status === 'RELEASED'
                 ? EDITORIAL_STATUS.green.stripe
                 : stage.status === 'WAITING_FOR_PARTS'
-                ? EDITORIAL_STATUS.amber.stripe
-                : EDITORIAL_STATUS.blue.stripe;
+                  ? EDITORIAL_STATUS.amber.stripe
+                  : EDITORIAL_STATUS.blue.stripe;
             return (
               <div
                 key={stage.status}

@@ -244,188 +244,188 @@ export const JobCardFormModal: React.FC<JobCardFormModalProps> = ({ isOpen, onCl
                                 ))}
                             </select>
                         </div>
-          </div>
-        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label
+                        className="text-xs font-semibold block mb-1"
+                        style={{ color: 'var(--color-ink)' }}
+                    >
+                        {t('Reporting Driver')}
+                    </label>
+                    <select
+                        value={driverId}
+                        onChange={(e) => setDriverId(e.target.value)}
+                        className="nf-field w-full"
+                    >
+                        <option value="">{t('-- Select Driver --')}</option>
+                        {drivers.map((d) => (
+                            <option key={d.id} value={d.id}>
+                                {d.full_name} ({d.employee_id})
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Section 2: Priority & Mechanic Allocation */}
+                <div
+                    className="p-4 space-y-3"
+                    style={{
+                        background: 'var(--color-surface)',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: 'var(--radius-sm)',
+                    }}
+                >
+                    <div
+                        className="flex items-center justify-between pb-2"
+                        style={{ borderBottom: '1px solid var(--color-row-divider)' }}
+                    >
+                        <div
+                            className="flex items-center gap-2 text-xs font-semibold"
+                            style={{ color: 'var(--color-ink)' }}
+                        >
+                            <span
+                                className="w-5 h-5 flex items-center justify-center font-bold text-[11px]"
+                                style={{
+                                    background: 'var(--color-page-bg)',
+                                    border: '1px solid var(--color-border)',
+                                    borderRadius: 'var(--radius-sm)',
+                                    fontFamily: 'var(--font-mono)',
+                                }}
+                            >
+                                2
+                            </span>
+                            <Calendar className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
+                            <span>{t('Priority & Repair Scheduling')}</span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                        <div>
+                            <label
+                                className="text-xs font-semibold block mb-1"
+                                style={{ color: 'var(--color-ink)' }}
+                            >
+                                {t('Repair Urgency / Priority')}{' '}
+                                <span style={{ color: EDITORIAL_STATUS.red.text }}>*</span>
+                            </label>
+                            <select
+                                value={priority}
+                                onChange={(e) => setPriority(e.target.value as WOPriority)}
+                                className="nf-field w-full font-semibold"
+                                style={{
+                                    color:
+                                        priority === 'CRITICAL'
+                                            ? EDITORIAL_STATUS.red.text
+                                            : priority === 'HIGH'
+                                                ? EDITORIAL_STATUS.amber.text
+                                                : priority === 'MEDIUM'
+                                                    ? EDITORIAL_STATUS.blue.text
+                                                    : 'var(--color-ink)',
+                                }}
+                            >
+                                <option value="LOW">{t('LOW (Scheduled Routine)')}</option>
+                                <option value="MEDIUM">{t('MEDIUM (Standard Maintenance)')}</option>
+                                <option value="HIGH">{t('HIGH (Urgent Dispatch Impact)')}</option>
+                                <option value="CRITICAL">{t('CRITICAL (Aramco Safety Emergency)')}</option>
+                            </select>
+                        </div>
 
                         <div>
                             <label
                                 className="text-xs font-semibold block mb-1"
                                 style={{ color: 'var(--color-ink)' }}
                             >
-                                {t('Reporting Driver')}
+                                {t('Lead Repair Technician')}
                             </label>
                             <select
-                                value={driverId}
-                                onChange={(e) => setDriverId(e.target.value)}
+                                value={assignedTechId}
+                                onChange={(e) => setAssignedTechId(e.target.value)}
                                 className="nf-field w-full"
                             >
-                                <option value="">{t('-- Select Driver --')}</option>
-                                {drivers.map((d) => (
-                                    <option key={d.id} value={d.id}>
-                                        {d.full_name} ({d.employee_id})
+                                <option value="">{t('-- Assign Mechanic Later --')}</option>
+                                {technicians.map((tech) => (
+                                    <option key={tech.id} value={tech.id}>
+                                        {tech.full_name} ({tech.specialization})
                                     </option>
                                 ))}
                             </select>
                         </div>
+                    </div>
+                </div>
 
-                        {/* Section 2: Priority & Mechanic Allocation */}
+                <div>
+                    <label
+                        className="text-xs font-semibold block mb-1"
+                        style={{ color: 'var(--color-ink)' }}
+                    >
+                        {t('Target Completion Date & Time')}
+                    </label>
+                    <input
+                        type="datetime-local"
+                        dir="ltr"
+                        value={estimatedCompletion}
+                        onChange={(e) => setEstimatedCompletion(e.target.value)}
+                        className="nf-field w-full"
+                        style={{ fontFamily: 'var(--font-mono)' }}
+                    />
+                </div>
+
+                {/* Section 3: Breakdown Symptoms & Description */}
+                <div
+                    className="p-4 space-y-3"
+                    style={{
+                        background: 'var(--color-surface)',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: 'var(--radius-sm)',
+                    }}
+                >
+                    <div
+                        className="flex items-center justify-between pb-2"
+                        style={{ borderBottom: '1px solid var(--color-row-divider)' }}
+                    >
                         <div
-                            className="p-4 space-y-3"
-                            style={{
-                                background: 'var(--color-surface)',
-                                border: '1px solid var(--color-border)',
-                                borderRadius: 'var(--radius-sm)',
-                            }}
+                            className="flex items-center gap-2 text-xs font-semibold"
+                            style={{ color: 'var(--color-ink)' }}
                         >
-                            <div
-                                className="flex items-center justify-between pb-2"
-                                style={{ borderBottom: '1px solid var(--color-row-divider)' }}
+                            <span
+                                className="w-5 h-5 flex items-center justify-center font-bold text-[11px]"
+                                style={{
+                                    background: 'var(--color-page-bg)',
+                                    border: '1px solid var(--color-border)',
+                                    borderRadius: 'var(--radius-sm)',
+                                    fontFamily: 'var(--font-mono)',
+                                }}
                             >
-                                <div
-                                    className="flex items-center gap-2 text-xs font-semibold"
-                                    style={{ color: 'var(--color-ink)' }}
-                                >
-                                    <span
-                                        className="w-5 h-5 flex items-center justify-center font-bold text-[11px]"
-                                        style={{
-                                            background: 'var(--color-page-bg)',
-                                            border: '1px solid var(--color-border)',
-                                            borderRadius: 'var(--radius-sm)',
-                                            fontFamily: 'var(--font-mono)',
-                                        }}
-                                    >
-                                        2
-                                    </span>
-                                    <Calendar className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
-                                    <span>{t('Priority & Repair Scheduling')}</span>
-                                </div>
-                            </div>
+                                3
+                            </span>
+                            <AlertCircle className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
+                            <span>{t('Reported Problem Symptoms & Work Scope')}</span>
+                        </div>
+                    </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-                                <div>
-                                    <label
-                                        className="text-xs font-semibold block mb-1"
-                                        style={{ color: 'var(--color-ink)' }}
-                                    >
-                                        {t('Repair Urgency / Priority')}{' '}
-                                        <span style={{ color: EDITORIAL_STATUS.red.text }}>*</span>
-                                    </label>
-                                    <select
-                                        value={priority}
-                                        onChange={(e) => setPriority(e.target.value as WOPriority)}
-                                        className="nf-field w-full font-semibold"
-                                        style={{
-                                            color:
-                                                priority === 'CRITICAL'
-                                                    ? EDITORIAL_STATUS.red.text
-                                                    : priority === 'HIGH'
-                                                        ? EDITORIAL_STATUS.amber.text
-                                                        : priority === 'MEDIUM'
-                                                            ? EDITORIAL_STATUS.blue.text
-                                                            : 'var(--color-ink)',
-                                        }}
-                                    >
-                                        <option value="LOW">{t('LOW (Scheduled Routine)')}</option>
-                                        <option value="MEDIUM">{t('MEDIUM (Standard Maintenance)')}</option>
-                                        <option value="HIGH">{t('HIGH (Urgent Dispatch Impact)')}</option>
-                                        <option value="CRITICAL">{t('CRITICAL (Aramco Safety Emergency)')}</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label
-                                        className="text-xs font-semibold block mb-1"
-                                        style={{ color: 'var(--color-ink)' }}
-                                    >
-                                        {t('Lead Repair Technician')}
-                                    </label>
-                                    <select
-                                        value={assignedTechId}
-                                        onChange={(e) => setAssignedTechId(e.target.value)}
-                                        className="nf-field w-full"
-                                    >
-                                        <option value="">{t('-- Assign Mechanic Later --')}</option>
-                                        {technicians.map((tech) => (
-                                            <option key={tech.id} value={tech.id}>
-                                                {tech.full_name} ({tech.specialization})
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-          </div>
-        </div>
-
-                                <div>
-                                    <label
-                                        className="text-xs font-semibold block mb-1"
-                                        style={{ color: 'var(--color-ink)' }}
-                                    >
-                                        {t('Target Completion Date & Time')}
-                                    </label>
-                                    <input
-                                        type="datetime-local"
-                                        dir="ltr"
-                                        value={estimatedCompletion}
-                                        onChange={(e) => setEstimatedCompletion(e.target.value)}
-                                        className="nf-field w-full"
-                                        style={{ fontFamily: 'var(--font-mono)' }}
-                                    />
-                                </div>
-
-                                {/* Section 3: Breakdown Symptoms & Description */}
-                                <div
-                                    className="p-4 space-y-3"
-                                    style={{
-                                        background: 'var(--color-surface)',
-                                        border: '1px solid var(--color-border)',
-                                        borderRadius: 'var(--radius-sm)',
-                                    }}
-                                >
-                                    <div
-                                        className="flex items-center justify-between pb-2"
-                                        style={{ borderBottom: '1px solid var(--color-row-divider)' }}
-                                    >
-                                        <div
-                                            className="flex items-center gap-2 text-xs font-semibold"
-                                            style={{ color: 'var(--color-ink)' }}
-                                        >
-                                            <span
-                                                className="w-5 h-5 flex items-center justify-center font-bold text-[11px]"
-                                                style={{
-                                                    background: 'var(--color-page-bg)',
-                                                    border: '1px solid var(--color-border)',
-                                                    borderRadius: 'var(--radius-sm)',
-                                                    fontFamily: 'var(--font-mono)',
-                                                }}
-                                            >
-                                                3
-                                            </span>
-                                            <AlertCircle className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
-                                            <span>{t('Reported Problem Symptoms & Work Scope')}</span>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label
-                                            className="text-xs font-semibold block mb-1"
-                                            style={{ color: 'var(--color-ink)' }}
-                                        >
-                                            {t('Breakdown Details / Driver Symptoms')}{' '}
-                                            <span style={{ color: EDITORIAL_STATUS.red.text }}>*</span>
-                                        </label>
-                                        <textarea
-                                            required
-                                            rows={3}
-                                            placeholder={t(
-                                                'Describe symptoms clearly: e.g. Air compressor building pressure slowly, weepage at API discharge valve 3, ABS warning light active on dashboard...'
-                                            )}
-                                            value={problemDescription}
-                                            onChange={(e) => setProblemDescription(e.target.value)}
-                                            className="nf-field w-full leading-relaxed resize-none"
-                                        />
-                                    </div>
-                                </div>
-                            </form>
-                        </Modal>
-                        );
+                    <div>
+                        <label
+                            className="text-xs font-semibold block mb-1"
+                            style={{ color: 'var(--color-ink)' }}
+                        >
+                            {t('Breakdown Details / Driver Symptoms')}{' '}
+                            <span style={{ color: EDITORIAL_STATUS.red.text }}>*</span>
+                        </label>
+                        <textarea
+                            required
+                            rows={3}
+                            placeholder={t(
+                                'Describe symptoms clearly: e.g. Air compressor building pressure slowly, weepage at API discharge valve 3, ABS warning light active on dashboard...'
+                            )}
+                            value={problemDescription}
+                            onChange={(e) => setProblemDescription(e.target.value)}
+                            className="nf-field w-full leading-relaxed resize-none"
+                        />
+                    </div>
+                </div>
+            </form>
+        </Modal>
+    );
 };

@@ -5,6 +5,7 @@
  */
 
 import { supabase, isSupabaseConfigured } from './supabase';
+import { resolveAttachmentUrl } from './attachmentUtils';
 import { 
   Vehicle, Trailer, Driver, Technician, Part, WorkOrder, 
   MaintenanceSchedule, VehicleInspection, VehicleDocument, 
@@ -724,28 +725,55 @@ export async function fetchVehicleDocuments(): Promise<VehicleDocument[]> {
     console.error('[SupabaseFleet] Error fetching documents:', error.message);
     throw error;
   }
-  return (data || []) as VehicleDocument[];
+  return (data || []).map((doc: any) => ({
+    ...doc,
+    attachment_url: resolveAttachmentUrl(doc.attachment_url) || doc.attachment_url || undefined,
+  })) as VehicleDocument[];
 }
 
 export async function insertVehicleDocument(doc: Omit<VehicleDocument, 'id' | 'created_at'>): Promise<VehicleDocument> {
+  const payload: Record<string, unknown> = { ...doc };
+  if (payload.attachment_url) {
+    payload.attachment_url = resolveAttachmentUrl(String(payload.attachment_url)) || payload.attachment_url;
+  }
   const { data, error } = await supabase
     .from('vehicle_documents')
-    .insert([doc])
+    .insert([payload])
     .select()
     .single();
   if (error) throw error;
-  return data as VehicleDocument;
+  return {
+    ...(data as VehicleDocument),
+    attachment_url: resolveAttachmentUrl(data.attachment_url) || data.attachment_url || undefined,
+  };
 }
 
 export async function updateVehicleDocument(id: string, updates: Partial<VehicleDocument>): Promise<VehicleDocument> {
+  // Never overwrite an existing attachment_url with null/undefined unless explicitly replaced
+  const safeUpdates: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(updates)) {
+    if (key === 'attachment_url') {
+      if (typeof val === 'string' && val.trim().length > 0) {
+        safeUpdates.attachment_url = resolveAttachmentUrl(val.trim()) || val.trim();
+      }
+      continue;
+    }
+    if (val !== undefined) {
+      safeUpdates[key] = val;
+    }
+  }
+
   const { data, error } = await supabase
     .from('vehicle_documents')
-    .update({ ...updates, updated_at: new Date().toISOString() })
+    .update({ ...safeUpdates, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select()
     .single();
   if (error) throw error;
-  return data as VehicleDocument;
+  return {
+    ...(data as VehicleDocument),
+    attachment_url: resolveAttachmentUrl(data.attachment_url) || data.attachment_url || undefined,
+  };
 }
 
 export async function deleteVehicleDocument(id: string): Promise<void> {
