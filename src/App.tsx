@@ -10,6 +10,7 @@ import { Flame } from 'lucide-react';
 
 import { SuperAdminDashboard } from './components/dashboards/SuperAdminDashboard';
 import { FleetManagerDashboard } from './components/dashboards/FleetManagerDashboard';
+import { WorkshopSupervisorDashboard } from './components/dashboards/WorkshopSupervisorDashboard';
 import { ManagementDashboard } from './components/dashboards/ManagementDashboard';
 
 import { VehicleList } from './components/vehicles/VehicleList';
@@ -50,8 +51,14 @@ function isPublicDriverReportRoute(): boolean {
 export function AppContent() {
   const [activeTab, setActiveTab] = useState<NavItemKey>('dashboard');
   const [isPublicPortal, setIsPublicPortal] = useState<boolean>(() => isPublicDriverReportRoute());
-  const { activeRole, isAuthenticated, isLoading } = useAuth();
+  const { activeRole, isAuthenticated, isLoading, canAccessTab } = useAuth();
   const { t } = useI18n();
+
+  useEffect(() => {
+    if (isAuthenticated && !canAccessTab(activeTab)) {
+      setActiveTab('dashboard');
+    }
+  }, [isAuthenticated, activeRole, activeTab, canAccessTab]);
 
   useEffect(() => {
     const syncRoute = () => setIsPublicPortal(isPublicDriverReportRoute());
@@ -123,19 +130,34 @@ export function AppContent() {
     return <LoginPage />;
   }
 
+  const handleSelectTab = (tab: NavItemKey) => {
+    if (canAccessTab(tab)) {
+      setActiveTab(tab);
+    } else {
+      setActiveTab('dashboard');
+    }
+  };
+
   const renderRoleDashboard = () => {
     switch (activeRole) {
       case 'SUPER_ADMIN':
-        return <SuperAdminDashboard onNavigateTab={setActiveTab} />;
+        return <SuperAdminDashboard onNavigateTab={handleSelectTab} />;
       case 'FLEET_MANAGER':
-        return <FleetManagerDashboard onNavigateTab={setActiveTab} />;
-      case 'MANAGEMENT':
+      case 'FLEET_STAFF':
+        return <FleetManagerDashboard onNavigateTab={handleSelectTab} />;
+      case 'WORKSHOP_MANAGER':
+      case 'WORKSHOP_STAFF':
+        return <WorkshopSupervisorDashboard onNavigateTab={handleSelectTab} />;
+      case 'VIEWER':
       default:
-        return <ManagementDashboard onNavigateTab={setActiveTab} />;
+        return <ManagementDashboard onNavigateTab={handleSelectTab} />;
     }
   };
 
   const renderTabContent = () => {
+    if (!canAccessTab(activeTab)) {
+      return renderRoleDashboard();
+    }
     switch (activeTab) {
       case 'dashboard':
         return renderRoleDashboard();
@@ -183,7 +205,7 @@ export function AppContent() {
   };
 
   return (
-    <Layout activeTab={activeTab} onSelectTab={setActiveTab}>
+    <Layout activeTab={activeTab} onSelectTab={handleSelectTab}>
       {renderTabContent()}
     </Layout>
   );

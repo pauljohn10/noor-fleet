@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Truck, Wrench, ShieldCheck, Package } from 'lucide-react';
+import { LayoutDashboard, Truck, Wrench, ShieldCheck, Package, FileText } from 'lucide-react';
 import { NavItemKey } from './Sidebar';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
@@ -22,8 +22,23 @@ export const MobileNav: React.FC<MobileNavProps> = ({ activeTab, onSelectTab }) 
           { key: 'workOrders', label: t('workOrders', 'Work Orders'), icon: <Wrench size={18} /> },
           { key: 'inspections', label: t('inspections', 'Reports'), icon: <ShieldCheck size={18} /> },
         ];
+      case 'FLEET_STAFF':
+        return [
+          { key: 'dashboard', label: t('dashboard', 'Dashboard'), icon: <LayoutDashboard size={18} /> },
+          { key: 'vehicles', label: t('vehicles', 'Trucks'), icon: <Truck size={18} /> },
+          { key: 'documents', label: t('documents', 'Permits'), icon: <FileText size={18} /> },
+          { key: 'inspections', label: t('inspections', 'Reports'), icon: <ShieldCheck size={18} /> },
+        ];
+      case 'WORKSHOP_MANAGER':
+      case 'WORKSHOP_STAFF':
+        return [
+          { key: 'dashboard', label: t('dashboard', 'Dashboard'), icon: <LayoutDashboard size={18} /> },
+          { key: 'workOrders', label: t('workOrders', 'Job Cards'), icon: <Wrench size={18} /> },
+          { key: 'inventory', label: t('inventory', 'Store'), icon: <Package size={18} /> },
+          { key: 'inspections', label: t('inspections', 'Reports'), icon: <ShieldCheck size={18} /> },
+        ];
       case 'SUPER_ADMIN':
-      case 'MANAGEMENT':
+      case 'VIEWER':
       default:
         return [
           { key: 'dashboard', label: t('dashboard', 'Dashboard'), icon: <LayoutDashboard size={18} /> },

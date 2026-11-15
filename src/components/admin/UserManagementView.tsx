@@ -1,990 +1,1614 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Modal } from '../common/Modal';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
-  PageContainer,
-  PageHeader,
-  PrimaryButton,
-  SecondaryButton,
-  StatusTabs,
-  EditorialSelect,
-  DataTable,
-  DataRow,
-  RowAction,
-  StatusText,
-  TableFooter,
-  MetricStrip,
-  EDITORIAL_STATUS,
-} from '../common/EditorialUI';
-import { 
-  Shield, Users, Plus, Key, Edit, Trash2, Search, 
-  CheckCircle2, AlertCircle, Loader2, Building2, Mail, 
-  Lock, RefreshCw, X, Eye, EyeOff, UserCheck, UserX,
-  Sparkles, Check
+  UserPlus,
+  RefreshCw,
+  Shield,
+  KeyRound,
+  Edit3,
+  Trash2,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  Lock,
+  Search,
+  Eye,
+  EyeOff,
+  Check,
+  UserCheck,
+  UserX,
 } from 'lucide-react';
-import { UserRole } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
-import { useTablePagination } from '../../lib/supabasePagination';
-import { 
-  listCorporateUsers, 
-  createCorporateUser, 
-  updateCorporateUser, 
-  toggleUserActive, 
-  resetUserPassword, 
-  deleteCorporateUser,
-  AdminUserRecord 
+import { SystemRole, UserRole } from '../../types';
+import {
+  ALL_SYSTEM_ROLES,
+  getRoleMeta,
+  normalizeRole,
+  ROLE_DEFINITIONS,
+} from '../../lib/rbac';
+import {
+  listManagedUsers,
+  createManagedUser,
+  updateManagedUser,
+  toggleManagedUserActive,
+  resetManagedUserPassword,
+  deleteManagedUser,
+  ManagedUserRecord,
 } from '../../lib/adminUsersApi';
+import {
+  PageHeader,
+  PrimaryButton,
+  GhostButton,
+  MetricStrip,
+  StatusTabs,
+  EditorialSelect,
+  TableFooter,
+} from '../common/EditorialUI';
 
-export const UserManagementView: React.FC = () => {
-  const { currentProfile } = useAuth();
-  const { t, isRTL } = useI18n();
+interface UserManagementViewProps {
+  isModal?: boolean;
+  onClose?: () => void;
+}
 
-  const [users, setUsers] = useState<AdminUserRecord[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState<'ALL' | UserRole>('ALL');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL');
+const DEFAULT_DEPARTMENTS = [
+  'IT & System Administration',
+  'Fleet Operations',
+  'Workshop & Maintenance',
+  'Executive Management',
+  'Safety & Compliance (HSE)',
+  'Dispatch & Logistics',
+  'Spare Parts & Store',
+];
 
-  // Notification banners
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+export const UserManagementView: React.FC<UserManagementViewProps> = ({
+  isModal = false,
+  onClose,
+}) => {
+  const { currentProfile, activeRole } = useAuth();
+  const { isRTL } = useI18n();
 
-  // Modals state
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<AdminUserRecord | null>(null);
+  const [users, setUsers] = useState<ManagedUserRecord[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  // Form states: Create User
-  const [newFullName, setNewFullName] = useState('');
-  const [newEmail, setNewEmail] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [newRole, setNewRole] = useState<UserRole>('FLEET_MANAGER');
-  const [newDepartment, setNewDepartment] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Filters & Pagination
+  const [roleTab, setRoleTab] = useState<string>('ALL');
+  const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(15);
 
-  // Form states: Edit User
-  const [editFullName, setEditFullName] = useState('');
-  const [editRole, setEditRole] = useState<UserRole>('FLEET_MANAGER');
-  const [editDepartment, setEditDepartment] = useState('');
+  // Create User Modal State
+  const [isCreateOpen, setIsCreateOpen] = useState<boolean>(false);
+  const [createFullName, setCreateFullName] = useState<string>('');
+  const [createEmail, setCreateEmail] = useState<string>('');
+  const [createPassword, setCreatePassword] = useState<string>('');
+  const [showCreatePassword, setShowCreatePassword] = useState<boolean>(false);
+  const [createRole, setCreateRole] = useState<SystemRole>('FLEET_STAFF');
+  const [createDepartment, setCreateDepartment] = useState<string>('Fleet Operations');
+  const [createPhone, setCreatePhone] = useState<string>('');
+  const [createIsActive, setCreateIsActive] = useState<boolean>(true);
+  const [submittingCreate, setSubmittingCreate] = useState<boolean>(false);
 
-  // Form states: Reset Password
-  const [resetNewPassword, setResetNewPassword] = useState('');
-  const [resetConfirmPassword, setResetConfirmPassword] = useState('');
-  const [showResetPassword, setShowResetPassword] = useState(false);
+  // Edit User Modal State
+  const [editingUser, setEditingUser] = useState<ManagedUserRecord | null>(null);
+  const [editFullName, setEditFullName] = useState<string>('');
+  const [editRole, setEditRole] = useState<SystemRole>('VIEWER');
+  const [editDepartment, setEditDepartment] = useState<string>('');
+  const [editPhone, setEditPhone] = useState<string>('');
+  const [editIsActive, setEditIsActive] = useState<boolean>(true);
+  const [submittingEdit, setSubmittingEdit] = useState<boolean>(false);
 
-  // Load live users from server
-  const loadUsers = async () => {
-    setIsLoading(true);
-    setErrorMessage(null);
-    const res = await listCorporateUsers();
-    if (res.success && res.users) {
-      setUsers(res.users);
-    } else {
-      setErrorMessage(res.error || t('Failed to load corporate users from database.'));
+  // Reset Password Modal State
+  const [resetTargetUser, setResetTargetUser] = useState<ManagedUserRecord | null>(null);
+  const [newPasswordVal, setNewPasswordVal] = useState<string>('');
+  const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
+  const [submittingReset, setSubmittingReset] = useState<boolean>(false);
+
+  // Delete Confirmation Modal State
+  const [deleteTargetUser, setDeleteTargetUser] = useState<ManagedUserRecord | null>(null);
+  const [submittingDelete, setSubmittingDelete] = useState<boolean>(false);
+
+  // Role Matrix Accordion
+  const [showRoleMatrix, setShowRoleMatrix] = useState<boolean>(false);
+
+  const fetchUsers = useCallback(async () => {
+    setLoading(true);
+    setErrorMsg(null);
+    try {
+      const list = await listManagedUsers();
+      setUsers(list);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to load user accounts.');
+    } finally {
+      setLoading(false);
     }
-    setIsLoading(false);
-  };
-
-  useEffect(() => {
-    loadUsers();
   }, []);
 
-  // Filtered users list
-  const filteredUsers = useMemo(() => {
-    return users.filter((u) => {
-      const matchesSearch =
-        u.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.department?.toLowerCase().includes(searchTerm.toLowerCase());
+  useEffect(() => {
+    if (activeRole === 'SUPER_ADMIN') {
+      fetchUsers();
+    }
+  }, [activeRole, fetchUsers]);
 
-      const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
+  // Reset pagination to page 1 on filter or search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [roleTab, statusFilter, searchQuery, pageSize]);
 
-      const matchesStatus =
-        statusFilter === 'ALL' ||
-        (statusFilter === 'ACTIVE' && u.is_active) ||
-        (statusFilter === 'INACTIVE' && !u.is_active);
+  const showBanner = (type: 'success' | 'error', msg: string) => {
+    if (type === 'success') {
+      setSuccessMsg(msg);
+      setErrorMsg(null);
+      setTimeout(() => setSuccessMsg(null), 5000);
+    } else {
+      setErrorMsg(msg);
+      setSuccessMsg(null);
+    }
+  };
 
-      return matchesSearch && matchesRole && matchesStatus;
-    });
-  }, [users, searchTerm, roleFilter, statusFilter]);
+  // Strict RBAC guard: Only Super Admin can access User & Role Management
+  if (activeRole !== 'SUPER_ADMIN') {
+    return (
+      <div
+        style={{
+          padding: 32,
+          border: '1px solid var(--color-border)',
+          borderRadius: 6,
+          background: 'var(--color-surface)',
+          textAlign: 'center',
+        }}
+      >
+        <Lock size={28} style={{ margin: '0 auto 10px', color: 'var(--color-danger-text)' }} />
+        <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-ink)', margin: 0 }}>
+          {isRTL ? 'غير مصرح بالوصول' : 'Restricted Administrator Area'}
+        </h3>
+        <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginTop: 6 }}>
+          {isRTL
+            ? 'إدارة المستخدمين والأدوار متاحة فقط لمدير النظام العام (Super Admin).'
+            : 'Only Super Admin accounts are authorized to create users, assign roles, or modify permissions.'}
+        </p>
+      </div>
+    );
+  }
 
-  const {
-    page,
-    setPage,
-    pageSize,
-    setPageSize,
-    totalPages,
-    pagedItems: pagedUsers,
-  } = useTablePagination(filteredUsers, [searchTerm, roleFilter, statusFilter], {
-    table: 'profiles',
-    orderBy: 'created_at',
-    ascending: false,
-    search: searchTerm,
-    searchColumns: ['full_name', 'email', 'department'],
-    eqFilters: { role: roleFilter },
-  });
-
-  // Metric stats
-  const metrics = useMemo(() => {
-    const total = users.length;
-    const superAdmins = users.filter((u) => u.role === 'SUPER_ADMIN').length;
-    const fleetManagers = users.filter((u) => u.role === 'FLEET_MANAGER').length;
-    const management = users.filter((u) => u.role === 'MANAGEMENT').length;
-    const active = users.filter((u) => u.is_active).length;
-    const inactive = total - active;
-    return { total, superAdmins, fleetManagers, management, active, inactive };
+  // Role counts
+  const roleCounts = useMemo(() => {
+    const counts: Record<SystemRole, number> = {
+      SUPER_ADMIN: 0,
+      FLEET_MANAGER: 0,
+      WORKSHOP_MANAGER: 0,
+      FLEET_STAFF: 0,
+      WORKSHOP_STAFF: 0,
+      VIEWER: 0,
+    };
+    for (const u of users) {
+      const r = normalizeRole(u.role);
+      counts[r] = (counts[r] || 0) + 1;
+    }
+    return counts;
   }, [users]);
 
-  // Generate strong random password
-  const generateStrongPassword = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';
-    let result = '';
-    for (let i = 0; i < 12; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
+  const activeUsersCount = useMemo(
+    () => users.filter(u => u.is_active !== false).length,
+    [users]
+  );
+  const deactivatedUsersCount = useMemo(
+    () => users.filter(u => u.is_active === false).length,
+    [users]
+  );
+
+  // Filtered users
+  const filteredUsers = useMemo(() => {
+    return users.filter(u => {
+      const normalized = normalizeRole(u.role);
+      if (roleTab !== 'ALL' && normalized !== roleTab) {
+        return false;
+      }
+      if (statusFilter === 'ACTIVE' && u.is_active === false) {
+        return false;
+      }
+      if (statusFilter === 'INACTIVE' && u.is_active !== false) {
+        return false;
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const roleMeta = getRoleMeta(normalized);
+        const match =
+          (u.full_name || '').toLowerCase().includes(q) ||
+          (u.email || '').toLowerCase().includes(q) ||
+          (u.department || '').toLowerCase().includes(q) ||
+          (u.phone || '').toLowerCase().includes(q) ||
+          roleMeta.labelEn.toLowerCase().includes(q) ||
+          roleMeta.labelAr.toLowerCase().includes(q);
+        if (!match) return false;
+      }
+      return true;
+    });
+  }, [users, roleTab, statusFilter, searchQuery]);
+
+  const paginatedUsers = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredUsers.slice(start, start + pageSize);
+  }, [filteredUsers, currentPage, pageSize]);
+
+  // Handlers
+  const handleRoleSelectForCreate = (r: SystemRole) => {
+    setCreateRole(r);
+    setCreateDepartment(ROLE_DEFINITIONS[r].defaultDepartment);
   };
 
-  // Handle Create User
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setErrorMessage(null);
-    setSuccessMessage(null);
-
-    const res = await createCorporateUser({
-      fullName: newFullName,
-      email: newEmail,
-      password: newPassword,
-      role: newRole,
-      department: newDepartment
-    });
-
-    if (res.success) {
-      setSuccessMessage(
+    if (!createFullName.trim() || !createEmail.trim() || createPassword.length < 6) {
+      showBanner(
+        'error',
         isRTL
-          ? `تم إنشاء الحساب بنجاح للمستخدم ${newEmail}.`
-          : `Account created successfully for ${newEmail}.`
+          ? 'يرجى إدخال الاسم الكامل والبريد الإلكتروني وكلمة مرور من 6 أحرف على الأقل.'
+          : 'Please provide full name, valid email, and a password of at least 6 characters.'
       );
-      setIsCreateModalOpen(false);
-      setNewFullName('');
-      setNewEmail('');
-      setNewPassword('');
-      setNewDepartment('');
-      setNewRole('FLEET_MANAGER');
-      await loadUsers();
-    } else {
-      setErrorMessage(res.error || t('Failed to create user account.'));
+      return;
     }
-    setIsSubmitting(false);
+
+    setSubmittingCreate(true);
+    try {
+      const created = await createManagedUser({
+        email: createEmail.trim(),
+        password: createPassword,
+        full_name: createFullName.trim(),
+        role: createRole,
+        department: createDepartment.trim() || ROLE_DEFINITIONS[createRole].defaultDepartment,
+        phone: createPhone.trim(),
+        is_active: createIsActive,
+      });
+
+      setUsers(prev => [created, ...prev.filter(u => u.id !== created.id)]);
+      setIsCreateOpen(false);
+      setCreateFullName('');
+      setCreateEmail('');
+      setCreatePassword('');
+      setCreatePhone('');
+      setCreateRole('FLEET_STAFF');
+      setCreateIsActive(true);
+      showBanner(
+        'success',
+        isRTL
+          ? `تم إنشاء حساب المستخدم ${created.full_name} بدور ${ROLE_DEFINITIONS[normalizeRole(created.role)].labelAr}`
+          : `Created user "${created.full_name}" with role ${ROLE_DEFINITIONS[normalizeRole(created.role)].labelEn}.`
+      );
+    } catch (err: any) {
+      showBanner('error', err.message || 'Failed to create user.');
+    } finally {
+      setSubmittingCreate(false);
+    }
   };
 
-  // Open Edit Modal
-  const openEditModal = (user: AdminUserRecord) => {
-    setSelectedUser(user);
-    setEditFullName(user.full_name);
-    setEditRole(user.role);
-    setEditDepartment(user.department || '');
-    setIsEditModalOpen(true);
+  const openEditModal = (u: ManagedUserRecord) => {
+    const normalized = normalizeRole(u.role);
+    setEditingUser(u);
+    setEditFullName(u.full_name || '');
+    setEditRole(normalized);
+    setEditDepartment(u.department || ROLE_DEFINITIONS[normalized].defaultDepartment);
+    setEditPhone(u.phone || '');
+    setEditIsActive(u.is_active !== false);
   };
 
-  // Handle Edit Submit
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedUser) return;
-    setIsSubmitting(true);
-    setErrorMessage(null);
-    setSuccessMessage(null);
+    if (!editingUser) return;
 
-    const res = await updateCorporateUser({
-      userId: selectedUser.id,
-      fullName: editFullName,
-      role: editRole,
-      department: editDepartment
-    });
-
-    if (res.success) {
-      setSuccessMessage(
+    if (editingUser.id === currentProfile.id && editRole !== 'SUPER_ADMIN') {
+      showBanner(
+        'error',
         isRTL
-          ? `تم تحديث ملف المستخدم ${selectedUser.email} بنجاح.`
-          : `User profile for ${selectedUser.email} updated successfully.`
+          ? 'لا يمكنك تخفيض صلاحية حسابك الشخصي كمدير نظام عام.'
+          : 'Safety Lock: You cannot demote your own Super Admin account.'
       );
-      setIsEditModalOpen(false);
-      await loadUsers();
-    } else {
-      setErrorMessage(res.error || t('Failed to update user.'));
-    }
-    setIsSubmitting(false);
-  };
-
-  // Handle Toggle Active/Inactive
-  const handleToggleActive = async (user: AdminUserRecord) => {
-    if (user.id === currentProfile.id) {
-      setErrorMessage(t('Security Alert: You cannot deactivate your own Super Admin account.'));
       return;
     }
 
-    const nextState = !user.is_active;
-    const confirmMsg = nextState
-      ? (isRTL ? `إعادة تفعيل صلاحية الدخول للمستخدم ${user.email}؟` : `Reactivate login access for ${user.email}?`)
-      : (isRTL ? `تعطيل صلاحية الدخول للمستخدم ${user.email}؟ سيتم منع المستخدم من تسجيل الدخول فوراً.` : `Deactivate login access for ${user.email}? The user will immediately be barred from signing in.`);
-
-    if (!window.confirm(confirmMsg)) return;
-
-    setErrorMessage(null);
-    setSuccessMessage(null);
-
-    const res = await toggleUserActive(user.id, nextState);
-    if (res.success) {
-      setSuccessMessage(
+    if (editingUser.id === currentProfile.id && !editIsActive) {
+      showBanner(
+        'error',
         isRTL
-          ? `حالة حساب ${user.email} الآن: ${nextState ? 'نشط' : 'معطل'}.`
-          : `Account for ${user.email} is now ${nextState ? 'ACTIVE' : 'DEACTIVATED'}.`
+          ? 'لا يمكنك تعطيل حسابك الشخصي النشط.'
+          : 'Safety Lock: You cannot deactivate your own active Super Admin account.'
       );
-      await loadUsers();
-    } else {
-      setErrorMessage(res.error || t('Failed to update account status.'));
+      return;
+    }
+
+    setSubmittingEdit(true);
+    try {
+      const updated = await updateManagedUser({
+        userId: editingUser.id,
+        full_name: editFullName.trim(),
+        role: editRole,
+        department: editDepartment.trim(),
+        phone: editPhone.trim(),
+        is_active: editIsActive,
+      });
+
+      setUsers(prev =>
+        prev.map(u => (u.id === editingUser.id ? { ...u, ...updated, role: editRole } : u))
+      );
+      setEditingUser(null);
+      showBanner(
+        'success',
+        isRTL
+          ? `تم تحديث صلاحيات وبيانات ${updated.full_name} بنجاح.`
+          : `Updated permissions and profile for "${updated.full_name}" (${ROLE_DEFINITIONS[editRole].labelEn}).`
+      );
+    } catch (err: any) {
+      showBanner('error', err.message || 'Failed to update user.');
+    } finally {
+      setSubmittingEdit(false);
     }
   };
 
-  // Open Reset Password Modal
-  const openResetPasswordModal = (user: AdminUserRecord) => {
-    setSelectedUser(user);
-    const initialPass = generateStrongPassword();
-    setResetNewPassword(initialPass);
-    setResetConfirmPassword(initialPass);
-    setIsResetPasswordModalOpen(true);
+  const handleToggleActive = async (u: ManagedUserRecord) => {
+    if (u.id === currentProfile.id) {
+      showBanner(
+        'error',
+        isRTL
+          ? 'لا يمكنك تعطيل حسابك الشخصي النشط.'
+          : 'Safety Lock: You cannot deactivate your own Super Admin account.'
+      );
+      return;
+    }
+
+    const nextActive = u.is_active === false;
+    try {
+      await toggleManagedUserActive(u.id, nextActive);
+      setUsers(prev =>
+        prev.map(item => (item.id === u.id ? { ...item, is_active: nextActive } : item))
+      );
+      showBanner(
+        'success',
+        nextActive
+          ? isRTL
+            ? `تم تفعيل حساب ${u.full_name}`
+            : `Activated account for ${u.full_name}.`
+          : isRTL
+          ? `تم تعطيل حساب ${u.full_name} وإيقاف وصوله للنظام.`
+          : `Deactivated account for ${u.full_name}. Access is now blocked by RLS.`
+      );
+    } catch (err: any) {
+      showBanner('error', err.message || 'Failed to change account status.');
+    }
   };
 
-  // Handle Reset Password Submit
   const handleResetPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedUser) return;
-    if (resetNewPassword !== resetConfirmPassword) {
-      setErrorMessage(t('Passwords do not match.'));
-      return;
-    }
-    if (resetNewPassword.length < 8) {
-      setErrorMessage(t('Password must be at least 8 characters long.'));
-      return;
-    }
+    if (!resetTargetUser || newPasswordVal.length < 6) return;
 
-    setIsSubmitting(true);
-    setErrorMessage(null);
-    setSuccessMessage(null);
-
-    const res = await resetUserPassword(selectedUser.id, resetNewPassword);
-    if (res.success) {
-      setSuccessMessage(
+    setSubmittingReset(true);
+    try {
+      await resetManagedUserPassword(resetTargetUser.id, newPasswordVal);
+      setResetTargetUser(null);
+      setNewPasswordVal('');
+      showBanner(
+        'success',
         isRTL
-          ? `تم تحديث كلمة المرور بنجاح للمستخدم ${selectedUser.email}.`
-          : `Password updated successfully for ${selectedUser.email}.`
+          ? `تم تحديث كلمة المرور للمستخدم ${resetTargetUser.full_name}`
+          : `Password reset completed for ${resetTargetUser.full_name}.`
       );
-      setIsResetPasswordModalOpen(false);
-    } else {
-      setErrorMessage(res.error || t('Failed to reset password.'));
+    } catch (err: any) {
+      showBanner('error', err.message || 'Failed to reset password.');
+    } finally {
+      setSubmittingReset(false);
     }
-    setIsSubmitting(false);
   };
 
-  // Open Delete Modal
-  const openDeleteModal = (user: AdminUserRecord) => {
-    if (user.id === currentProfile.id) {
-      setErrorMessage(t('Security Alert: You cannot delete your own Super Admin account.'));
+  const handleDeleteConfirm = async () => {
+    if (!deleteTargetUser) return;
+    if (deleteTargetUser.id === currentProfile.id) {
+      showBanner('error', 'You cannot delete your own Super Admin account.');
       return;
     }
-    setSelectedUser(user);
-    setIsDeleteModalOpen(true);
-  };
 
-  // Handle Delete Submit
-  const handleDeleteSubmit = async () => {
-    if (!selectedUser) return;
-    setIsSubmitting(true);
-    setErrorMessage(null);
-    setSuccessMessage(null);
-
-    const res = await deleteCorporateUser(selectedUser.id);
-    if (res.success) {
-      setSuccessMessage(
-        isRTL
-          ? `تم حذف حساب المستخدم ${selectedUser.email} نهائياً.`
-          : `User account ${selectedUser.email} deleted permanently.`
+    setSubmittingDelete(true);
+    try {
+      await deleteManagedUser(deleteTargetUser.id);
+      setUsers(prev => prev.filter(u => u.id !== deleteTargetUser.id));
+      const deletedName = deleteTargetUser.full_name;
+      setDeleteTargetUser(null);
+      showBanner(
+        'success',
+        isRTL ? `تم حذف حساب ${deletedName}` : `Deleted user account "${deletedName}".`
       );
-      setIsDeleteModalOpen(false);
-      await loadUsers();
-    } else {
-      setErrorMessage(res.error || t('Failed to delete user.'));
-    }
-    setIsSubmitting(false);
-  };
-
-  const getRoleDisplay = (role: UserRole) => {
-    switch (role) {
-      case 'SUPER_ADMIN':
-        return { label: t('SUPER ADMIN'), stripe: EDITORIAL_STATUS.amber.stripe, color: EDITORIAL_STATUS.amber.text, icon: Shield };
-      case 'FLEET_MANAGER':
-        return { label: t('FLEET MANAGEMENT'), stripe: EDITORIAL_STATUS.blue.stripe, color: EDITORIAL_STATUS.blue.text, icon: Building2 };
-      case 'MANAGEMENT':
-      default:
-        return { label: t('MANAGEMENT AUDIT'), stripe: '#6D28D9', color: '#5B21B6', icon: Users };
+    } catch (err: any) {
+      showBanner('error', err.message || 'Failed to delete user.');
+    } finally {
+      setSubmittingDelete(false);
     }
   };
 
   return (
-    <PageContainer>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <PageHeader
-        title={t('Corporate User & Role Management')}
-        subtitle={t('Super Admin governance console: provision corporate staff, enforce 3-role RBAC, manage credentials, and audit user logins.')}
+        title={isRTL ? 'إدارة المستخدمين والصلاحيات (RBAC)' : 'Users & Role-Based Access Control (RBAC)'}
+        subtitle={
+          isRTL
+            ? 'إنشاء الحسابات، تعيين الأدوار الستة المعتمدة، تفعيل أو تعطيل المستخدمين، وإنفاذ سياسات أمان قاعدة البيانات (Supabase RLS).'
+            : 'Provision users, assign the 6 system roles, enforce read-only viewer guards, and manage account activation backed by Supabase Row Level Security.'
+        }
         actions={
           <>
-            <SecondaryButton onClick={loadUsers} disabled={isLoading}>
-              <RefreshCw style={{ width: 14, height: 14 }} className={isLoading ? 'animate-spin' : ''} />
-              <span>{t('Refresh')}</span>
-            </SecondaryButton>
-            <PrimaryButton
-              onClick={() => {
-                setNewPassword(generateStrongPassword());
-                setIsCreateModalOpen(true);
-              }}
-            >
-              <Plus style={{ width: 15, height: 15 }} />
-              <span>{t('Provision New User')}</span>
+            <GhostButton onClick={() => setShowRoleMatrix(v => !v)}>
+              <Shield size={14} style={{ marginInlineEnd: 5, display: 'inline' }} />
+              {showRoleMatrix
+                ? isRTL
+                  ? 'إخفاء مصفوفة الصلاحيات'
+                  : 'Hide Role Matrix'
+                : isRTL
+                ? 'مصفوفة الأدوار والصلاحيات (6)'
+                : 'Role Permissions Matrix (6)'}
+            </GhostButton>
+            <GhostButton onClick={fetchUsers} disabled={loading}>
+              <RefreshCw
+                size={14}
+                className={loading ? 'animate-spin' : ''}
+                style={{ marginInlineEnd: 5, display: 'inline' }}
+              />
+              {isRTL ? 'تحديث' : 'Refresh'}
+            </GhostButton>
+            <PrimaryButton onClick={() => setIsCreateOpen(true)}>
+              <UserPlus size={14} style={{ marginInlineEnd: 6, display: 'inline' }} />
+              {isRTL ? '+ إضافة مستخدم جديد' : '+ Create User Account'}
             </PrimaryButton>
+            {isModal && onClose && (
+              <GhostButton onClick={onClose}>{isRTL ? 'إغلاق' : 'Close'}</GhostButton>
+            )}
           </>
         }
       />
 
-      {/* Feedback Alerts */}
-      {errorMessage && (
+      {/* Feedback Banners */}
+      {errorMsg && (
         <div
           style={{
-            padding: '12px 14px',
-            marginBottom: 16,
-            borderRadius: 4,
+            padding: '12px 16px',
+            borderRadius: 6,
             background: '#FEF2F2',
             border: '1px solid #FECACA',
-            borderInlineStart: '3px solid #991B1B',
             color: '#991B1B',
             fontSize: 13,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            gap: 10,
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <AlertCircle style={{ width: 16, height: 16, flexShrink: 0 }} />
-            <span style={{ fontWeight: 500 }}>{errorMessage}</span>
+            <AlertTriangle size={16} />
+            <span>{errorMsg}</span>
           </div>
           <button
             type="button"
-            onClick={() => setErrorMessage(null)}
-            style={{ background: 'transparent', border: 'none', color: '#991B1B', cursor: 'pointer' }}
+            onClick={() => setErrorMsg(null)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#991B1B' }}
           >
-            <X style={{ width: 15, height: 15 }} />
+            ✕
           </button>
         </div>
       )}
 
-      {successMessage && (
+      {successMsg && (
         <div
           style={{
-            padding: '12px 14px',
-            marginBottom: 16,
-            borderRadius: 4,
+            padding: '12px 16px',
+            borderRadius: 6,
             background: '#F0FDF4',
             border: '1px solid #BBF7D0',
-            borderInlineStart: '3px solid #16A34A',
             color: '#166534',
             fontSize: 13,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            gap: 10,
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <CheckCircle2 style={{ width: 16, height: 16, flexShrink: 0 }} />
-            <span style={{ fontWeight: 500 }}>{successMessage}</span>
+            <CheckCircle2 size={16} />
+            <span>{successMsg}</span>
           </div>
           <button
             type="button"
-            onClick={() => setSuccessMessage(null)}
-            style={{ background: 'transparent', border: 'none', color: '#166534', cursor: 'pointer' }}
+            onClick={() => setSuccessMsg(null)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#166534' }}
           >
-            <X style={{ width: 15, height: 15 }} />
+            ✕
           </button>
         </div>
       )}
 
-      {/* Editorial Metric Strip */}
+      {/* 6-Role KPI Strip */}
       <MetricStrip
-        marginBottom={20}
         items={[
-          { label: t('Total Accounts'), value: metrics.total, mono: true, onClick: () => { setRoleFilter('ALL'); setStatusFilter('ALL'); } },
-          { label: t('Super Admins'), value: metrics.superAdmins, mono: true, stripe: EDITORIAL_STATUS.amber.stripe, valueColor: EDITORIAL_STATUS.amber.text, onClick: () => setRoleFilter('SUPER_ADMIN') },
-          { label: t('Fleet Management'), value: metrics.fleetManagers, mono: true, stripe: EDITORIAL_STATUS.blue.stripe, valueColor: EDITORIAL_STATUS.blue.text, onClick: () => setRoleFilter('FLEET_MANAGER') },
-          { label: t('Executive Audit'), value: metrics.management, mono: true, stripe: '#6D28D9', valueColor: '#5B21B6', onClick: () => setRoleFilter('MANAGEMENT') },
-          { label: t('Active Status'), value: metrics.active, mono: true, stripe: EDITORIAL_STATUS.green.stripe, valueColor: EDITORIAL_STATUS.green.text, onClick: () => setStatusFilter('ACTIVE') },
-          { label: t('Deactivated'), value: metrics.inactive, mono: true, stripe: EDITORIAL_STATUS.red.stripe, valueColor: EDITORIAL_STATUS.red.text, onClick: () => setStatusFilter('INACTIVE') },
+          {
+            label: isRTL ? 'إجمالي الحسابات' : 'Total Accounts',
+            value: users.length,
+            subtext: `${activeUsersCount} ${isRTL ? 'نشط' : 'active'} · ${deactivatedUsersCount} ${
+              isRTL ? 'معطل' : 'deactivated'
+            }`,
+          },
+          {
+            label: isRTL ? 'مدير النظام / الأسطول' : 'Super Admin / Fleet Mgr',
+            value: `${roleCounts.SUPER_ADMIN} / ${roleCounts.FLEET_MANAGER}`,
+            subtext: isRTL ? 'القيادة وإدارة الأسطول' : 'System & Fleet Leadership',
+          },
+          {
+            label: isRTL ? 'مدير الورشة / موظف الأسطول' : 'Workshop Mgr / Fleet Staff',
+            value: `${roleCounts.WORKSHOP_MANAGER} / ${roleCounts.FLEET_STAFF}`,
+            subtext: isRTL ? 'إدارة الصيانة وعمليات الأسطول' : 'Maintenance & Fleet Ops',
+          },
+          {
+            label: isRTL ? 'موظف الورشة / مشاهد (قراءة فقط)' : 'Workshop Staff / Viewer',
+            value: `${roleCounts.WORKSHOP_STAFF} / ${roleCounts.VIEWER}`,
+            subtext: isRTL ? 'التنفيذ الفني والعرض فقط' : 'Workshop Execution & Read-Only',
+          },
         ]}
       />
 
-      {/* Tabs + Filters + Search */}
-      <StatusTabs
-        tabs={[
-          { key: 'ALL', label: t('All Roles'), count: metrics.total, stripe: 'var(--color-ink)' },
-          { key: 'SUPER_ADMIN', label: t('Super Admins'), count: metrics.superAdmins, stripe: EDITORIAL_STATUS.amber.stripe },
-          { key: 'FLEET_MANAGER', label: t('Fleet Management'), count: metrics.fleetManagers, stripe: EDITORIAL_STATUS.blue.stripe },
-          { key: 'MANAGEMENT', label: t('Executive Audit'), count: metrics.management, stripe: '#6D28D9' },
-        ]}
-        activeKey={roleFilter}
-        onChange={key => setRoleFilter(key as any)}
-        searchValue={searchTerm}
-        onSearchChange={setSearchTerm}
-        searchPlaceholder={t('Search by full name, email address, or department...')}
-        extraFilters={
-          <EditorialSelect
-            width={160}
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value as any)}
+      {/* Collapsible 6-Role Permissions Reference Matrix */}
+      {showRoleMatrix && (
+        <div
+          style={{
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 6,
+            padding: 18,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 14,
+            }}
           >
-            <option value="ALL">{t('All Statuses')}</option>
-            <option value="ACTIVE">{t('Active Only')}</option>
-            <option value="INACTIVE">{t('Deactivated Only')}</option>
-          </EditorialSelect>
-        }
-      />
+            <div>
+              <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--color-ink)' }}>
+                {isRTL
+                  ? 'مصفوفة الصلاحيات للأدوار الستة (مطبقة في الواجهة وقاعدة بيانات Supabase RLS)'
+                  : '6-Role Security & Permission Matrix (Enforced on Frontend, Backend API & Supabase RLS)'}
+              </h3>
+              <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--color-text-muted)' }}>
+                {isRTL
+                  ? 'لا يُسمح للمستخدمين بترقية صلاحياتهم ذاتياً. دور المشاهد (Viewer) مقيد للقراءة فقط.'
+                  : 'Users are blocked by database triggers from self-escalating roles. Viewers are strictly read-only across all tables and storage buckets.'}
+              </p>
+            </div>
+          </div>
 
-      {/* Users Table */}
-      <DataTable
-        columns={[
-          { label: t('Employee Name') },
-          { label: t('Corporate Email') },
-          { label: t('Role Authority') },
-          { label: t('Department') },
-          { label: t('Account Status') },
-          { label: t('Created Date') },
-          { label: t('Last Sign-In') },
-        ]}
-        isEmpty={!isLoading && filteredUsers.length === 0}
-        emptyMessage={
-          searchTerm || roleFilter !== 'ALL' || statusFilter !== 'ALL'
-            ? t('No matching user accounts found.')
-            : t('Click "Provision New User" above to add your first corporate user.')
-        }
-        onClearFilters={
-          searchTerm || roleFilter !== 'ALL' || statusFilter !== 'ALL'
-            ? () => {
-                setSearchTerm('');
-                setRoleFilter('ALL');
-                setStatusFilter('ALL');
-              }
-            : undefined
-        }
-        clearFiltersLabel={t('Clear filters')}
-      >
-        {isLoading ? (
-          <tr>
-            <td colSpan={8} style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                <Loader2 className="animate-spin" style={{ width: 22, height: 22, color: 'var(--color-brand-accent)' }} />
-                <span style={{ fontWeight: 500, fontSize: 13 }}>{t('Querying corporate directory and auth credentials...')}</span>
-              </div>
-            </td>
-          </tr>
-        ) : (
-          pagedUsers.map(user => {
-            const roleMeta = getRoleDisplay(user.role);
-            const RoleIcon = roleMeta.icon;
-            const stripe = user.is_active ? roleMeta.stripe : EDITORIAL_STATUS.red.stripe;
-
-            return (
-              <DataRow
-                key={user.id}
-                stripeColor={stripe}
-                style={!user.is_active ? { opacity: 0.72 } : undefined}
-                actions={
-                  <>
-                    <RowAction
-                      icon={<Edit style={{ width: 14, height: 14 }} />}
-                      title={t('Edit Profile & Role')}
-                      onClick={() => openEditModal(user)}
-                    />
-                    <RowAction
-                      icon={<Key style={{ width: 14, height: 14 }} />}
-                      title={t('Reset Password')}
-                      onClick={() => openResetPasswordModal(user)}
-                    />
-                    {user.id !== currentProfile.id && (
-                      <RowAction
-                        icon={user.is_active ? <UserX style={{ width: 14, height: 14 }} /> : <UserCheck style={{ width: 14, height: 14 }} />}
-                        title={user.is_active ? t('Deactivate Account') : t('Reactivate Account')}
-                        danger={user.is_active}
-                        onClick={() => handleToggleActive(user)}
-                      />
-                    )}
-                    {user.id !== currentProfile.id && (
-                      <RowAction
-                        icon={<Trash2 style={{ width: 14, height: 14 }} />}
-                        title={t('Delete Permanently')}
-                        danger
-                        onClick={() => openDeleteModal(user)}
-                      />
-                    )}
-                  </>
-                }
-              >
-                <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))',
+              gap: 12,
+            }}
+          >
+            {ALL_SYSTEM_ROLES.map(r => {
+              const meta = ROLE_DEFINITIONS[r];
+              const perms = isRTL ? meta.permissionsAr : meta.permissionsEn;
+              return (
+                <div
+                  key={r}
+                  style={{
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 6,
+                    padding: 14,
+                    background: 'var(--color-page-bg)',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: 6,
+                    }}
+                  >
+                    <span
                       style={{
-                        width: 30,
-                        height: 30,
-                        borderRadius: 4,
-                        background: 'var(--color-surface)',
-                        border: '1px solid var(--color-border)',
-                        color: 'var(--color-ink)',
-                        display: 'flex',
+                        display: 'inline-flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
+                        gap: 6,
+                        fontSize: 12.5,
                         fontWeight: 600,
-                        fontSize: 13,
-                        flexShrink: 0,
+                        color: 'var(--color-ink)',
                       }}
                     >
-                      {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
-                    </div>
-                    <div>
-                      <span style={{ fontWeight: 500, fontSize: 13.5, color: 'var(--color-ink)' }}>{user.full_name}</span>
-                      {user.id === currentProfile.id && (
-                        <span
-                          style={{
-                            marginInlineStart: 8,
-                            fontSize: 11,
-                            fontWeight: 600,
-                            color: '#0F5C4D',
-                            background: '#ECFDF5',
-                            border: '1px solid #A7F3D0',
-                            padding: '1px 6px',
-                            borderRadius: 4,
-                          }}
-                        >
-                          {t('YOU')}
-                        </span>
-                      )}
-                    </div>
+                      <span
+                        style={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          background: meta.dotColor,
+                        }}
+                      />
+                      {isRTL ? meta.labelAr : meta.labelEn}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: 10.5,
+                        color: 'var(--color-text-muted)',
+                      }}
+                    >
+                      {r}
+                    </span>
                   </div>
-                </td>
-
-                <td style={{ padding: '14px 16px', verticalAlign: 'middle', fontFamily: 'var(--font-mono)', fontSize: 12.5, color: 'var(--color-text-secondary)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Mail style={{ width: 13, height: 13, color: 'var(--color-text-muted)', flexShrink: 0 }} />
-                    <span dir="ltr">{user.email}</span>
-                  </div>
-                </td>
-
-                <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 500, color: roleMeta.color }}>
-                    <RoleIcon style={{ width: 13, height: 13, flexShrink: 0 }} />
-                    <span>{roleMeta.label}</span>
-                  </span>
-                </td>
-
-                <td style={{ padding: '14px 16px', verticalAlign: 'middle', fontSize: 13, color: 'var(--color-text-secondary)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Building2 style={{ width: 13, height: 13, color: 'var(--color-text-muted)', flexShrink: 0 }} />
-                    <span>{user.department || t('Fleet Operations')}</span>
-                  </div>
-                </td>
-
-                <td style={{ padding: '14px 16px', verticalAlign: 'middle' }}>
-                  <StatusText
-                    label={user.is_active ? t('Active') : t('Deactivated')}
-                    color={user.is_active ? EDITORIAL_STATUS.green.text : EDITORIAL_STATUS.red.text}
-                  />
-                </td>
-
-                <td style={{ padding: '14px 16px', verticalAlign: 'middle', fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-text-muted)' }} dir="ltr">
-                  {new Date(user.created_at).toLocaleDateString(isRTL ? 'ar-SA-u-ca-gregory' : 'en-US')}
-                </td>
-
-                <td style={{ padding: '14px 16px', verticalAlign: 'middle', fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-text-muted)' }}>
-                  {user.last_sign_in_at ? (
-                    <span dir="ltr">{new Date(user.last_sign_in_at).toLocaleString(isRTL ? 'ar-SA-u-ca-gregory' : 'en-US')}</span>
-                  ) : (
-                    <span>{t('Never')}</span>
-                  )}
-                </td>
-              </DataRow>
-            );
-          })
-        )}
-      </DataTable>
-
-      <TableFooter
-        summaryText={`${t('Showing')} ${filteredUsers.length} ${t('of')} ${users.length} ${t('Total Accounts')}`}
-        page={page}
-        totalPages={totalPages}
-        pageSize={pageSize}
-        totalRecords={filteredUsers.length}
-        onPageChange={setPage}
-        onPageSizeChange={setPageSize}
-        onPrev={() => setPage(p => Math.max(1, p - 1))}
-        onNext={() => setPage(p => Math.min(totalPages, p + 1))}
-      />
-
-      {/* MODAL 1: PROVISION NEW USER */}
-      <Modal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        title={t('Provision New Corporate User')}
-        subtitle={t('Create Supabase Auth credentials & assign RBAC role')}
-        maxWidth="lg"
-      >
-        <form onSubmit={handleCreateSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div>
-            <label style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--color-ink)', display: 'block', marginBottom: 5 }}>
-              {t('Full Legal Name')} <span style={{ color: '#991B1B' }}>*</span>
-            </label>
-            <input
-              type="text"
-              required
-              placeholder={t('e.g. Faisal Al-Otaibi')}
-              value={newFullName}
-              onChange={e => setNewFullName(e.target.value)}
-              className="nf-field"
-            />
+                  <p
+                    style={{
+                      fontSize: 11.5,
+                      color: 'var(--color-text-secondary)',
+                      margin: '0 0 8px',
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    {isRTL ? meta.shortDescAr : meta.shortDescEn}
+                  </p>
+                  <ul
+                    style={{
+                      margin: 0,
+                      paddingInlineStart: 16,
+                      fontSize: 11.5,
+                      color: 'var(--color-text-muted)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 3,
+                    }}
+                  >
+                    {perms.map((p, i) => (
+                      <li key={i}>{p}</li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
           </div>
-
-          <div>
-            <label style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--color-ink)', display: 'block', marginBottom: 5 }}>
-              {t('Corporate Email Address')} <span style={{ color: '#991B1B' }}>*</span>
-            </label>
-            <input
-              type="email"
-              required
-              dir="ltr"
-              placeholder="e.g. faisal@alnoortransport.com"
-              value={newEmail}
-              onChange={e => setNewEmail(e.target.value)}
-              className="nf-field"
-              style={{ fontFamily: 'var(--font-mono)' }}
-            />
-          </div>
-
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-              <label style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--color-ink)' }}>
-                {t('Master Password')} <span style={{ color: '#991B1B' }}>*</span>
-              </label>
-              <button
-                type="button"
-                onClick={() => setNewPassword(generateStrongPassword())}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  fontSize: 12,
-                  color: 'var(--color-brand-accent)',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  textDecoration: 'underline',
-                }}
-              >
-                <Sparkles style={{ width: 12, height: 12 }} />
-                {t('Generate Strong')}
-              </button>
-            </div>
-            <div style={{ position: 'relative' }}>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                required
-                dir="ltr"
-                minLength={8}
-                placeholder={t('Min 8 characters')}
-                value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
-                className="nf-field"
-                style={{ fontFamily: 'var(--font-mono)', paddingInlineEnd: 36 }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  insetInlineEnd: 10,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--color-text-muted)',
-                  cursor: 'pointer',
-                }}
-              >
-                {showPassword ? <EyeOff style={{ width: 16, height: 16 }} /> : <Eye style={{ width: 16, height: 16 }} />}
-              </button>
-            </div>
-            <p style={{ fontSize: 11.5, color: 'var(--color-text-muted)', marginTop: 4, marginBottom: 0 }}>
-              {t('The password will be activated immediately without requiring email confirmation clicks.')}
-            </p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-            <div>
-              <label style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--color-ink)', display: 'block', marginBottom: 5 }}>
-                {t('System Role')} <span style={{ color: '#991B1B' }}>*</span>
-              </label>
-              <EditorialSelect
-                width="100%"
-                value={newRole}
-                onChange={e => setNewRole(e.target.value as UserRole)}
-              >
-                <option value="SUPER_ADMIN">{t('SUPER ADMIN (Full Access)')}</option>
-                <option value="FLEET_MANAGER">{t('FLEET MANAGEMENT (Dispatch & Workshop)')}</option>
-                <option value="MANAGEMENT">{t('MANAGEMENT (Audit & Reports)')}</option>
-              </EditorialSelect>
-            </div>
-
-            <div>
-              <label style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--color-ink)', display: 'block', marginBottom: 5 }}>
-                {t('Department')}
-              </label>
-              <input
-                type="text"
-                placeholder={t('e.g. Workshop Operations')}
-                value={newDepartment}
-                onChange={e => setNewDepartment(e.target.value)}
-                className="nf-field"
-              />
-            </div>
-          </div>
-
-          <div style={{ paddingTop: 12, borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-            <SecondaryButton onClick={() => setIsCreateModalOpen(false)}>
-              {t('Cancel')}
-            </SecondaryButton>
-            <PrimaryButton type="submit" disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="animate-spin" style={{ width: 14, height: 14 }} /> : <Check style={{ width: 14, height: 14 }} />}
-              <span>{isSubmitting ? t('Provisioning...') : t('Provision Account')}</span>
-            </PrimaryButton>
-          </div>
-        </form>
-      </Modal>
-
-      {/* MODAL 2: EDIT USER & ROLE */}
-      {selectedUser && (
-        <Modal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          title={t('Edit User Profile & Role')}
-          maxWidth="md"
-        >
-          <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div>
-              <label style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--color-ink)', display: 'block', marginBottom: 5 }}>
-                {t('Corporate Email')}
-              </label>
-              <input
-                type="email"
-                disabled
-                dir="ltr"
-                value={selectedUser.email}
-                className="nf-field"
-                style={{ fontFamily: 'var(--font-mono)', opacity: 0.7, cursor: 'not-allowed' }}
-              />
-            </div>
-
-            <div>
-              <label style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--color-ink)', display: 'block', marginBottom: 5 }}>
-                {t('Full Legal Name')}
-              </label>
-              <input
-                type="text"
-                required
-                value={editFullName}
-                onChange={e => setEditFullName(e.target.value)}
-                className="nf-field"
-              />
-            </div>
-
-            <div>
-              <label style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--color-ink)', display: 'block', marginBottom: 5 }}>
-                {t('Role Authority')}
-              </label>
-              <EditorialSelect
-                width="100%"
-                value={editRole}
-                onChange={e => setEditRole(e.target.value as UserRole)}
-                disabled={selectedUser.id === currentProfile.id}
-              >
-                <option value="SUPER_ADMIN">{t('SUPER ADMIN (Full Access)')}</option>
-                <option value="FLEET_MANAGER">{t('FLEET MANAGEMENT (Dispatch & Workshop)')}</option>
-                <option value="MANAGEMENT">{t('MANAGEMENT (Audit & Reports)')}</option>
-              </EditorialSelect>
-              {selectedUser.id === currentProfile.id && (
-                <p style={{ fontSize: 11.5, color: EDITORIAL_STATUS.amber.text, marginTop: 4, marginBottom: 0 }}>
-                  {t('You cannot change your own role to prevent accidental lockout.')}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--color-ink)', display: 'block', marginBottom: 5 }}>
-                {t('Department')}
-              </label>
-              <input
-                type="text"
-                value={editDepartment}
-                onChange={e => setEditDepartment(e.target.value)}
-                className="nf-field"
-              />
-            </div>
-
-            <div style={{ paddingTop: 12, borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <SecondaryButton onClick={() => setIsEditModalOpen(false)}>
-                {t('Cancel')}
-              </SecondaryButton>
-              <PrimaryButton type="submit" disabled={isSubmitting}>
-                {isSubmitting ? t('Saving...') : t('Save Changes')}
-              </PrimaryButton>
-            </div>
-          </form>
-        </Modal>
+        </div>
       )}
 
-      {/* MODAL 3: RESET PASSWORD */}
-      {selectedUser && (
-        <Modal
-          isOpen={isResetPasswordModalOpen}
-          onClose={() => setIsResetPasswordModalOpen(false)}
-          title={t('Reset Password')}
-          maxWidth="sm"
-        >
-          <p style={{ fontSize: 12.5, color: 'var(--color-text-secondary)', marginTop: 0, marginBottom: 14 }}>
-            {isRTL
-              ? <>تعيين كلمة مرور رئيسية جديدة للحساب <strong style={{ color: 'var(--color-ink)' }} dir="ltr">{selectedUser.email}</strong>.</>
-              : <>Set a new master password for <strong style={{ color: 'var(--color-ink)' }}>{selectedUser.email}</strong>.</>}
-          </p>
+      {/* Filter Bar */}
+      <StatusTabs
+        activeKey={roleTab}
+        onChange={setRoleTab}
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder={
+          isRTL
+            ? 'بحث بالاسم، البريد، القسم، أو الدور...'
+            : 'Search name, email, department, role...'
+        }
+        extraFilters={
+          <EditorialSelect
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+          >
+            <option value="ALL">{isRTL ? 'جميع الحالات' : 'All Account Statuses'}</option>
+            <option value="ACTIVE">{isRTL ? 'نشط فقط' : 'Active Only'}</option>
+            <option value="INACTIVE">{isRTL ? 'معطل فقط' : 'Deactivated Only'}</option>
+          </EditorialSelect>
+        }
+        tabs={[
+          { key: 'ALL', label: isRTL ? 'الكل' : 'All Roles', count: users.length },
+          {
+            key: 'SUPER_ADMIN',
+            label: isRTL ? 'مدير النظام' : 'Super Admin',
+            count: roleCounts.SUPER_ADMIN,
+            stripe: ROLE_DEFINITIONS.SUPER_ADMIN.dotColor,
+          },
+          {
+            key: 'FLEET_MANAGER',
+            label: isRTL ? 'مدير الأسطول' : 'Fleet Manager',
+            count: roleCounts.FLEET_MANAGER,
+            stripe: ROLE_DEFINITIONS.FLEET_MANAGER.dotColor,
+          },
+          {
+            key: 'WORKSHOP_MANAGER',
+            label: isRTL ? 'مدير الورشة' : 'Workshop Manager',
+            count: roleCounts.WORKSHOP_MANAGER,
+            stripe: ROLE_DEFINITIONS.WORKSHOP_MANAGER.dotColor,
+          },
+          {
+            key: 'FLEET_STAFF',
+            label: isRTL ? 'موظف الأسطول' : 'Fleet Staff',
+            count: roleCounts.FLEET_STAFF,
+            stripe: ROLE_DEFINITIONS.FLEET_STAFF.dotColor,
+          },
+          {
+            key: 'WORKSHOP_STAFF',
+            label: isRTL ? 'موظف الورشة' : 'Workshop Staff',
+            count: roleCounts.WORKSHOP_STAFF,
+            stripe: ROLE_DEFINITIONS.WORKSHOP_STAFF.dotColor,
+          },
+          {
+            key: 'VIEWER',
+            label: isRTL ? 'مشاهد (قراءة فقط)' : 'Viewer (Read Only)',
+            count: roleCounts.VIEWER,
+            stripe: ROLE_DEFINITIONS.VIEWER.dotColor,
+          },
+        ]}
+      />
 
-          <form onSubmit={handleResetPasswordSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-                <label style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--color-ink)' }}>{t('New Password')}</label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const p = generateStrongPassword();
-                    setResetNewPassword(p);
-                    setResetConfirmPassword(p);
+      {/* Users Data Table */}
+      <div
+        style={{
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 6,
+          overflow: 'hidden',
+        }}
+      >
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr
+                style={{
+                  borderBottom: '1px solid var(--color-border)',
+                  background: 'var(--color-table-header)',
+                  textAlign: 'start',
+                }}
+              >
+                <th style={{ padding: '10px 14px', fontWeight: 500, color: 'var(--color-text-muted)', fontSize: 12 }}>
+                  {isRTL ? 'المستخدم' : 'User'}
+                </th>
+                <th style={{ padding: '10px 14px', fontWeight: 500, color: 'var(--color-text-muted)', fontSize: 12 }}>
+                  {isRTL ? 'الدور الأمني (Role)' : 'Assigned Role'}
+                </th>
+                <th style={{ padding: '10px 14px', fontWeight: 500, color: 'var(--color-text-muted)', fontSize: 12 }}>
+                  {isRTL ? 'القسم' : 'Department'}
+                </th>
+                <th style={{ padding: '10px 14px', fontWeight: 500, color: 'var(--color-text-muted)', fontSize: 12 }}>
+                  {isRTL ? 'مستوى الوصول' : 'Access Level'}
+                </th>
+                <th style={{ padding: '10px 14px', fontWeight: 500, color: 'var(--color-text-muted)', fontSize: 12 }}>
+                  {isRTL ? 'حالة الحساب' : 'Account Status'}
+                </th>
+                <th
+                  style={{
+                    padding: '10px 14px',
+                    fontWeight: 500,
+                    color: 'var(--color-text-muted)',
+                    fontSize: 12,
+                    textAlign: 'end',
                   }}
-                  style={{ background: 'transparent', border: 'none', fontSize: 11.5, color: 'var(--color-brand-accent)', textDecoration: 'underline', cursor: 'pointer' }}
                 >
-                  {t('Generate Strong')}
-                </button>
+                  {isRTL ? 'الإجراءات' : 'Actions'}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={6} style={{ padding: 36, textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                    {isRTL ? 'جاري تحميل حسابات المستخدمين...' : 'Loading user accounts & permissions...'}
+                  </td>
+                </tr>
+              ) : paginatedUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ padding: 36, textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                    {isRTL ? 'لا توجد حسابات مطابقة للبحث.' : 'No user accounts match the current filters.'}
+                  </td>
+                </tr>
+              ) : (
+                paginatedUsers.map(u => {
+                  const normalizedRole = normalizeRole(u.role);
+                  const meta = getRoleMeta(normalizedRole);
+                  const isSelf = u.id === currentProfile.id;
+
+                  return (
+                    <tr
+                      key={u.id}
+                      style={{
+                        borderBottom: '1px solid var(--color-border-subtle)',
+                        opacity: u.is_active === false ? 0.65 : 1,
+                      }}
+                    >
+                      <td style={{ padding: '12px 14px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontWeight: 600, color: 'var(--color-ink)' }}>
+                            {u.full_name || 'Unnamed User'}
+                          </span>
+                          {isSelf && (
+                            <span
+                              style={{
+                                fontSize: 10.5,
+                                fontWeight: 600,
+                                padding: '1px 6px',
+                                borderRadius: 4,
+                                background: 'var(--color-row-hover)',
+                                color: 'var(--color-ink)',
+                                border: '1px solid var(--color-border)',
+                              }}
+                            >
+                              {isRTL ? 'أنت' : 'You'}
+                            </span>
+                          )}
+                        </div>
+                        <div
+                          style={{
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: 12,
+                            color: 'var(--color-text-muted)',
+                            marginTop: 2,
+                          }}
+                        >
+                          {u.email || '—'}
+                          {u.phone ? ` · ${u.phone}` : ''}
+                        </div>
+                      </td>
+
+                      <td style={{ padding: '12px 14px' }}>
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            padding: '3px 9px',
+                            borderRadius: 4,
+                            fontSize: 12,
+                            fontWeight: 600,
+                            border: '1px solid var(--color-border)',
+                            background: 'var(--color-page-bg)',
+                            color: 'var(--color-ink)',
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: 7,
+                              height: 7,
+                              borderRadius: '50%',
+                              background: meta.dotColor,
+                            }}
+                          />
+                          {isRTL ? meta.labelAr : meta.labelEn}
+                        </span>
+                      </td>
+
+                      <td style={{ padding: '12px 14px', color: 'var(--color-text-secondary)' }}>
+                        {u.department || meta.defaultDepartment}
+                      </td>
+
+                      <td style={{ padding: '12px 14px', fontSize: 12, color: 'var(--color-text-muted)' }}>
+                        {normalizedRole === 'VIEWER' ? (
+                          <span style={{ color: '#6B7280', fontWeight: 500 }}>
+                            {isRTL ? 'قراءة فقط (ممنوع الإضافة/التعديل/الرفع)' : 'Read-Only (No Add/Edit/Delete/Upload)'}
+                          </span>
+                        ) : normalizedRole === 'SUPER_ADMIN' ? (
+                          <span style={{ color: '#9A3412', fontWeight: 500 }}>
+                            {isRTL ? 'صلاحيات النظام الكاملة' : 'Full System & Admin Control'}
+                          </span>
+                        ) : normalizedRole === 'FLEET_MANAGER' ? (
+                          <span>{isRTL ? 'إدارة الأسطول كاملة' : 'Full Fleet Management'}</span>
+                        ) : normalizedRole === 'WORKSHOP_MANAGER' ? (
+                          <span>{isRTL ? 'إدارة الورشة والصيانة كاملة' : 'Full Workshop & Store Management'}</span>
+                        ) : normalizedRole === 'FLEET_STAFF' ? (
+                          <span>{isRTL ? 'تشغيل وسجلات الأسطول المصرحة' : 'Authorized Fleet Operations'}</span>
+                        ) : (
+                          <span>{isRTL ? 'تشغيل وسجلات الورشة المصرحة' : 'Authorized Workshop Operations'}</span>
+                        )}
+                      </td>
+
+                      <td style={{ padding: '12px 14px' }}>
+                        {u.is_active !== false ? (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#15803D', fontWeight: 500 }}>
+                            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#15803D' }} />
+                            {isRTL ? 'نشط' : 'Active'}
+                          </span>
+                        ) : (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#B91C1C', fontWeight: 500 }}>
+                            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#B91C1C' }} />
+                            {isRTL ? 'معطل' : 'Deactivated'}
+                          </span>
+                        )}
+                      </td>
+
+                      <td style={{ padding: '12px 14px', textAlign: 'end' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <GhostButton
+                            onClick={() => openEditModal(u)}
+                            title={isRTL ? 'تعديل الدور والصلاحيات' : 'Change Role & Permissions'}
+                          >
+                            <Edit3 size={13} style={{ marginInlineEnd: 4, display: 'inline' }} />
+                            {isRTL ? 'الدور / تعديل' : 'Role / Edit'}
+                          </GhostButton>
+
+                          <GhostButton
+                            onClick={() => {
+                              setResetTargetUser(u);
+                              setNewPasswordVal('');
+                            }}
+                            title={isRTL ? 'إعادة تعيين كلمة المرور' : 'Reset Password'}
+                          >
+                            <KeyRound size={13} />
+                          </GhostButton>
+
+                          {!isSelf && (
+                            <GhostButton
+                              onClick={() => handleToggleActive(u)}
+                              title={
+                                u.is_active !== false
+                                  ? isRTL
+                                    ? 'تعطيل الحساب'
+                                    : 'Deactivate Account'
+                                  : isRTL
+                                  ? 'تفعيل الحساب'
+                                  : 'Activate Account'
+                              }
+                            >
+                              {u.is_active !== false ? (
+                                <UserX size={13} style={{ color: '#B91C1C' }} />
+                              ) : (
+                                <UserCheck size={13} style={{ color: '#15803D' }} />
+                              )}
+                            </GhostButton>
+                          )}
+
+                          {!isSelf && (
+                            <GhostButton
+                              onClick={() => setDeleteTargetUser(u)}
+                              title={isRTL ? 'حذف المستخدم' : 'Delete User'}
+                            >
+                              <Trash2 size={13} style={{ color: '#B91C1C' }} />
+                            </GhostButton>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div style={{ padding: '0 14px' }}>
+          <TableFooter
+            summaryText={`${filteredUsers.length} ${isRTL ? 'مستخدم' : 'users'}`}
+            page={currentPage}
+            totalPages={Math.max(1, Math.ceil(filteredUsers.length / pageSize))}
+            totalRecords={filteredUsers.length}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+          />
+        </div>
+      </div>
+
+      {/* =====================================================================
+          MODAL 1: CREATE NEW USER ACCOUNT & ASSIGN ROLE
+          ===================================================================== */}
+      {isCreateOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(17,17,16,0.55)' }}
+        >
+          <div
+            style={{
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 8,
+              width: '100%',
+              maxWidth: 640,
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              padding: 24,
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 16,
+              }}
+            >
+              <div>
+                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: 'var(--color-ink)' }}>
+                  {isRTL ? 'إنشاء حساب مستخدم جديد وتعيين الصلاحيات' : 'Create New User Account & Assign Role'}
+                </h3>
+                <p style={{ margin: '3px 0 0', fontSize: 12.5, color: 'var(--color-text-muted)' }}>
+                  {isRTL
+                    ? 'اختر أحد الأدوار الستة المعتمدة. سيتم تطبيق الصلاحيات تلقائياً في Supabase RLS.'
+                    : 'Select one of the 6 system roles. Permissions are enforced automatically via Supabase RLS.'}
+                </p>
               </div>
+              <button
+                type="button"
+                onClick={() => setIsCreateOpen(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: 18,
+                  cursor: 'pointer',
+                  color: 'var(--color-text-muted)',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>
+                    {isRTL ? 'الاسم الكامل *' : 'Full Name *'}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={createFullName}
+                    onChange={e => setCreateFullName(e.target.value)}
+                    placeholder={isRTL ? 'مثال: خالد العتيبي' : 'e.g., Khalid Al-Otaibi'}
+                    style={{
+                      width: '100%',
+                      height: 36,
+                      padding: '0 10px',
+                      borderRadius: 4,
+                      border: '1px solid var(--color-input-border)',
+                      background: 'var(--color-page-bg)',
+                      fontSize: 13,
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>
+                    {isRTL ? 'البريد الإلكتروني الرسمي *' : 'Corporate Email *'}
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={createEmail}
+                    onChange={e => setCreateEmail(e.target.value)}
+                    placeholder="user@alnoortransport.com"
+                    style={{
+                      width: '100%',
+                      height: 36,
+                      padding: '0 10px',
+                      borderRadius: 4,
+                      border: '1px solid var(--color-input-border)',
+                      background: 'var(--color-page-bg)',
+                      fontSize: 13,
+                      fontFamily: 'var(--font-mono)',
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>
+                    {isRTL ? 'كلمة المرور الأولية (6 أحرف على الأقل) *' : 'Initial Password (min 6 chars) *'}
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showCreatePassword ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      value={createPassword}
+                      onChange={e => setCreatePassword(e.target.value)}
+                      placeholder="••••••••"
+                      style={{
+                        width: '100%',
+                        height: 36,
+                        padding: '0 34px 0 10px',
+                        borderRadius: 4,
+                        border: '1px solid var(--color-input-border)',
+                        background: 'var(--color-page-bg)',
+                        fontSize: 13,
+                        fontFamily: 'var(--font-mono)',
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCreatePassword(v => !v)}
+                      style={{
+                        position: 'absolute',
+                        right: 8,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--color-text-muted)',
+                      }}
+                    >
+                      {showCreatePassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>
+                    {isRTL ? 'رقم الجوال' : 'Phone / Mobile'}
+                  </label>
+                  <input
+                    type="text"
+                    value={createPhone}
+                    onChange={e => setCreatePhone(e.target.value)}
+                    placeholder="+966 5X XXX XXXX"
+                    style={{
+                      width: '100%',
+                      height: 36,
+                      padding: '0 10px',
+                      borderRadius: 4,
+                      border: '1px solid var(--color-input-border)',
+                      background: 'var(--color-page-bg)',
+                      fontSize: 13,
+                      fontFamily: 'var(--font-mono)',
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* 6-Role Selector Grid */}
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>
+                  {isRTL ? 'تعيين الدور الأمني (اختر واحداً من الأدوار الستة) *' : 'Assign System Role (6 Roles) *'}
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  {ALL_SYSTEM_ROLES.map(r => {
+                    const meta = ROLE_DEFINITIONS[r];
+                    const selected = createRole === r;
+                    return (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => handleRoleSelectForCreate(r)}
+                        style={{
+                          textAlign: 'start',
+                          padding: '10px 12px',
+                          borderRadius: 6,
+                          border: selected
+                            ? '2px solid var(--color-ink)'
+                            : '1px solid var(--color-border)',
+                          background: selected ? 'var(--color-row-hover)' : 'var(--color-page-bg)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600, fontSize: 12.5, color: 'var(--color-ink)' }}>
+                            <span style={{ width: 7, height: 7, borderRadius: '50%', background: meta.dotColor }} />
+                            {isRTL ? meta.labelAr : meta.labelEn}
+                          </span>
+                          {selected && <Check size={14} style={{ color: 'var(--color-ink)' }} />}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4, lineHeight: 1.35 }}>
+                          {isRTL ? meta.shortDescAr : meta.shortDescEn}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>
+                    {isRTL ? 'القسم / الإدارة' : 'Department'}
+                  </label>
+                  <input
+                    type="text"
+                    list="noor-departments-list"
+                    value={createDepartment}
+                    onChange={e => setCreateDepartment(e.target.value)}
+                    style={{
+                      width: '100%',
+                      height: 36,
+                      padding: '0 10px',
+                      borderRadius: 4,
+                      border: '1px solid var(--color-input-border)',
+                      background: 'var(--color-page-bg)',
+                      fontSize: 13,
+                    }}
+                  />
+                  <datalist id="noor-departments-list">
+                    {DEFAULT_DEPARTMENTS.map(d => (
+                      <option key={d} value={d} />
+                    ))}
+                  </datalist>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 6 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={createIsActive}
+                      onChange={e => setCreateIsActive(e.target.checked)}
+                    />
+                    <span>{isRTL ? 'الحساب نشط ومفعل للدخول فوراً' : 'Account Active (Allow immediate sign-in)'}</span>
+                  </label>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: 8,
+                  paddingTop: 12,
+                  borderTop: '1px solid var(--color-border)',
+                }}
+              >
+                <GhostButton type="button" onClick={() => setIsCreateOpen(false)}>
+                  {isRTL ? 'إلغاء' : 'Cancel'}
+                </GhostButton>
+                <PrimaryButton type="submit" disabled={submittingCreate}>
+                  {submittingCreate
+                    ? isRTL
+                      ? 'جاري الإنشاء...'
+                      : 'Creating Account...'
+                    : isRTL
+                    ? 'إنشاء الحساب وتعيين الدور'
+                    : 'Create User & Assign Role'}
+                </PrimaryButton>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================================
+          MODAL 2: EDIT USER ROLE, PERMISSIONS & ACCOUNT STATUS
+          ===================================================================== */}
+      {editingUser && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(17,17,16,0.55)' }}
+        >
+          <div
+            style={{
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 8,
+              width: '100%',
+              maxWidth: 640,
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              padding: 24,
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 16,
+              }}
+            >
+              <div>
+                <h3 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: 'var(--color-ink)' }}>
+                  {isRTL ? 'تعديل دور وصلاحيات المستخدم' : 'Modify User Role & Permissions'}
+                </h3>
+                <p style={{ margin: '3px 0 0', fontSize: 12.5, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
+                  {editingUser.email}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingUser(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: 18,
+                  cursor: 'pointer',
+                  color: 'var(--color-text-muted)',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>
+                    {isRTL ? 'الاسم الكامل *' : 'Full Name *'}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editFullName}
+                    onChange={e => setEditFullName(e.target.value)}
+                    style={{
+                      width: '100%',
+                      height: 36,
+                      padding: '0 10px',
+                      borderRadius: 4,
+                      border: '1px solid var(--color-input-border)',
+                      background: 'var(--color-page-bg)',
+                      fontSize: 13,
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>
+                    {isRTL ? 'رقم الجوال' : 'Phone / Mobile'}
+                  </label>
+                  <input
+                    type="text"
+                    value={editPhone}
+                    onChange={e => setEditPhone(e.target.value)}
+                    style={{
+                      width: '100%',
+                      height: 36,
+                      padding: '0 10px',
+                      borderRadius: 4,
+                      border: '1px solid var(--color-input-border)',
+                      background: 'var(--color-page-bg)',
+                      fontSize: 13,
+                      fontFamily: 'var(--font-mono)',
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* 6-Role Selector */}
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>
+                  {isRTL ? 'الدور الأمني ومستوى الصلاحيات *' : 'System Role & Permission Tier *'}
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  {ALL_SYSTEM_ROLES.map(r => {
+                    const meta = ROLE_DEFINITIONS[r];
+                    const selected = editRole === r;
+                    const disabledSelfDemote = editingUser.id === currentProfile.id && r !== 'SUPER_ADMIN';
+                    return (
+                      <button
+                        key={r}
+                        type="button"
+                        disabled={disabledSelfDemote}
+                        onClick={() => setEditRole(r)}
+                        style={{
+                          textAlign: 'start',
+                          padding: '10px 12px',
+                          borderRadius: 6,
+                          border: selected
+                            ? '2px solid var(--color-ink)'
+                            : '1px solid var(--color-border)',
+                          background: selected ? 'var(--color-row-hover)' : 'var(--color-page-bg)',
+                          cursor: disabledSelfDemote ? 'not-allowed' : 'pointer',
+                          opacity: disabledSelfDemote ? 0.45 : 1,
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600, fontSize: 12.5, color: 'var(--color-ink)' }}>
+                            <span style={{ width: 7, height: 7, borderRadius: '50%', background: meta.dotColor }} />
+                            {isRTL ? meta.labelAr : meta.labelEn}
+                          </span>
+                          {selected && <Check size={14} style={{ color: 'var(--color-ink)' }} />}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--color-text-muted)', marginTop: 4, lineHeight: 1.35 }}>
+                          {isRTL ? meta.shortDescAr : meta.shortDescEn}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Selected Role Effective Permissions Preview */}
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 6,
+                  background: 'var(--color-page-bg)',
+                  border: '1px solid var(--color-border)',
+                  fontSize: 12,
+                }}
+              >
+                <div style={{ fontWeight: 600, color: 'var(--color-ink)', marginBottom: 4 }}>
+                  {isRTL
+                    ? `الصلاحيات الفعلية لدور (${ROLE_DEFINITIONS[editRole].labelAr}):`
+                    : `Effective Permissions for ${ROLE_DEFINITIONS[editRole].labelEn}:`}
+                </div>
+                <ul style={{ margin: 0, paddingInlineStart: 18, color: 'var(--color-text-secondary)' }}>
+                  {(isRTL
+                    ? ROLE_DEFINITIONS[editRole].permissionsAr
+                    : ROLE_DEFINITIONS[editRole].permissionsEn
+                  ).map((p, idx) => (
+                    <li key={idx}>{p}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>
+                    {isRTL ? 'القسم / الإدارة' : 'Department'}
+                  </label>
+                  <input
+                    type="text"
+                    list="noor-departments-list"
+                    value={editDepartment}
+                    onChange={e => setEditDepartment(e.target.value)}
+                    style={{
+                      width: '100%',
+                      height: 36,
+                      padding: '0 10px',
+                      borderRadius: 4,
+                      border: '1px solid var(--color-input-border)',
+                      background: 'var(--color-page-bg)',
+                      fontSize: 13,
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 6 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      disabled={editingUser.id === currentProfile.id}
+                      checked={editIsActive}
+                      onChange={e => setEditIsActive(e.target.checked)}
+                    />
+                    <span>{isRTL ? 'الحساب نشط (مسموح بتسجيل الدخول)' : 'Account Active (Authorized to access system)'}</span>
+                  </label>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: 8,
+                  paddingTop: 12,
+                  borderTop: '1px solid var(--color-border)',
+                }}
+              >
+                <GhostButton type="button" onClick={() => setEditingUser(null)}>
+                  {isRTL ? 'إلغاء' : 'Cancel'}
+                </GhostButton>
+                <PrimaryButton type="submit" disabled={submittingEdit}>
+                  {submittingEdit
+                    ? isRTL
+                      ? 'جاري الحفظ...'
+                      : 'Saving Changes...'
+                    : isRTL
+                    ? 'حفظ الدور والصلاحيات'
+                    : 'Save Role & Permissions'}
+                </PrimaryButton>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================================
+          MODAL 3: RESET USER PASSWORD
+          ===================================================================== */}
+      {resetTargetUser && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(17,17,16,0.55)' }}
+        >
+          <div
+            style={{
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 8,
+              width: '100%',
+              maxWidth: 420,
+              padding: 24,
+            }}
+          >
+            <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600, color: 'var(--color-ink)' }}>
+              {isRTL ? 'إعادة تعيين كلمة المرور' : 'Reset User Password'}
+            </h3>
+            <p style={{ margin: '0 0 14px', fontSize: 12.5, color: 'var(--color-text-muted)' }}>
+              {resetTargetUser.full_name} ({resetTargetUser.email})
+            </p>
+            <form onSubmit={handleResetPasswordSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ position: 'relative' }}>
                 <input
-                  type={showResetPassword ? 'text' : 'password'}
+                  type={showNewPassword ? 'text' : 'password'}
                   required
-                  dir="ltr"
-                  minLength={8}
-                  value={resetNewPassword}
-                  onChange={e => setResetNewPassword(e.target.value)}
-                  className="nf-field"
-                  style={{ fontFamily: 'var(--font-mono)', paddingInlineEnd: 36 }}
+                  minLength={6}
+                  value={newPasswordVal}
+                  onChange={e => setNewPasswordVal(e.target.value)}
+                  placeholder={isRTL ? 'كلمة المرور الجديدة (6 أحرف على الأقل)' : 'New password (min 6 characters)'}
+                  style={{
+                    width: '100%',
+                    height: 36,
+                    padding: '0 34px 0 10px',
+                    borderRadius: 4,
+                    border: '1px solid var(--color-input-border)',
+                    background: 'var(--color-page-bg)',
+                    fontSize: 13,
+                    fontFamily: 'var(--font-mono)',
+                  }}
                 />
                 <button
                   type="button"
-                  onClick={() => setShowResetPassword(!showResetPassword)}
+                  onClick={() => setShowNewPassword(v => !v)}
                   style={{
                     position: 'absolute',
-                    insetInlineEnd: 10,
+                    right: 8,
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    background: 'transparent',
+                    background: 'none',
                     border: 'none',
-                    color: 'var(--color-text-muted)',
                     cursor: 'pointer',
+                    color: 'var(--color-text-muted)',
                   }}
                 >
-                  {showResetPassword ? <EyeOff style={{ width: 16, height: 16 }} /> : <Eye style={{ width: 16, height: 16 }} />}
+                  {showNewPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
               </div>
-            </div>
-
-            <div>
-              <label style={{ fontSize: 12.5, fontWeight: 500, color: 'var(--color-ink)', display: 'block', marginBottom: 5 }}>
-                {t('Confirm Password')}
-              </label>
-              <input
-                type={showResetPassword ? 'text' : 'password'}
-                required
-                dir="ltr"
-                value={resetConfirmPassword}
-                onChange={e => setResetConfirmPassword(e.target.value)}
-                className="nf-field"
-                style={{ fontFamily: 'var(--font-mono)' }}
-              />
-            </div>
-
-            <div style={{ paddingTop: 12, borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <SecondaryButton onClick={() => setIsResetPasswordModalOpen(false)}>
-                {t('Cancel')}
-              </SecondaryButton>
-              <PrimaryButton type="submit" disabled={isSubmitting}>
-                {isSubmitting ? t('Updating...') : t('Set Password')}
-              </PrimaryButton>
-            </div>
-          </form>
-        </Modal>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                <GhostButton type="button" onClick={() => setResetTargetUser(null)}>
+                  {isRTL ? 'إلغاء' : 'Cancel'}
+                </GhostButton>
+                <PrimaryButton type="submit" disabled={submittingReset}>
+                  {submittingReset
+                    ? isRTL
+                      ? 'جاري التحديث...'
+                      : 'Updating...'
+                    : isRTL
+                    ? 'تحديث كلمة المرور'
+                    : 'Update Password'}
+                </PrimaryButton>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
-      {/* MODAL 4: DELETE CONFIRMATION */}
-      {selectedUser && (
-        <Modal
-          isOpen={isDeleteModalOpen}
-          onClose={() => setIsDeleteModalOpen(false)}
-          title={t('Permanently Delete Account?')}
-          maxWidth="sm"
+      {/* =====================================================================
+          MODAL 4: DELETE USER CONFIRMATION
+          ===================================================================== */}
+      {deleteTargetUser && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(17,17,16,0.55)' }}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div
-              style={{
-                padding: 14,
-                borderRadius: 4,
-                background: '#FEF2F2',
-                border: '1px solid #FECACA',
-                color: '#991B1B',
-                fontSize: 13,
-                lineHeight: 1.5,
-              }}
-            >
+          <div
+            style={{
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 8,
+              width: '100%',
+              maxWidth: 420,
+              padding: 24,
+            }}
+          >
+            <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600, color: '#991B1B' }}>
+              {isRTL ? 'تأكيد حذف حساب المستخدم' : 'Confirm User Deletion'}
+            </h3>
+            <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--color-text-secondary)' }}>
               {isRTL
-                ? <>هل أنت متأكد من حذف حساب <strong dir="ltr">{selectedUser.email}</strong>؟ سيؤدي ذلك إلى إزالة بيانات الدخول وملفه في قاعدة البيانات نهائياً.</>
-                : <>Are you sure you want to delete <strong>{selectedUser.email}</strong>? This will remove both their login credentials and database profile.</>}
-            </div>
-
+                ? `هل أنت متأكد من حذف حساب "${deleteTargetUser.full_name}" (${deleteTargetUser.email})؟ يمكنك بدلاً من ذلك تعطيل الحساب مع الاحتفاظ بالسجل.`
+                : `Are you sure you want to permanently remove "${deleteTargetUser.full_name}" (${deleteTargetUser.email})? Tip: You can deactivate the account instead to preserve historical links.`}
+            </p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <SecondaryButton onClick={() => setIsDeleteModalOpen(false)}>
-                {t('Cancel')}
-              </SecondaryButton>
+              <GhostButton type="button" onClick={() => setDeleteTargetUser(null)}>
+                {isRTL ? 'إلغاء' : 'Cancel'}
+              </GhostButton>
               <PrimaryButton
-                onClick={handleDeleteSubmit}
-                disabled={isSubmitting}
-                style={{ background: '#991B1B', borderColor: '#991B1B' }}
+                type="button"
+                onClick={handleDeleteConfirm}
+                disabled={submittingDelete}
+                style={{ background: '#B91C1C', color: '#FFFFFF' }}
               >
-                {isSubmitting ? t('Deleting...') : t('Yes, Delete Account')}
+                {submittingDelete
+                  ? isRTL
+                    ? 'جاري الحذف...'
+                    : 'Deleting...'
+                  : isRTL
+                  ? 'حذف الحساب نهائياً'
+                  : 'Delete Account'}
               </PrimaryButton>
             </div>
           </div>
-        </Modal>
+        </div>
       )}
-    </PageContainer>
+    </div>
   );
 };
-

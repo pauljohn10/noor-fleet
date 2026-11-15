@@ -60,7 +60,7 @@ export const InspectionList: React.FC = () => {
   } = useFleet();
   const { currentProfile, hasPermission } = useAuth();
   const { t, isRTL } = useI18n();
-  const canManage = hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER']);
+  const canManage = hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER', 'WORKSHOP_MANAGER', 'FLEET_STAFF', 'WORKSHOP_STAFF']);
 
   const [activeMainTab, setActiveMainTab] = useState<'DEFECT_REPORTS' | 'CHECKLISTS'>('DEFECT_REPORTS');
 

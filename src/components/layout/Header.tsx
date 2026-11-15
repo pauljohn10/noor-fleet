@@ -29,6 +29,7 @@ const getBreadcrumb = (tab: NavItemKey, isRTL: boolean): { section: string; page
     workOrders:     { section: 'Maintenance',  sectionAr: 'الصيانة',     page: 'Job Cards',               pageAr: 'بطاقات العمل' },
     preventive:     { section: 'Maintenance',  sectionAr: 'الصيانة',     page: 'Preventive',              pageAr: 'الصيانة الوقائية' },
     inventory:      { section: 'Maintenance',  sectionAr: 'الصيانة',     page: 'Spare Parts',             pageAr: 'قطع الغيار' },
+    technicians:    { section: 'Maintenance',  sectionAr: 'الصيانة',     page: 'Technicians',             pageAr: 'الفنيون' },
     documents:      { section: 'Documents',    sectionAr: 'الوثائق',     page: 'Document Expiries',       pageAr: 'انتهاء الوثائق' },
     reports:        { section: 'Analytics',    sectionAr: 'التحليلات',   page: 'Reports & Export',        pageAr: 'التقارير والتصدير' },
     analytics:      { section: 'Analytics',    sectionAr: 'التحليلات',   page: 'Fleet Cost Metrics',      pageAr: 'مقاييس التكلفة' },
@@ -45,9 +46,13 @@ const getBreadcrumb = (tab: NavItemKey, isRTL: boolean): { section: string; page
 
 const roleLabel = (role: string, isRTL: boolean) => {
   const map: Record<string, { en: string; ar: string }> = {
-    SUPER_ADMIN:   { en: 'Super Admin',    ar: 'مدير النظام' },
-    FLEET_MANAGER: { en: 'Fleet Manager',  ar: 'مدير الأسطول' },
-    MANAGEMENT:    { en: 'Management',     ar: 'الإدارة' },
+    SUPER_ADMIN:      { en: 'Super Admin',       ar: 'مدير النظام العام' },
+    FLEET_MANAGER:    { en: 'Fleet Manager',     ar: 'مدير الأسطول' },
+    WORKSHOP_MANAGER: { en: 'Workshop Manager',  ar: 'مدير الورشة والصيانة' },
+    FLEET_STAFF:      { en: 'Fleet Staff',       ar: 'موظف عمليات الأسطول' },
+    WORKSHOP_STAFF:   { en: 'Workshop Staff',    ar: 'فني / موظف الورشة' },
+    VIEWER:           { en: 'Viewer (Read Only)', ar: 'مشاهد (للقراءة فقط)' },
+    MANAGEMENT:       { en: 'Viewer (Read Only)', ar: 'مشاهد (للقراءة فقط)' },
   };
   const entry = map[role];
   if (!entry) return role;

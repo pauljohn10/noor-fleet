@@ -1,6 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { UserRole, Profile } from '../types';
+import { UserRole, Profile, SystemRole } from '../types';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import type { NavItemKey } from '../components/layout/Sidebar';
+import {
+  canAccessNavTab,
+  evaluateRolePermission,
+  isViewerRole,
+  normalizeRole,
+  ROLE_DEFINITIONS,
+} from '../lib/rbac';
 
 interface AuthContextType {
   // Authentication states
@@ -9,10 +17,12 @@ interface AuthContextType {
   loginError: string | null;
   clearError: () => void;
 
-  // Profiles & Roles (Strictly 3 roles)
+  // Profiles & Roles (6 System Roles)
   currentProfile: Profile;
-  activeRole: UserRole;
+  activeRole: SystemRole;
+  isReadOnly: boolean;
   hasPermission: (allowedRoles: UserRole[]) => boolean;
+  canAccessTab: (tab: NavItemKey) => boolean;
 
   // Actions
   signInWithEmail: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
@@ -24,10 +34,10 @@ const defaultProfile: Profile = {
   id: '',
   email: '',
   full_name: 'Authorized Staff',
-  role: 'MANAGEMENT',
+  role: 'VIEWER',
   department: 'Operations',
   is_active: true,
-  created_at: new Date().toISOString()
+  created_at: new Date().toISOString(),
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,33 +46,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [loginError, setLoginError] = useState<string | null>(null);
-  const [activeRole, setActiveRole] = useState<UserRole>('MANAGEMENT');
+  const [activeRole, setActiveRole] = useState<SystemRole>('VIEWER');
   const [currentProfile, setCurrentProfile] = useState<Profile>(defaultProfile);
 
-  // Helper to fetch verified user profile from Supabase profiles table
-  const fetchVerifiedProfile = async (userId: string, email: string, userMeta: any): Promise<Profile> => {
+  // Fetch verified user profile from Supabase profiles table
+  const fetchVerifiedProfile = async (
+    userId: string,
+    email: string,
+    userMeta: any
+  ): Promise<{ profile: Profile; deactivated: boolean }> => {
     try {
       if (isSupabaseConfigured) {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, email, full_name, role, department, is_active, created_at')
+          .select('id, email, full_name, phone, role, department, is_active, created_at')
           .eq('id', userId)
           .maybeSingle();
 
         if (!error && data) {
-          const verifiedRole: UserRole =
-            data.role === 'SUPER_ADMIN' || data.role === 'FLEET_MANAGER'
-              ? data.role
-              : 'MANAGEMENT';
+          if (data.is_active === false) {
+            return { profile: defaultProfile, deactivated: true };
+          }
+
+          const verifiedRole = normalizeRole(data.role || userMeta?.role);
+          const roleMeta = ROLE_DEFINITIONS[verifiedRole];
 
           return {
-            id: data.id,
-            email: data.email || email,
-            full_name: data.full_name || email.split('@')[0],
-            role: verifiedRole,
-            department: data.department || (verifiedRole === 'SUPER_ADMIN' ? 'Executive Management' : 'Fleet Operations'),
-            is_active: data.is_active ?? true,
-            created_at: data.created_at || new Date().toISOString()
+            profile: {
+              id: data.id,
+              email: data.email || email,
+              full_name: data.full_name || email.split('@')[0],
+              phone: data.phone || userMeta?.phone || '',
+              role: verifiedRole,
+              department: data.department || roleMeta.defaultDepartment,
+              is_active: data.is_active ?? true,
+              created_at: data.created_at || new Date().toISOString(),
+            },
+            deactivated: false,
           };
         }
       }
@@ -70,29 +90,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.warn('[Security] Could not query profiles table, falling back to verified JWT metadata:', err);
     }
 
-    // Fallback strictly to cryptographic JWT metadata (assigned during Supabase user provisioning)
-    const metaRole: UserRole =
-      userMeta?.role === 'SUPER_ADMIN' || userMeta?.role === 'FLEET_MANAGER'
-        ? userMeta.role
-        : 'MANAGEMENT';
+    const metaRole = normalizeRole(userMeta?.role);
+    const roleMeta = ROLE_DEFINITIONS[metaRole];
 
     return {
-      id: userId,
-      email: email,
-      full_name: userMeta?.full_name || email.split('@')[0].replace(/[._]/g, ' '),
-      role: metaRole,
-      department: userMeta?.department || (metaRole === 'SUPER_ADMIN' ? 'Executive Management' : 'Fleet Operations'),
-      is_active: true,
-      created_at: new Date().toISOString()
+      profile: {
+        id: userId,
+        email,
+        full_name: userMeta?.full_name || email.split('@')[0].replace(/[._]/g, ' '),
+        phone: userMeta?.phone || '',
+        role: metaRole,
+        department: userMeta?.department || roleMeta.defaultDepartment,
+        is_active: true,
+        created_at: new Date().toISOString(),
+      },
+      deactivated: false,
     };
   };
 
-  const handleAuthenticatedUser = async (user: any) => {
+  const handleAuthenticatedUser = async (user: any): Promise<boolean> => {
     const email = user.email || '';
-    const profile = await fetchVerifiedProfile(user.id, email, user.user_metadata);
+    const { profile, deactivated } = await fetchVerifiedProfile(user.id, email, user.user_metadata);
+
+    if (deactivated) {
+      await supabase.auth.signOut();
+      setIsAuthenticated(false);
+      setCurrentProfile(defaultProfile);
+      setActiveRole('VIEWER');
+      setLoginError('Your account has been deactivated by an administrator. Please contact Super Admin.');
+      return false;
+    }
+
     setCurrentProfile(profile);
-    setActiveRole(profile.role);
+    setActiveRole(normalizeRole(profile.role));
     setIsAuthenticated(true);
+    return true;
   };
 
   // Initialize session on mount strictly using Supabase verified session
@@ -102,7 +134,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const initializeAuth = async () => {
       try {
         if (isSupabaseConfigured) {
-          const { data: { session }, error } = await supabase.auth.getSession();
+          const {
+            data: { session },
+            error,
+          } = await supabase.auth.getSession();
           if (!error && session?.user) {
             if (mounted) {
               await handleAuthenticatedUser(session.user);
@@ -122,7 +157,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initializeAuth();
 
-    // Listen for real-time Supabase auth state changes
     let subscription: { unsubscribe: () => void } | null = null;
     if (isSupabaseConfigured) {
       const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -131,7 +165,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else if (_event === 'SIGNED_OUT') {
           setIsAuthenticated(false);
           setCurrentProfile(defaultProfile);
-          setActiveRole('MANAGEMENT');
+          setActiveRole('VIEWER');
         }
       });
       subscription = data.subscription;
@@ -149,8 +183,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoginError(null);
   };
 
-  // Secure real login with Supabase password verification
-  const signInWithEmail = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+  const signInWithEmail = async (
+    email: string,
+    password: string
+  ): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
     setLoginError(null);
 
@@ -170,18 +206,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email: cleanEmail,
-        password: password
+        password,
       });
 
       if (error || !data.user) {
-        const errorMsg = 'Invalid email or password. Please verify your credentials or contact your administrator.';
+        const errorMsg =
+          'Invalid email or password. Please verify your credentials or contact your administrator.';
         setLoginError(errorMsg);
         setIsLoading(false);
         return { success: false, error: errorMsg };
       }
 
-      await handleAuthenticatedUser(data.user);
+      const ok = await handleAuthenticatedUser(data.user);
       setIsLoading(false);
+      if (!ok) {
+        return {
+          success: false,
+          error: 'Your account has been deactivated by an administrator. Please contact Super Admin.',
+        };
+      }
       return { success: true };
     } catch (err: any) {
       const msg = err?.message || 'Authentication error. Please check your network and credentials.';
@@ -203,8 +246,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
-        }
+          redirectTo: window.location.origin,
+        },
       });
 
       if (error) {
@@ -230,16 +273,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsAuthenticated(false);
       setCurrentProfile(defaultProfile);
-      setActiveRole('MANAGEMENT');
+      setActiveRole('VIEWER');
       setLoginError(null);
       setIsLoading(false);
     }
   };
 
   const hasPermission = (allowedRoles: UserRole[]): boolean => {
-    if (activeRole === 'SUPER_ADMIN') return true;
-    return allowedRoles.includes(activeRole);
+    if (!isAuthenticated || currentProfile.is_active === false) return false;
+    return evaluateRolePermission(activeRole, allowedRoles);
   };
+
+  const canAccessTab = (tab: NavItemKey): boolean => {
+    if (!isAuthenticated || currentProfile.is_active === false) return false;
+    return canAccessNavTab(activeRole, tab);
+  };
+
+  const isReadOnly = isViewerRole(activeRole);
 
   return (
     <AuthContext.Provider
@@ -250,10 +300,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         clearError,
         currentProfile,
         activeRole,
+        isReadOnly,
         hasPermission,
+        canAccessTab,
         signInWithEmail,
         signInWithGoogle,
-        signOut
+        signOut,
       }}
     >
       {children}

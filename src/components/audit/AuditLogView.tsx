@@ -51,7 +51,7 @@ export const AuditLogView: React.FC = () => {
     eqFilters: { module: moduleFilter },
   });
 
-  if (!hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER', 'MANAGEMENT'])) {
+  if (!hasPermission(['SUPER_ADMIN'])) {
     return (
       <PageContainer>
         <div
@@ -68,7 +68,7 @@ export const AuditLogView: React.FC = () => {
             {t('Access Restricted')}
           </h3>
           <p style={{ marginTop: 6, fontSize: 13, color: 'var(--color-text-muted)' }}>
-            {t('Only authorized Management and Super Admin roles can inspect system audit logs.')}
+            {t('Only Super Admin accounts are authorized to inspect system security and audit logs.')}
           </p>
         </div>
       </PageContainer>

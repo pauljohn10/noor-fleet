@@ -176,7 +176,7 @@ export const PartsList: React.FC = () => {
     setSelectedPart(null);
   };
 
-  const canManage = hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER']);
+  const canManage = hasPermission(['SUPER_ADMIN', 'WORKSHOP_MANAGER', 'WORKSHOP_STAFF']);
 
   return (
     <PageContainer>

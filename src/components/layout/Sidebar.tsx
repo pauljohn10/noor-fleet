@@ -2,6 +2,7 @@ import React from 'react';
 import { LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../context/I18nContext';
+import { canAccessNavTab, getRoleMeta } from '../../lib/rbac';
 
 export type NavItemKey =
   | 'dashboard'
@@ -92,6 +93,7 @@ const NAV_GROUPS: NavGroup[] = [
       { key: 'workOrders', label: 'Job Cards & Repair', labelAr: 'بطاقات العمل والإصلاح' },
       { key: 'preventive', label: 'Preventive Maint.', labelAr: 'الصيانة الوقائية' },
       { key: 'inventory', label: 'Spare Parts Store', labelAr: 'مخزن قطع الغيار' },
+      { key: 'technicians', label: 'Technicians', labelAr: 'الفنيون' },
     ],
   },
   {
@@ -128,7 +130,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
   const { isRTL, t } = useI18n();
   const uiFont = isRTL ? 'var(--font-arabic)' : 'var(--font-ui)';
 
-  const visibleGroups = NAV_GROUPS.filter(g => !g.adminOnly || activeRole === 'SUPER_ADMIN');
+  const visibleGroups = NAV_GROUPS
+    .map(g => ({
+      ...g,
+      items: g.items.filter(item => canAccessNavTab(activeRole, item.key)),
+    }))
+    .filter(g => g.items.length > 0 && (!g.adminOnly || activeRole === 'SUPER_ADMIN'));
+
+  const roleMeta = getRoleMeta(activeRole);
 
   const sidebarBase: React.CSSProperties = {
     width: 224,
@@ -223,8 +232,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
         }}>
           {currentProfile.full_name}
         </div>
-        <div style={{ color: 'var(--color-text-muted)', fontSize: 11, marginBottom: 8 }}>
-          {t(activeRole, activeRole.replace(/_/g, ' '))}
+        <div style={{ color: 'var(--color-text-muted)', fontSize: 11, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: roleMeta.dotColor,
+              display: 'inline-block',
+              flexShrink: 0,
+            }}
+          />
+          <span>{isRTL ? roleMeta.labelAr : roleMeta.labelEn}</span>
         </div>
         <button
           onClick={signOut}

@@ -85,7 +85,7 @@ export const MaintenanceScheduleList: React.FC = () => {
   const { currentProfile, hasPermission } = useAuth();
   const { t, isRTL } = useI18n();
 
-  const canManageStatus = hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER']);
+  const canManageStatus = hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER', 'WORKSHOP_MANAGER', 'WORKSHOP_STAFF']);
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');

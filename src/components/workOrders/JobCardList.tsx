@@ -214,7 +214,7 @@ export const JobCardList: React.FC = () => {
             <GhostButton onClick={handleExportPDF}>
               {isRTL ? 'تقرير PDF' : 'PDF report'}
             </GhostButton>
-            {hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER']) && (
+            {hasPermission(['SUPER_ADMIN', 'FLEET_MANAGER', 'WORKSHOP_MANAGER', 'WORKSHOP_STAFF']) && (
               <PrimaryButton onClick={() => setIsFormOpen(true)}>
                 {isRTL ? `+ ${t('Create Work Order')}` : '+ Create work order'}
               </PrimaryButton>

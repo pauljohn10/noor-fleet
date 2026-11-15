@@ -1,6 +1,13 @@
-export type UserRole = 
+export type SystemRole =
   | 'SUPER_ADMIN'
   | 'FLEET_MANAGER'
+  | 'WORKSHOP_MANAGER'
+  | 'FLEET_STAFF'
+  | 'WORKSHOP_STAFF'
+  | 'VIEWER';
+
+export type UserRole =
+  | SystemRole
   | 'MANAGEMENT';
 
 export interface Profile {
